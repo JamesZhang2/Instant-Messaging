@@ -1,6 +1,10 @@
 (* Adapted from https://github.com/anmonteiro/piaf *)
 
 open Piaf
+open Yojson.Basic.Util
+
+let string_of_json file_name =
+  Yojson.Basic.from_file file_name |> Yojson.Basic.to_string
 
 let get_sync url =
   let open Lwt_result.Syntax in
@@ -35,9 +39,10 @@ let post_message url (message : string) =
     end
 
 let () =
-  print_string "Enter a message: ";
-  let msg = read_line () in
-  match post_message "http://localhost:3000/message" msg with
+  print_string "Click enter to send the message...";
+  let _ = read_line () in
+  let msg = string_of_json "data/cornell.json" in
+  match post_message "http://localhost:3000/json" msg with
   | Ok body -> print_endline body
   | Error error ->
       let message = Error.to_string error in

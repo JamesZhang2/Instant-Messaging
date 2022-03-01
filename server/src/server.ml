@@ -2,6 +2,22 @@
    https://github.com/rgrinberg/opium *)
 
 open Opium
+open Yojson.Basic.Util
+
+type t = {
+  user : string;
+  msg : string;
+}
+
+let t_of_json j =
+  {
+    user = j |> member "user" |> to_string;
+    msg = j |> member "message" |> to_string;
+  }
+
+let from_json json =
+  try t_of_json json with
+  | Type_error (s, _) -> failwith ("Parsing error: " ^ s)
 
 let hello _req = Response.of_plain_text "Hello World" |> Lwt.return
 
@@ -24,9 +40,19 @@ let handle_post req =
   in
   Response.make ~body:(Body.of_stream content') () |> Lwt.return
 
+let json_to_msg str =
+  "Message received: "
+  ^ (str |> Yojson.Basic.from_string |> from_json).msg
+
+let handle_json req =
+  let content = Body.to_stream req.Request.body in
+  let content' = Lwt_stream.map json_to_msg content in
+  Response.make ~body:(Body.of_stream content') () |> Lwt.return
+
 let () =
   (* let open App in *)
   App.empty |> App.get "/" hello
   |> App.get "/greet/:name" greet
   |> App.post "/message" handle_post
+  |> App.post "/json" handle_json
   |> App.run_command |> ignore
