@@ -9,12 +9,17 @@ type t = {
   msg : string;
 }
 
+(** [t_of_json j] converts [j] to the internal representation type [t].
+    Requires: [j] is a valid json representation. *)
 let t_of_json j =
   {
     user = j |> member "user" |> to_string;
     msg = j |> member "message" |> to_string;
   }
 
+(** [from_json json] attempts to convert [j] to the internal
+    representation type [t]. Raises: [Failure] if an error occurs when
+    parsing [json]. *)
 let from_json json =
   try t_of_json json with
   | Type_error (s, _) -> failwith ("Parsing error: " ^ s)
@@ -32,6 +37,7 @@ let more req =
   Printf.sprintf "Message received: %s" msg
   |> Response.of_plain_text |> Lwt.return
 
+(** [handle_post req] handles the post request [req]. *)
 let handle_post req =
   let content = Body.to_stream req.Request.body in
   let content' =
@@ -40,14 +46,17 @@ let handle_post req =
   in
   Response.make ~body:(Body.of_stream content') () |> Lwt.return
 
-let json_to_msg str =
-  "Message received: "
-  ^ (str |> Yojson.Basic.from_string |> from_json).msg
+(** [json_to_msg json] converts [json] to a message. *)
+let json_to_msg json =
+  "Message from " ^ (json |> Yojson.Basic.from_string |> from_json).user
+  ^ ": " ^ (json |> Yojson.Basic.from_string |> from_json).msg
 
+(** [handle_json req] handles the post request [req]. Requires: [json]
+    is the string representation of a json file.*)
 let handle_json req =
-  let content = Body.to_stream req.Request.body in
-  let content' = Lwt_stream.map json_to_msg content in
-  Response.make ~body:(Body.of_stream content') () |> Lwt.return
+  let content_json = Body.to_stream req.Request.body in
+  let content_str = Lwt_stream.map json_to_msg content_json in
+  Response.make ~body:(Body.of_stream content_str) () |> Lwt.return
 
 let () =
   (* let open App in *)

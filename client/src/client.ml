@@ -6,21 +6,29 @@ open Yojson.Basic.Util
 let string_of_json file_name =
   Yojson.Basic.from_file file_name |> Yojson.Basic.to_string
 
+(** [get_result response] is the body of the response if the connection
+    is successful, or the error returned if the connection is
+    unsuccessful. *)
+let get_result (response : Response.t) =
+  let open Lwt_result.Syntax in
+  if Status.is_successful response.status then
+    Body.to_string response.body
+  else
+    let message = Status.to_string response.status in
+    Lwt.return (Error (`Msg message))
+
+(** [get_sync url] attempts to send a get request to [url]. *)
 let get_sync url =
   let open Lwt_result.Syntax in
   Lwt_main.run
     begin
       print_endline "Sending request...";
-
       let* response = Client.Oneshot.get (Uri.of_string url) in
-
-      if Status.is_successful response.status then
-        Body.to_string response.body
-      else
-        let message = Status.to_string response.status in
-        Lwt.return (Error (`Msg message))
+      get_result response
     end
 
+(** [post_message url message] attempts to send a post request to [url]
+    with [message] as its body. *)
 let post_message url (message : string) =
   let open Lwt_result.Syntax in
   Lwt_main.run
@@ -30,19 +38,20 @@ let post_message url (message : string) =
           ~body:(Body.of_string message)
           (Uri.of_string url)
       in
-
-      if Status.is_successful post_req.status then
-        Body.to_string post_req.body
-      else
-        let message = Status.to_string post_req.status in
-        Lwt.return (Error (`Msg message))
+      get_result post_req
     end
 
+(** [post_json url filename] sends a post request to [url], with body
+    being the string converted from [filename]. Requires: [filename] is
+    a valid json file.*)
+let post_json url (filename : string) =
+  post_message url (filename |> string_of_json)
+
 let () =
-  print_string "Click enter to send the message...";
+  print_string "Enter message, then press enter to send: ";
   let _ = read_line () in
-  let msg = string_of_json "data/cornell.json" in
-  match post_message "http://localhost:3000/json" msg with
+  (* TODO: put the message into a json file *)
+  match post_json "http://localhost:3000/json" "data/cornell.json" with
   | Ok body -> print_endline body
   | Error error ->
       let message = Error.to_string error in
