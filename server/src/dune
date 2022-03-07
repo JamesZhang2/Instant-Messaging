@@ -1,3 +1,4 @@
-(executable
+(library
  (name server)
+ (public_name Server)
  (libraries opium))

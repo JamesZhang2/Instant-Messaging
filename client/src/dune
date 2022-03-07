@@ -1,3 +1,4 @@
-(executable
+(library
  (name client)
+ (public_name Client)
  (libraries yojson piaf))
