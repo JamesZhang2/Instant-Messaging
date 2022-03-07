@@ -8,4 +8,4 @@ clean:
 	dune clean
 
 run:
-	OCAMLRUNPARAM=b dune exec src/server.exe
+	OCAMLRUNPARAM=b dune exec bin/main.exe
