@@ -33,6 +33,7 @@ let post_message url (message : string) =
   let open Lwt_result.Syntax in
   Lwt_main.run
     begin
+      print_endline "Sending request...";
       let* post_req =
         Client.Oneshot.post
           ~body:(Body.of_string message)
@@ -49,9 +50,9 @@ let post_json url (filename : string) =
 
 let () =
   print_string "Enter message, then press enter to send: ";
-  let _ = read_line () in
+  let msg = read_line () in
   (* TODO: put the message into a json file *)
-  match post_json "http://localhost:3000/json" "data/cornell.json" with
+  match post_message "http://localhost:3000/post/" msg with
   | Ok body -> print_endline body
   | Error error ->
       let message = Error.to_string error in
