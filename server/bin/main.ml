@@ -1,3 +1,6 @@
+(** Accepts Requests from clients, hands it to the processor which
+    produces Responses, and sends back Responses to clients. *)
+
 (* Adapted from https://rgrinberg.github.io/opium/opium/index.html and
    https://github.com/rgrinberg/opium *)
 

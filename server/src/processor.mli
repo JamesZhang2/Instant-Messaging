@@ -1,7 +1,8 @@
-(** A module to process tasks and give a proper response. *)
+(** A module that processes tasks handed by the server and gives a
+    proper response back to the server. *)
 
 type t
-(** The abstract type of response for the response to client. *)
+(** The abstract type for the response to the client. *)
 
 val handle : string -> (string * string) list -> string -> t
 (** [handle meth headers body] is the response to the client by sending
