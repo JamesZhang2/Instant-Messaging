@@ -9,7 +9,7 @@ open Server.Processor
 
 let get_body req =
   match req.Request.body |> Body.to_string |> Lwt.state with
-  | Sleep -> ""
+  | Sleep -> "sleep"
   | Return s -> s
   | Fail exn -> raise exn
 

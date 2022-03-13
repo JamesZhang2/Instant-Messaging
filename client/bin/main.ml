@@ -48,12 +48,16 @@ let post_message url (message : string) =
 let post_json url (filename : string) =
   post_message url (filename |> string_of_json)
 
-let () =
+let rec main () =
   print_string "Enter message, then press enter to send: ";
   let msg = read_line () in
   (* TODO: put the message into a json file *)
   match post_message "http://localhost:3000/post/" msg with
-  | Ok body -> print_endline body
+  | Ok body ->
+      print_endline body;
+      main ()
   | Error error ->
       let message = Error.to_string error in
       prerr_endline ("Error: " ^ message)
+
+let () = main ()

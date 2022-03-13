@@ -1,3 +1,5 @@
+.PHONY: test check
+
 build:
 	dune build
 
@@ -6,3 +8,6 @@ utop:
 
 clean:
 	dune clean
+
+test:
+	OCAMLRUNPARAM=b dune exec test/main.exe

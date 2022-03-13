@@ -30,6 +30,3 @@ val sender : t -> string
 
 val time : t -> string
 (** [time pkt] is the time that [pkt] is sent. *)
-
-val body : t -> string
-(** [body pkt] is the body of [pkt]. *)
