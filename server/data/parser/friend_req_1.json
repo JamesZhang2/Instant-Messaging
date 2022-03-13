@@ -1,0 +1,7 @@
+{
+  "type": "FriendReq",
+  "sender": "Alice",
+  "time": "08:00:00 03/01/2022",
+  "receiver": "Bob",
+  "message": "Hi, I'm Alice."
+}
