@@ -14,3 +14,16 @@ let string_of_now ~local =
   let day = now.tm_mday in
   let year = 1900 + now.tm_year in
   Printf.sprintf "%i:%s:%s %i/%i/%i" hr min sec month day year
+
+let time_regex =
+  (* TODO: This does not check invalid dates like 2/31/2022. *)
+  let hr = "\\([1]?[0-9]\\|2[0-3]\\)" in
+  let min = "\\([0-5][0-9]\\)" in
+  let sec = min in
+  let month = "\\([1-9]\\|1[0-2]\\)" in
+  let day = "\\([1-9]\\|[1-2][0-9]\\|3[0-1]\\)" in
+  let yr = "\\([1-9][0-9][0-9][0-9]\\)" in
+  Printf.sprintf "%s:%s:%s %s/%s/%s" hr min sec month day yr
+
+let chk_time time =
+  Str.string_match ("^" ^ time_regex ^ "$" |> Str.regexp) time 0
