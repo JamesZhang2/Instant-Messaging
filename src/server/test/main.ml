@@ -5,6 +5,12 @@ open Parser
 open Processor
 open Yojson.Basic
 
+(******************** Packager Tests ********************)
+
+let packager_tests = []
+
+(******************** Parser Tests ********************)
+
 let parser_dir = "data/parser/"
 
 let friend_accept_1 =
@@ -34,8 +40,6 @@ let parser_type_test
     (expected_output : Parser.pkt_type) =
   name >:: fun _ -> assert_equal expected_output (pkt_type parsed_t)
 
-let packager_tests = []
-
 let parser_tests =
   [
     ( "Time of send_msg_1 is correct" >:: fun _ ->
@@ -64,6 +68,8 @@ let parser_tests =
     parser_type_test "Type of send_msg_1 is correct" send_msg_1
       (SendMessage ("Bob", "Hi"));
   ]
+
+(******************** Processor Tests ********************)
 
 let processor_tests = []
 
