@@ -1,4 +1,5 @@
-(** Packages the operations of the client into json strings. *)
+(** The controller is called by the client's interface to complete
+    operations. *)
 
 type msg = {
   sender : string;
@@ -7,14 +8,13 @@ type msg = {
   body : string;
 }
 
-val send_message : string -> string -> string -> bool
-(** [send_message sender receiver msg] sends [msg] from [sender] to
+val send_msg : string -> string -> string -> bool
+(** [send_msg sender receiver msg] sends [msg] from [sender] to
     [receiver]. Returns: true if the message is successfully sent, false
     otherwise. *)
 
-val get_message : string -> msg list
-(** [get_message sender] Returns: true if the message is successfully
-    sent, false otherwise. *)
+val get_msg : string -> msg list
+(** [get_msg sender] fetches all the messages sent to [sender]. *)
 
 val register : string -> string -> bool
 (** [register username password] registers a user with [username] and
