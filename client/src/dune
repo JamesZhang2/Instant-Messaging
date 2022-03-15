@@ -1,4 +1,4 @@
 (library
  (name client)
  (public_name Client)
- (libraries yojson piaf))
+ (libraries yojson piaf Util))

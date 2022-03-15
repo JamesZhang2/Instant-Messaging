@@ -5,8 +5,8 @@ type msg = {
   body : string;
 }
 
-let send_message = failwith "Unimplemented"
-let get_message = failwith "Unimplemented"
+let send_msg = failwith "Unimplemented"
+let get_msg = failwith "Unimplemented"
 let register = failwith "Unimplemented"
 let login = failwith "Unimplemented"
 let friend_req = failwith "Unimplemented"
