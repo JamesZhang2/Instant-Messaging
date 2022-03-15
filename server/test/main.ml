@@ -39,10 +39,10 @@ let packager_tests = []
 let parser_tests =
   [
     ( "Time of send_msg_1 is correct" >:: fun _ ->
-      assert_equal "08:00:00 03/01/2022" (time send_msg_1)
+      assert_equal "8:00:00 3/1/2022" (time send_msg_1)
         ~printer:(fun x -> x) );
     ( "Time of get_msg_1 is correct" >:: fun _ ->
-      assert_equal "09:15:53 03/02/2022" (time get_msg_1)
+      assert_equal "19:15:53 11/16/2022" (time get_msg_1)
         ~printer:(fun x -> x) );
     ( "Sender of get_msg_1 is Alice" >:: fun _ ->
       assert_equal "Alice" (sender get_msg_1) ~printer:(fun x -> x) );

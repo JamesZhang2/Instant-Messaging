@@ -26,8 +26,7 @@ let get_str_val j property = j |> member property |> to_string
     from j, but pkt_type is set to a dummy value and should be replaced. *)
 let parse_common j =
   {
-    pkt_type = GetMessage;
-    (* dummy value, should be replaced later *)
+    pkt_type = GetMessage (* dummy value, should be replaced later *);
     sender = get_str_val j "sender";
     time = get_str_val j "time";
   }
