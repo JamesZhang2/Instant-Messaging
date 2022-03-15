@@ -1,0 +1,7 @@
+{
+  "type": "FriendReqReply",
+  "sender": "Alice",
+  "time": "8:00:00 12/31/2022",
+  "receiver": "Bob",
+  "accepted": true
+}

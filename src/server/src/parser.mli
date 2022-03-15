@@ -11,12 +11,11 @@ exception SyntaxError of string
 type pkt_type =
   | SendMessage of string * string (* Receiver, Message *)
   | GetMessage
-  | Registration of string (* Password, (TODO: add public key later) *)
+  | Register of string (* Password, (TODO: add public key later) *)
   | Login of string (* Password *)
   | FriendReq of string * string (* Receiver, Message *)
-  | FriendReqReply of bool * string (* Accept or Reject, Receiver *)
-  | Error
-(* TODO: Do we need this? *)
+  | FriendReqReply of string * bool
+(* Receiver, Accept or Reject *)
 
 val parse : string -> t
 (** [parse json] is the packet of information parsed from [json].

@@ -1,5 +1,0 @@
-(lang dune 2.9)
-
-(context default)
-
-(profile dev)
