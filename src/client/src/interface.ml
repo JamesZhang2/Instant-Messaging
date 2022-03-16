@@ -12,6 +12,7 @@ module Command = struct
     | Login of parameters
     | FriendReq of parameters
     | FriendReqRep of parameters
+    | Help
     | Quit
 
   (** [parse str] Parses a string command into command type. Raises:
@@ -30,6 +31,7 @@ module Command = struct
         | "FriendReq" -> FriendReq t
         | "FriendReqReply" -> FriendReqRep t
         | "quit" -> Quit
+        | "help" -> Help
         | _ -> raise Malformed)
 end
 
@@ -117,12 +119,31 @@ let bool_print (check, msg) =
     "Request failed" |> str_format 1
     |> ANSITerminal.print_string [ ANSITerminal.magenta ]
 
+let help_print =
+  "[SendMsg sender receiver message] : sends a message from sender to \
+   receiver" |> str_format 1 |> print_string;
+  "[GetMsg receiver] : gets messages to receiver" |> str_format 1
+  |> print_string;
+  "[SendMsg sender receiver message] : sends a message from sender to \
+   receiver" |> str_format 1 |> print_string;
+  "[Register username password] : registers a user" |> str_format 1
+  |> print_string;
+  "[Login username password] : logs a user in" |> str_format 1
+  |> print_string;
+  "[FriendReq sender receiver message] : sends a friend request from \
+   sender to receiver" |> str_format 1 |> print_string;
+  "[FriendReqReply sender receiver message] : replies a message from \
+   receiver to sender" |> str_format 1 |> print_string
+
 let rec main () =
   begin_print;
   let read = read_line () in
   match Command.parse read with
   | exception Command.Malformed ->
       illegal_command "Command Illegal: ";
+      main ()
+  | Help ->
+      help_print;
       main ()
   | SendMsg parameters ->
       let resp = send_msg parameters in
