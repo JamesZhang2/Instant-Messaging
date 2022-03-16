@@ -151,31 +151,11 @@ let packager_tests =
     test post_method_response "post_test 1" post_expected_2
       "Post Message";
     test get_method_response "get test 1" get_expected_1
-      [
-        {
-          sender = "sender";
-          receiver = "receiver";
-          time = "time";
-          msg_type = "Message";
-          message = "message";
-        };
-      ];
+      [ make_message "sender" "receiver" "time" Message "message" ];
     test get_method_response "get test 2" get_expected_2
       [
-        {
-          sender = "sender1";
-          receiver = "receiver1";
-          time = "time1";
-          msg_type = "Message";
-          message = "message1";
-        };
-        {
-          sender = "sender2";
-          receiver = "receiver2";
-          time = "time2";
-          msg_type = "FriendReq";
-          message = "message2";
-        };
+        make_message "sender1" "receiver1" "time1" Message "message1";
+        make_message "sender2" "receiver2" "time2" FriendReq "message2";
       ];
     test get_method_response "get test 3" get_expected_3 [];
   ]
