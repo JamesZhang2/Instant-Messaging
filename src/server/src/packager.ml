@@ -68,18 +68,30 @@ let message_to_obj msg =
   ItemList lst
 
 let error_parse message =
-  ItemList [ ("type", "Error"); ("time", "time"); ("message", message) ]
+  ItemList
+    [
+      ("type", "Error");
+      ("time", Util.Time.string_of_now true);
+      ("message", message);
+    ]
 
 let post_method_response text =
   let lst =
     [
-      ItemList [ ("type", "Post"); ("time", "time"); ("message", text) ];
+      ItemList
+        [
+          ("type", "Post");
+          ("time", Util.Time.string_of_now true);
+          ("message", text);
+        ];
     ]
   in
   json_convert lst
 
 let get_method_response msg_lst =
-  let meth = ItemList [ ("type", "Get"); ("time", "time") ] in
+  let meth =
+    ItemList [ ("type", "Get"); ("time", Util.Time.string_of_now true) ]
+  in
   let msg_obj_lst = List.map message_to_obj msg_lst in
   let body = NestList ("message", msg_obj_lst) in
   json_convert [ meth; body ]
