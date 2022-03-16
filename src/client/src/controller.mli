@@ -8,13 +8,15 @@ type msg = {
   body : string;
 }
 
+exception IllegalResponse
+
 val send_msg : string -> string -> string -> bool
 (** [send_msg sender receiver msg] sends [msg] from [sender] to
     [receiver]. Returns: true if the message is successfully sent, false
     otherwise. *)
 
 val get_msg : string -> msg list
-(** [get_msg sender] fetches all the messages sent to [sender]. *)
+(** [get_msg reciever] fetches all the messages sent to [receiver]. *)
 
 val register : string -> string -> bool
 (** [register username password] registers a user with [username] and

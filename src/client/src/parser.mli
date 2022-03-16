@@ -28,6 +28,10 @@ val get_type : t -> response_type
 (** [get_type parsert] returns the response type of the parsed
     representation [parsert]*)
 
+val get_plain : t -> string
+(** [get_plain parsert] returns the plain message body of the parsed
+    representatoin of response*)
+
 val msg_type : msg -> string
 (** [msg_type t] determines what type this message is. "friend request"
     if a response to a friend request, "message" if a normal message,

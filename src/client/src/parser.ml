@@ -76,3 +76,9 @@ let msg_plain msg =
   match msg.message with
   | Message x -> x
   | FriendReq x -> x
+
+let get_plain t =
+  match t.response with
+  | GetMethResponse x -> "List of Messages"
+  | ErrorResponse x -> x
+  | PostMethResponse x -> x
