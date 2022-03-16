@@ -93,7 +93,67 @@ let packager_tests =
 
 (******************** Parser Tests ********************)
 
-let parser_tests = []
+(**[test name func checker expected input] checks whether checking the
+   property through [checker] after running the [input] through function
+   [func] yields the expected result [expected]*)
+let test name func checker expected input =
+  [
+    (name >:: fun _ -> assert_equal expected (input |> func |> checker));
+  ]
+
+let error_input_1 =
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"error message\"\n\
+   }"
+
+let post_input =
+  "{\n\
+   \t\"type\" : \"Post\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"Post Message\"\n\
+   }"
+
+let get_input_1 =
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender\", \n\
+   \t\"receiver\" : \"receiver\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"message\"\n\
+   }\n\
+   ]\n\
+   }"
+
+(** [get_test name expected input property]*)
+let get_test name expected input property =
+  let resp = parse input in
+  match get_type resp with
+  | ErrorResponse msg
+  | PostMethResponse msg ->
+      [ (name >:: fun _ -> assert_equal expected msg) ]
+  | GetMethResponse body ->
+      List.map
+        (fun x -> name >:: fun _ -> assert_equal expected (property x))
+        body
+
+let parser_tests =
+  "parser_tests"
+  >::: List.flatten
+         [
+           test "error test" parse get_type
+             (ErrorResponse "error message") error_input_1;
+           test "error test time" parse get_time "time" error_input_1;
+           test "post test" parse get_type
+             (PostMethResponse "Post Message") post_input;
+           get_test "get test 1" "sender" get_input_1 msg_sender;
+           get_test "get test 1 message" "message" get_input_1 msg_body;
+           get_test "get test 1 time" "time" get_input_1 msg_time;
+         ]
 
 let suite =
   "test suite for Server"
@@ -103,7 +163,7 @@ let suite =
            interface_tests;
            network_tests;
            packager_tests;
-           parser_tests;
+           [ parser_tests ];
          ]
 
 let _ = run_test_tt_main suite

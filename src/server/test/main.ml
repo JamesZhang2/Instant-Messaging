@@ -5,11 +5,11 @@ open Parser
 open Processor
 open Yojson.Basic
 
-(******************** Packager Tests ********************)
+(******************** Client Packager Tests ********************)
 
 let packager_tests = []
 
-(******************** Parser Tests ********************)
+(******************** Server Parser Tests ********************)
 
 let parser_dir = "data/parser/"
 
@@ -69,12 +69,120 @@ let parser_tests =
       (SendMessage ("Bob", "Hi"));
   ]
 
+(******************** Server Packager Tests ********************)
+
+(**[test func name expected input]*)
+let test func name expected input =
+  name >:: fun _ ->
+  assert_equal expected (func input) ~printer:(fun x -> x)
+
+let error_expected_1 =
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"error message\"\n\
+   }"
+
+let error_expected_2 =
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"\"\n\
+   }"
+
+let post_expected_2 =
+  "{\n\
+   \t\"type\" : \"Post\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"Post Message\"\n\
+   }"
+
+let get_expected_1 =
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender\", \n\
+   \t\"receiver\" : \"receiver\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"message\"\n\
+   }\n\
+   ]\n\
+   }"
+
+let get_expected_2 =
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender1\", \n\
+   \t\"receiver\" : \"receiver1\", \n\
+   \t\"time\" : \"time1\", \n\
+   \t\"message\" : \"message1\"\n\
+   }, \n\
+   {\n\
+   \t\"sender\" : \"sender2\", \n\
+   \t\"receiver\" : \"receiver2\", \n\
+   \t\"time\" : \"time2\", \n\
+   \t\"message\" : \"message2\"\n\
+   }\n\
+   ]\n\
+   }"
+
+let get_expected_3 =
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\n\
+   ]\n\
+   }"
+
+let error_tests = []
+
+let packager_tests =
+  [
+    test error_response "error_test 1" error_expected_1 "error message";
+    test error_response "error_test 2" error_expected_2 "";
+    test post_method_response "post_test 1" post_expected_2
+      "Post Message";
+    test get_method_response "get test 1" get_expected_1
+      [
+        {
+          sender = "sender";
+          receiver = "receiver";
+          time = "time";
+          message = "message";
+        };
+      ];
+    test get_method_response "get test 2" get_expected_2
+      [
+        {
+          sender = "sender1";
+          receiver = "receiver1";
+          time = "time1";
+          message = "message1";
+        };
+        {
+          sender = "sender2";
+          receiver = "receiver2";
+          time = "time2";
+          message = "message2";
+        };
+      ];
+    test get_method_response "get test 3" get_expected_3 [];
+  ]
+
 (******************** Processor Tests ********************)
 
 let processor_tests = []
 
 let suite =
   "test suite for Server"
-  >::: List.flatten [ packager_tests; parser_tests; processor_tests ]
+  >::: List.flatten
+         [
+           packager_tests; parser_tests; processor_tests; packager_tests;
+         ]
 
 let _ = run_test_tt_main suite
