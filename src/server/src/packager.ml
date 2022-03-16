@@ -56,11 +56,9 @@ let message_to_obj msg =
 let error_parse message =
   ItemList [ ("type", "Error"); ("message", message) ]
 
-let post_method_response ?(error_msg = "") text =
-  if text = "Error" then json_convert [ error_parse error_msg ]
-  else
-    let lst = [ ItemList [ ("type", "Post"); ("message", text) ] ] in
-    json_convert lst
+let post_method_response text =
+  let lst = [ ItemList [ ("type", "Post"); ("message", text) ] ] in
+  json_convert lst
 
 let get_method_response msg_lst =
   let meth = ItemList [ ("type", "Get") ] in
@@ -68,4 +66,4 @@ let get_method_response msg_lst =
   let body = NestList ("message", msg_obj_lst) in
   json_convert [ meth; body ]
 
-let error_response msg = ""
+let error_response msg = json_convert [ error_parse msg ]
