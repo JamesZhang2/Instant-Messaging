@@ -1,14 +1,11 @@
 (** This module converts a response message from the server into json*)
 
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  msg_type : string;
-  message : string;
-}
-(** If the client sends a get request, type that each message will be
-    transformed into*)
+type msg
+(** Represents a message. *)
+
+val make_msg : string -> string -> string -> string -> string -> msg
+(** [make_msg sender receiver time msg_type message] creates a message
+    with the given fields. *)
 
 val post_method_response : string -> string
 (** [post_method_response message] Takes the response body text

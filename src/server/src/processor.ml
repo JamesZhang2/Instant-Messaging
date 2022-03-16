@@ -21,21 +21,76 @@ let header body =
   [ ("content-length", body |> String.length |> string_of_int) ]
 
 let handle_send_msg req_meth sender time receiver msg =
-  failwith "Unimplemented"
+  if req_meth <> Post then
+    Packager.error_response "SendMessage should use POST method"
+  else
+    (* TODO: Put this event into the database *)
+    let res =
+      Printf.sprintf "%s sent a message to %s at %s: %s\n" sender
+        receiver time msg
+    in
+    print_endline res;
+    Packager.post_method_response res
 
-let handle_get_msg req_meth sender time = failwith "Unimplemented"
+let handle_get_msg req_meth sender time =
+  if req_meth <> Get then
+    Packager.error_response "GetMessage should use GET method"
+  else begin
+    (* TODO: Retrieve messages from the database *)
+    print_endline
+      (Printf.sprintf "%s wants to get their messages at %s\n" sender
+         time);
+    Packager.get_method_response []
+  end
 
 let handle_register req_meth sender time password =
-  failwith "Unimplemented"
+  if req_meth <> Post then
+    Packager.error_response "Register should use POST method"
+  else
+    (* TODO: Put this event into the database *)
+    let res =
+      Printf.sprintf "%s registers with password %s at %s\n" sender
+        password time
+    in
+    print_endline res;
+    Packager.post_method_response res
 
 let handle_login req_meth sender time password =
-  failwith "Unimplemented"
+  if req_meth <> Post then
+    Packager.error_response "Login should use POST method"
+  else
+    (* TODO: Put this event into the database *)
+    let res =
+      Printf.sprintf "%s logs in with password %s at %s\n" sender
+        password time
+    in
+    print_endline res;
+    Packager.post_method_response res
 
 let handle_friend_req req_meth sender time receiver msg =
-  failwith "Unimplemented"
+  if req_meth <> Post then
+    Packager.error_response "FriendReq should use POST method"
+  else
+    (* TODO: Put this event into the database *)
+    let res =
+      Printf.sprintf "%s wants to friend %s at %s: %s\n" sender receiver
+        time msg
+    in
+    print_endline res;
+    Packager.post_method_response res
 
 let handle_friend_req_reply req_meth sender time receiver accepted =
-  failwith "Unimplemented"
+  if req_meth <> Post then
+    Packager.error_response "FriendReqReply should use POST method"
+  else
+    (* TODO: Put this event into the database *)
+    let res =
+      Printf.sprintf "%s %s the friend request from %s at %s\n" sender
+        (if accepted then "accepted" else "rejected")
+        receiver time
+    in
+    print_endline res;
+    Packager.post_method_response res
 
 let handle meth headers body =
   let req_meth =
