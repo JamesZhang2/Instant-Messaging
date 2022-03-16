@@ -1,10 +1,11 @@
+(** Networking processes library. This module includes functions that
+    will be used to connect to the server as a client. *)
+
 exception RequestFailed of string
+(** Raised when the request is failed to send or its response has error. *)
+
 exception IncorrectMeth
-
-(** Networking processes library.
-
-    This module includes functions that will be used to connect to the
-    server as a client. *)
+(** Raised when the specified http method is incorrect. *)
 
 type t
 (** The abstract type of response from the server. *)

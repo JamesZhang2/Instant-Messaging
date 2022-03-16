@@ -12,6 +12,7 @@ exception IncorrectMeth
 
 let url = "http://localhost:3000/"
 
+(** [get_body res] is the body of [res] with type [string]. *)
 let get_body (response : Response.t) =
   let open Lwt_result.Syntax in
   let body = Lwt_main.run (Body.to_string response.body) in
@@ -19,6 +20,7 @@ let get_body (response : Response.t) =
   | Ok b -> b
   | Error e -> raise (RequestFailed (Error.to_string e))
 
+(** [get_response res] is the response [res] in type [t]. *)
 let get_response (response : (Response.t, Error.t) Lwt_result.t) =
   let res = Lwt_main.run response in
   match res with
