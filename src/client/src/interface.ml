@@ -108,6 +108,9 @@ let rec print_messages msg_list =
       print_message h;
       print_messages t
 
+(** [bool_print (check, msg)] check if the first element is true then
+    print the message, if false, assume an error and print an error
+    message*)
 let bool_print (check, msg) =
   if check then msg |> str_format 1 |> print_string
   else
