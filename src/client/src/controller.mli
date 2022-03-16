@@ -10,30 +10,35 @@ type msg = {
 
 exception IllegalResponse
 
-val send_msg : string -> string -> string -> bool
+val send_msg : string -> string -> string -> bool * string
 (** [send_msg sender receiver msg] sends [msg] from [sender] to
-    [receiver]. Returns: true if the message is successfully sent, false
-    otherwise. *)
+    [receiver]. Returns: [(true, feedback)] if the message is
+    successfully sent, [(false, feedback)] otherwise. *)
 
-val get_msg : string -> msg list
-(** [get_msg reciever] fetches all the messages sent to [receiver]. *)
+val get_msg : string -> bool * msg list
+(** [get_msg reciever] fetches all the messages sent to [receiver].
+    Returns [(true, msglist)] if request successful, else
+    [(false, \[\])]*)
 
-val register : string -> string -> bool
+val register : string -> string -> bool * string
 (** [register username password] registers a user with [username] and
-    [password]. Returns: true if the user is successfully registered,
-    false otherwise. *)
+    [password]. Returns: [(true, feedback)] if the user is successfully
+    registered, [(false, error_msg)] otherwise. *)
 
 val login : string -> string -> bool * string
 (** [login username password] tries to log in to user [username] with
     [password]. Returns: [(true, "")] if the user is logged in,
     [(false, error_msg)] otherwise. *)
 
-val friend_req : string -> string -> string -> bool
+val friend_req : string -> string -> string -> bool * string
 (** [friend_req sender receiver msg] sends a friend request from
-    [sender] to [receiver] with message [msg]. Returns: true if the
-    request is sent, false otherwise. *)
+    [sender] to [receiver] with message [msg]. Returns:
+    [(true, feedback)] if the request is sent, [(false, error_msg)]
+    otherwise. *)
 
-val friend_req_reply : string -> string -> bool -> bool
+val friend_req_reply : string -> string -> bool -> bool * string
 (** [friend_req_reply sender receiver accepted] accepts the friend
     request from [receiver] if [accepted] is true, and rejects the
-    friend request from [receiver] if [accepted] is false.*)
+    friend request from [receiver] if [accepted] is false. Returns
+    [(true, feedback)] if it is successfully sent, else
+    [(false, error_msg)]*)

@@ -12,8 +12,10 @@ module Command = struct
     | Login of parameters
     | FriendReq of parameters
     | FriendReqRep of parameters
+    | Quit
 
-  (** [parse str] Parses a string command into command type*)
+  (** [parse str] Parses a string command into command type. Raises:
+      [Malformed] if the command does not match with any of the types*)
   let parse str =
     let str_list = String.split_on_char ' ' str in
     match str_list with
@@ -27,11 +29,9 @@ module Command = struct
         | "Login" -> Login t
         | "FriendReq" -> FriendReq t
         | "FriendReqReply" -> FriendReqRep t
+        | "quit" -> Quit
         | _ -> raise Malformed)
 end
-
-let bool_print check =
-  if check then "Request sent successfully" else "Request failed"
 
 (**[send_msg lst] takes the parameters in [lst] and sends the message to
    the server and convert result to a print statement*)
@@ -75,4 +75,76 @@ let friend_rep lst =
   let third = if List.hd sndlist = "true" then true else false in
   Controller.friend_req_reply first second third
 
-let run = failwith "Unimplemented"
+(** begin new line if 1, if 0 then it's a prompt*)
+let str_format prompt str =
+  if prompt = 0 then "> " ^ str ^ "\n" else "> " ^ str ^ "\n> "
+
+(**[begin_print] prompts the user for a new command.*)
+let begin_print =
+  "What would you like to do : " |> str_format 0
+  |> ANSITerminal.print_string [ ANSITerminal.cyan ]
+
+(** [illegal_command str] prints the string [str] corresponding to an
+    illegal input*)
+let illegal_command str =
+  str |> str_format 1
+  |> ANSITerminal.print_string [ ANSITerminal.magenta ]
+
+(**[print_message msg] prints one message represented by Controller type
+   [msg]*)
+let print_message msg =
+  let sender = "from: " ^ msg.sender in
+  let time = "time: " ^ msg.time in
+  let message = "\n" ^ msg.body in
+  sender |> str_format 0 |> print_endline;
+  time |> str_format 0 |> print_endline;
+  message |> str_format 0 |> print_endline
+
+(** [print_messages msg_list] prints the list of messages [msg_list]*)
+let rec print_messages msg_list =
+  match msg_list with
+  | [] -> ()
+  | h :: t ->
+      print_message h;
+      print_messages t
+
+let bool_print (check, msg) =
+  if check then msg |> str_format 1 |> print_string
+  else
+    "Request failed" |> str_format 1
+    |> ANSITerminal.print_string [ ANSITerminal.magenta ]
+
+let rec main () =
+  begin_print;
+  let read = read_line () in
+  match Command.parse read with
+  | exception Command.Malformed ->
+      illegal_command "Command Illegal: ";
+      main ()
+  | SendMsg parameters ->
+      let resp = send_msg parameters in
+      bool_print resp;
+      main ()
+  | GetMsg parameters ->
+      let check, msg = get_msg (List.hd parameters) in
+      if check then print_messages msg else bool_print (false, "");
+      main ()
+  | Register parameters ->
+      let resp = register parameters in
+      bool_print resp;
+      main ()
+  | Login parameters ->
+      let resp = register parameters in
+      bool_print resp;
+      main ()
+  | FriendReq parameters ->
+      let resp = register parameters in
+      bool_print resp;
+      main ()
+  | FriendReqRep parameters ->
+      let resp = friend_req parameters in
+      bool_print resp;
+      main ()
+  | Quit -> exit 0
+
+let run = main ()
