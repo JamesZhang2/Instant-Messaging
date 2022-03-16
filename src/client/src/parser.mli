@@ -1,5 +1,8 @@
 (** This module processes a response body from the server*)
 
+exception SyntaxError
+(**Raised when the json syntax is incorrect. *)
+
 type t
 (** Abstract type representing a reponse from *)
 
@@ -8,8 +11,8 @@ type msg
     per user request. *)
 
 type response_type =
-  | GetMethResponse of string
-  | PostMethResponse of msg list
+  | GetMethResponse of msg list
+  | PostMethResponse of string
   | ErrorResponse of string
       (** Represents the type of data that the response is for. *)
 

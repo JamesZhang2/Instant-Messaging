@@ -1,5 +1,7 @@
 open Yojson.Basic
 
+exception SyntaxError
+
 type msg = {
   purpose : string;
   sender : string;
@@ -43,9 +45,10 @@ let parse json =
     let json_list = Yojson.Basic.Util.to_list body_t in
     let body = parse_messages json_list in
     { time = "Unimplemented"; response = GetMethResponse body }
-  else
+  else if res_type = "Error" then
     let msg = Yojson.Basic.Util.to_string body_t in
     { time = "unimplemented"; response = ErrorResponse msg }
+  else raise SyntaxError
 
 let get_type t = t.response
 let msg_type msg = msg.purpose
