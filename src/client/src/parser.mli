@@ -6,6 +6,10 @@ exception SyntaxError
 type t
 (** Abstract type representing a reponse from *)
 
+type message_type =
+  | Message of string
+  | FriendReq of string
+
 type msg
 (** Represents one message entry that the server may send back as a list
     per user request. *)
@@ -40,5 +44,10 @@ val msg_time : msg -> string
 (** [msg_time msg] is the time that hte message [msg] was sent by the
     other user*)
 
-val msg_body : msg -> string
-(** [msg_body msg] is the actual body of the message [msg]*)
+val msg_body : msg -> message_type
+(** [msg_body msg] is the actual body of the message [msg], including
+    the type of them message as a variant*)
+
+val msg_plain : msg -> string
+(** [msg_body plain] is is the body of the message [msg] without the
+    type*)

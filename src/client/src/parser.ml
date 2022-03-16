@@ -2,11 +2,14 @@ open Yojson.Basic
 
 exception SyntaxError
 
+type message_type =
+  | Message of string
+  | FriendReq of string
+
 type msg = {
-  purpose : string;
   sender : string;
   time : string;
-  message : string;
+  message : message_type;
 }
 
 type response_type =
@@ -24,12 +27,17 @@ let rec parse_messages msg_list =
   | [] -> []
   | h :: t ->
       let assoc = Yojson.Basic.Util.to_assoc h in
-      let purp = "purpose" in
+
       let util x = List.assoc x assoc |> Yojson.Basic.Util.to_string in
       let sender = util "sender" in
+      let msg_type = util "msg_type" in
       let time = util "time" in
       let message = util "message" in
-      { purpose = purp; sender; time; message } :: parse_messages t
+      let complete_type =
+        if msg_type = "Message" then Message message
+        else FriendReq message
+      in
+      { sender; time; message = complete_type } :: parse_messages t
 
 let parse json =
   let conversion = Yojson.Basic.from_string json in
@@ -55,7 +63,16 @@ let parse json =
 
 let get_type t = t.response
 let get_time t = t.time
-let msg_type msg = msg.purpose
+let msg_body msg = msg.message
 let msg_sender msg = msg.sender
 let msg_time (msg : msg) = msg.time
-let msg_body msg = msg.message
+
+let msg_type msg =
+  match msg.message with
+  | Message _ -> "Message"
+  | FriendReq _ -> "FriendReq"
+
+let msg_plain msg =
+  match msg.message with
+  | Message x -> x
+  | FriendReq x -> x

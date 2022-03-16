@@ -4,6 +4,7 @@ type msg = {
   sender : string;
   receiver : string;
   time : string;
+  msg_type : string;
   message : string;
 }
 
@@ -50,6 +51,7 @@ let message_to_obj msg =
       ("sender", msg.sender);
       ("receiver", msg.receiver);
       ("time", msg.time);
+      ("msg_type", msg.msg_type);
       ("message", msg.message);
     ]
   in

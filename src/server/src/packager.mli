@@ -4,6 +4,7 @@ type msg = {
   sender : string;
   receiver : string;
   time : string;
+  msg_type : string;
   message : string;
 }
 (** If the client sends a get request, type that each message will be
