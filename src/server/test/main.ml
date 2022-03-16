@@ -69,31 +69,18 @@ let parser_tests =
       (SendMessage ("Bob", "Hi"));
   ]
 
-(******************** Processor Tests ********************)
-
-let processor_tests = []
-
-let suite =
-  "test suite for Server"
-  >::: List.flatten [ packager_tests; parser_tests; processor_tests ]
-
-(* let _ = run_test_tt_main suite *)
-
 (******************** Server Packager Tests ********************)
 
-(**[error_post_test name expected input error_msg]*)
-let error_post_test name expected input error_msg =
-  name >:: fun _ ->
-  assert_equal expected (post_method_response ~error_msg input)
-    ~printer:(fun x -> x)
-
-(**[error_post_test func name expected input error_msg]*)
+(**[test func name expected input]*)
 let test func name expected input =
   name >:: fun _ ->
   assert_equal expected (func input) ~printer:(fun x -> x)
 
-let post_error_expected_1 =
+let error_expected_1 =
   "{\n\t\"type\" : \"Error\", \n\t\"message\" : \"error message\"\n}"
+
+let error_expected_2 =
+  "{\n\t\"type\" : \"Error\", \n\t\"message\" : \"\"\n}"
 
 let post_expected_2 =
   "{\n\t\"type\" : \"Post\", \n\t\"message\" : \"Post Message\"\n}"
@@ -130,16 +117,17 @@ let get_expected_2 =
    ]\n\
    }"
 
-let post_method_response_tests =
+let get_expected_3 =
+  "{\n\t\"type\" : \"Get\", \n\t\"message\" : [\n\n]\n}"
+
+let error_tests = []
+
+let packager_tests =
   [
-    error_post_test "error_post 1" post_error_expected_1 "Error"
-      "error message";
+    test error_response "error_test 1" error_expected_1 "error message";
+    test error_response "error_test 2" error_expected_2 "";
     test post_method_response "post_test 1" post_expected_2
       "Post Message";
-  ]
-
-let get_method_response_tests =
-  [
     test get_method_response "get test 1" get_expected_1
       [
         {
@@ -164,11 +152,18 @@ let get_method_response_tests =
           message = "message2";
         };
       ];
+    test get_method_response "get test 3" get_expected_3 [];
   ]
 
+(******************** Processor Tests ********************)
+
+let processor_tests = []
+
 let suite =
-  "packager suite"
+  "test suite for Server"
   >::: List.flatten
-         [ post_method_response_tests; get_method_response_tests ]
+         [
+           packager_tests; parser_tests; processor_tests; packager_tests;
+         ]
 
 let _ = run_test_tt_main suite
