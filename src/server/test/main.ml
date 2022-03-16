@@ -13,33 +13,17 @@ let packager_tests = []
 
 let parser_dir = "data/parser/"
 
-let friend_accept_1 =
+let to_parser_t filename =
   let open Yojson.Basic in
-  from_file (parser_dir ^ "friend_accept_1.json") |> to_string |> parse
+  from_file (parser_dir ^ filename) |> to_string |> parse
 
-let friend_reject_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "friend_reject_1.json") |> to_string |> parse
-
-let friend_req_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "friend_req_1.json") |> to_string |> parse
-
-let get_msg_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "get_msg_1.json") |> to_string |> parse
-
-let login_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "login_1.json") |> to_string |> parse
-
-let register_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "register_1.json") |> to_string |> parse
-
-let send_msg_1 =
-  let open Yojson.Basic in
-  from_file (parser_dir ^ "send_msg_1.json") |> to_string |> parse
+let friend_accept_1 = to_parser_t "friend_accept_1.json"
+let friend_reject_1 = to_parser_t "friend_reject_1.json"
+let friend_req_1 = to_parser_t "friend_req_1.json"
+let get_msg_1 = to_parser_t "get_msg_1.json"
+let login_1 = to_parser_t "login_1.json"
+let register_1 = to_parser_t "register_1.json"
+let send_msg_1 = to_parser_t "send_msg_1.json"
 
 let parser_type_test
     (name : string)
@@ -150,12 +134,12 @@ let packager_tests =
       "Post Message";
     test get_method_response "get test 1"
       (get_expected_1 (Util.Time.string_of_now true))
-      [ make_message "sender" "receiver" "time" Message "message" ];
+      [ make_msg "sender" "receiver" "time" Message "message" ];
     test get_method_response "get test 2"
       (get_expected_2 (Util.Time.string_of_now true))
       [
-        make_message "sender1" "receiver1" "time1" Message "message1";
-        make_message "sender2" "receiver2" "time2" FriendReq "message2";
+        make_msg "sender1" "receiver1" "time1" Message "message1";
+        make_msg "sender2" "receiver2" "time2" FriendReq "message2";
       ];
     test get_method_response "get test 3"
       (get_expected_3 (Util.Time.string_of_now true))
