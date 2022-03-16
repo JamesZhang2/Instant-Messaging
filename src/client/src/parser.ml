@@ -37,21 +37,25 @@ let parse json =
   let res_type =
     largest |> List.assoc "type" |> Yojson.Basic.Util.to_string
   in
+  let time =
+    largest |> List.assoc "time" |> Yojson.Basic.Util.to_string
+  in
   let body_t = largest |> List.assoc "message" in
   if res_type = "Post" then
     let msg = Yojson.Basic.Util.to_string body_t in
-    { time = "unimplemented"; response = PostMethResponse msg }
+    { time; response = PostMethResponse msg }
   else if res_type = "Get" then
     let json_list = Yojson.Basic.Util.to_list body_t in
     let body = parse_messages json_list in
-    { time = "Unimplemented"; response = GetMethResponse body }
+    { time; response = GetMethResponse body }
   else if res_type = "Error" then
     let msg = Yojson.Basic.Util.to_string body_t in
-    { time = "unimplemented"; response = ErrorResponse msg }
+    { time; response = ErrorResponse msg }
   else raise SyntaxError
 
 let get_type t = t.response
+let get_time t = t.time
 let msg_type msg = msg.purpose
 let msg_sender msg = msg.sender
-let get_time t = t.time
+let msg_time (msg : msg) = msg.time
 let msg_body msg = msg.message

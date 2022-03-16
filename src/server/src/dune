@@ -1,4 +1,4 @@
 (library
  (name server)
  (public_name Server)
- (libraries opium))
+ (libraries opium util))

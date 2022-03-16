@@ -77,17 +77,30 @@ let test func name expected input =
   assert_equal expected (func input) ~printer:(fun x -> x)
 
 let error_expected_1 =
-  "{\n\t\"type\" : \"Error\", \n\t\"message\" : \"error message\"\n}"
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"error message\"\n\
+   }"
 
 let error_expected_2 =
-  "{\n\t\"type\" : \"Error\", \n\t\"message\" : \"\"\n}"
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"\"\n\
+   }"
 
 let post_expected_2 =
-  "{\n\t\"type\" : \"Post\", \n\t\"message\" : \"Post Message\"\n}"
+  "{\n\
+   \t\"type\" : \"Post\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"Post Message\"\n\
+   }"
 
 let get_expected_1 =
   "{\n\
    \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
    \t\"message\" : [\n\
    {\n\
    \t\"sender\" : \"sender\", \n\
@@ -101,6 +114,7 @@ let get_expected_1 =
 let get_expected_2 =
   "{\n\
    \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
    \t\"message\" : [\n\
    {\n\
    \t\"sender\" : \"sender1\", \n\
@@ -118,7 +132,12 @@ let get_expected_2 =
    }"
 
 let get_expected_3 =
-  "{\n\t\"type\" : \"Get\", \n\t\"message\" : [\n\n]\n}"
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\n\
+   ]\n\
+   }"
 
 let error_tests = []
 

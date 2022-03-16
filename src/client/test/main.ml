@@ -54,14 +54,23 @@ let test name func checker expected input =
   ]
 
 let error_input_1 =
-  "{\n\t\"type\" : \"Error\", \n\t\"message\" : \"error message\"\n}"
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"error message\"\n\
+   }"
 
 let post_input =
-  "{\n\t\"type\" : \"Post\", \n\t\"message\" : \"Post Message\"\n}"
+  "{\n\
+   \t\"type\" : \"Post\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : \"Post Message\"\n\
+   }"
 
 let get_input_1 =
   "{\n\
    \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
    \t\"message\" : [\n\
    {\n\
    \t\"sender\" : \"sender\", \n\
@@ -90,10 +99,12 @@ let parser_tests =
          [
            test "error test" parse get_type
              (ErrorResponse "error message") error_input_1;
+           test "error test time" parse get_time "time" error_input_1;
            test "post test" parse get_type
              (PostMethResponse "Post Message") post_input;
            get_test "get test 1" "sender" get_input_1 msg_sender;
            get_test "get test 1 message" "message" get_input_1 msg_body;
+           get_test "get test 1 time" "time" get_input_1 msg_time;
          ]
 
 let suite =

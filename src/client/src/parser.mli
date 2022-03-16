@@ -33,7 +33,11 @@ val msg_sender : msg -> string
 (** [msg_sender msg] determines which user is the message from*)
 
 val get_time : t -> string
-(** [msg_time msg] is the time that the message [msg] was sent by the
+(** [get_time t] is the time that the response [t] was sent by the
+    server*)
+
+val msg_time : msg -> string
+(** [msg_time msg] is the time that hte message [msg] was sent by the
     other user*)
 
 val msg_body : msg -> string

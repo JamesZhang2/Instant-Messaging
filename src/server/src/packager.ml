@@ -1,3 +1,5 @@
+open Util
+
 type msg = {
   sender : string;
   receiver : string;
@@ -54,14 +56,18 @@ let message_to_obj msg =
   ItemList lst
 
 let error_parse message =
-  ItemList [ ("type", "Error"); ("message", message) ]
+  ItemList [ ("type", "Error"); ("time", "time"); ("message", message) ]
 
 let post_method_response text =
-  let lst = [ ItemList [ ("type", "Post"); ("message", text) ] ] in
+  let lst =
+    [
+      ItemList [ ("type", "Post"); ("time", "time"); ("message", text) ];
+    ]
+  in
   json_convert lst
 
 let get_method_response msg_lst =
-  let meth = ItemList [ ("type", "Get") ] in
+  let meth = ItemList [ ("type", "Get"); ("time", "time") ] in
   let msg_obj_lst = List.map message_to_obj msg_lst in
   let body = NestList ("message", msg_obj_lst) in
   json_convert [ meth; body ]
