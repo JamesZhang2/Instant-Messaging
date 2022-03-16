@@ -1,16 +1,23 @@
 open Util
 
+type msg_type =
+  | FriendReq
+  | Message
+
 type msg = {
   sender : string;
   receiver : string;
   time : string;
-  msg_type : string;
+  msg_type : msg_type;
   message : string;
 }
 
 type obj =
   | NestList of string * obj list
   | ItemList of (string * string) list
+
+let make_message sender receiver time msg_type message =
+  { sender; receiver; time; msg_type; message }
 
 let ( ^.^ ) a b = a ^ ", \n" ^ b
 
@@ -46,12 +53,15 @@ and json_convert lst =
   "{\n" ^ concat ^ "\n}"
 
 let message_to_obj msg =
+  let msg_t =
+    if msg.msg_type = Message then "Message" else "FriendReq"
+  in
   let lst =
     [
       ("sender", msg.sender);
       ("receiver", msg.receiver);
       ("time", msg.time);
-      ("msg_type", msg.msg_type);
+      ("msg_type", msg_t);
       ("message", msg.message);
     ]
   in
@@ -61,18 +71,30 @@ let make_msg sender receiver time msg_type message =
   { sender; receiver; time; msg_type; message }
 
 let error_parse message =
-  ItemList [ ("type", "Error"); ("time", "time"); ("message", message) ]
+  ItemList
+    [
+      ("type", "Error");
+      ("time", Util.Time.string_of_now true);
+      ("message", message);
+    ]
 
 let post_method_response text =
   let lst =
     [
-      ItemList [ ("type", "Post"); ("time", "time"); ("message", text) ];
+      ItemList
+        [
+          ("type", "Post");
+          ("time", Util.Time.string_of_now true);
+          ("message", text);
+        ];
     ]
   in
   json_convert lst
 
 let get_method_response msg_lst =
-  let meth = ItemList [ ("type", "Get"); ("time", "time") ] in
+  let meth =
+    ItemList [ ("type", "Get"); ("time", Util.Time.string_of_now true) ]
+  in
   let msg_obj_lst = List.map message_to_obj msg_lst in
   let body = NestList ("message", msg_obj_lst) in
   json_convert [ meth; body ]

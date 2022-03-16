@@ -3,7 +3,7 @@ open Server
 open Packager
 open Parser
 open Processor
-open Yojson.Basic
+(* open Yojson.Basic *)
 
 (******************** Client Packager Tests ********************)
 
@@ -14,24 +14,31 @@ let packager_tests = []
 let parser_dir = "data/parser/"
 
 let friend_accept_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "friend_accept_1.json") |> to_string |> parse
 
 let friend_reject_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "friend_reject_1.json") |> to_string |> parse
 
 let friend_req_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "friend_req_1.json") |> to_string |> parse
 
 let get_msg_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "get_msg_1.json") |> to_string |> parse
 
 let login_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "login_1.json") |> to_string |> parse
 
 let register_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "register_1.json") |> to_string |> parse
 
 let send_msg_1 =
+  let open Yojson.Basic in
   from_file (parser_dir ^ "send_msg_1.json") |> to_string |> parse
 
 let parser_type_test
@@ -76,108 +83,83 @@ let test func name expected input =
   name >:: fun _ ->
   assert_equal expected (func input) ~printer:(fun x -> x)
 
-let error_expected_1 =
-  "{\n\
-   \t\"type\" : \"Error\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : \"error message\"\n\
-   }"
+let error_expected_1 time =
+  "{\n\t\"type\" : \"Error\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\t\"message\" : \"error message\"\n}"
 
-let error_expected_2 =
-  "{\n\
-   \t\"type\" : \"Error\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : \"\"\n\
-   }"
+let error_expected_2 time =
+  "{\n\t\"type\" : \"Error\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\t\"message\" : \"\"\n}"
 
-let post_expected_2 =
-  "{\n\
-   \t\"type\" : \"Post\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : \"Post Message\"\n\
-   }"
+let post_expected_2 time =
+  "{\n\t\"type\" : \"Post\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\t\"message\" : \"Post Message\"\n}"
 
-let get_expected_1 =
-  "{\n\
-   \t\"type\" : \"Get\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : [\n\
-   {\n\
-   \t\"sender\" : \"sender\", \n\
-   \t\"receiver\" : \"receiver\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"msg_type\" : \"Message\", \n\
-   \t\"message\" : \"message\"\n\
-   }\n\
-   ]\n\
-   }"
+let get_expected_1 time =
+  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\
+     \t\"message\" : [\n\
+     {\n\
+     \t\"sender\" : \"sender\", \n\
+     \t\"receiver\" : \"receiver\", \n\
+     \t\"time\" : \"time\", \n\
+     \t\"msg_type\" : \"Message\", \n\
+     \t\"message\" : \"message\"\n\
+     }\n\
+     ]\n\
+     }"
 
-let get_expected_2 =
-  "{\n\
-   \t\"type\" : \"Get\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : [\n\
-   {\n\
-   \t\"sender\" : \"sender1\", \n\
-   \t\"receiver\" : \"receiver1\", \n\
-   \t\"time\" : \"time1\", \n\
-   \t\"msg_type\" : \"Message\", \n\
-   \t\"message\" : \"message1\"\n\
-   }, \n\
-   {\n\
-   \t\"sender\" : \"sender2\", \n\
-   \t\"receiver\" : \"receiver2\", \n\
-   \t\"time\" : \"time2\", \n\
-   \t\"msg_type\" : \"FriendReq\", \n\
-   \t\"message\" : \"message2\"\n\
-   }\n\
-   ]\n\
-   }"
+let get_expected_2 time =
+  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\
+     \t\"message\" : [\n\
+     {\n\
+     \t\"sender\" : \"sender1\", \n\
+     \t\"receiver\" : \"receiver1\", \n\
+     \t\"time\" : \"time1\", \n\
+     \t\"msg_type\" : \"Message\", \n\
+     \t\"message\" : \"message1\"\n\
+     }, \n\
+     {\n\
+     \t\"sender\" : \"sender2\", \n\
+     \t\"receiver\" : \"receiver2\", \n\
+     \t\"time\" : \"time2\", \n\
+     \t\"msg_type\" : \"FriendReq\", \n\
+     \t\"message\" : \"message2\"\n\
+     }\n\
+     ]\n\
+     }"
 
-let get_expected_3 =
-  "{\n\
-   \t\"type\" : \"Get\", \n\
-   \t\"time\" : \"time\", \n\
-   \t\"message\" : [\n\n\
-   ]\n\
-   }"
+let get_expected_3 time =
+  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  ^ "\", \n\t\"message\" : [\n\n]\n}"
 
 let error_tests = []
 
 let packager_tests =
+  let open Util in
   [
-    test error_response "error_test 1" error_expected_1 "error message";
-    test error_response "error_test 2" error_expected_2 "";
-    test post_method_response "post_test 1" post_expected_2
+    test error_response "error_test 1"
+      (error_expected_1 (Util.Time.string_of_now true))
+      "error message";
+    test error_response "error_test 2"
+      (error_expected_2 (Util.Time.string_of_now true))
+      "";
+    test post_method_response "post_test 1"
+      (post_expected_2 (Util.Time.string_of_now true))
       "Post Message";
-    test get_method_response "get test 1" get_expected_1
+    test get_method_response "get test 1"
+      (get_expected_1 (Util.Time.string_of_now true))
+      [ make_message "sender" "receiver" "time" Message "message" ];
+    test get_method_response "get test 2"
+      (get_expected_2 (Util.Time.string_of_now true))
       [
-        {
-          sender = "sender";
-          receiver = "receiver";
-          time = "time";
-          msg_type = "Message";
-          message = "message";
-        };
+        make_message "sender1" "receiver1" "time1" Message "message1";
+        make_message "sender2" "receiver2" "time2" FriendReq "message2";
       ];
-    test get_method_response "get test 2" get_expected_2
-      [
-        {
-          sender = "sender1";
-          receiver = "receiver1";
-          time = "time1";
-          msg_type = "Message";
-          message = "message1";
-        };
-        {
-          sender = "sender2";
-          receiver = "receiver2";
-          time = "time2";
-          msg_type = "FriendReq";
-          message = "message2";
-        };
-      ];
-    test get_method_response "get test 3" get_expected_3 [];
+    test get_method_response "get test 3"
+      (get_expected_3 (Util.Time.string_of_now true))
+      [];
   ]
 
 (******************** Processor Tests ********************)
