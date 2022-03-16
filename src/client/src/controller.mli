@@ -16,7 +16,7 @@ val send_msg : string -> string -> string -> bool
     otherwise. *)
 
 val get_msg : string -> msg list
-(** [get_msg sender] fetches all the messages sent to [sender]. *)
+(** [get_msg reciever] fetches all the messages sent to [receiver]. *)
 
 val register : string -> string -> bool
 (** [register username password] registers a user with [username] and
