@@ -45,7 +45,23 @@ let get_msg receiver =
   | PostMethResponse x -> raise EmptyBody
   | GetMethResponse lst -> List.map (parser_msg_controller receiver) lst
 
-let register = failwith "Unimplemented"
-let login = failwith "Unimplemented"
+let register username password =
+  let message = Packager.pack_register username password in
+  let request = Network.request "Post" ~body:message ~header:[] in
+  let raw_response = Network.status request in
+  raw_response / 100 = 2
+
+let login username password =
+  let message = Packager.pack_login username password in
+  let request = Network.request "Post" ~body:message ~header:[] in
+  let raw_response = Network.response_body request in
+  match raw_response with
+  | None -> (true, "")
+  | Some raw_body -> (
+      match raw_body |> Parser.parse |> Parser.get_type with
+      | ErrorResponse x -> (false, x)
+      | GetMethResponse x -> raise EmptyBody
+      | PostMethResponse x -> (true, ""))
+
 let friend_req = failwith "Unimplemented"
 let friend_req_reply = failwith "Unimplemented"
