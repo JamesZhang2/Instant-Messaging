@@ -57,6 +57,9 @@ let message_to_obj msg =
   in
   ItemList lst
 
+let make_msg sender receiver time msg_type message =
+  { sender; receiver; time; msg_type; message }
+
 let error_parse message =
   ItemList [ ("type", "Error"); ("time", "time"); ("message", message) ]
 
