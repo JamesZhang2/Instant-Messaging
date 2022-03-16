@@ -8,7 +8,7 @@ type msg = {
   body : string;
 }
 
-exception EmptyBody
+exception IllegalResponse
 
 val send_msg : string -> string -> string -> bool
 (** [send_msg sender receiver msg] sends [msg] from [sender] to

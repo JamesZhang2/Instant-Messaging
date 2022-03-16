@@ -9,12 +9,12 @@ type msg = {
   body : string;
 }
 
-exception EmptyBody
+exception IllegalResponse
 
 let send_msg sender receiver msg =
   let msg = Packager.pack_send_msg sender receiver msg in
   let raw_response = Network.request "Post" ~body:msg ~header:[] in
-  let raw_body = Network.response_body raw_response in
+  (* let raw_body = Network.response_body raw_response in *)
   let status = Network.status raw_response in
   (* let body = *)
   status / 100 = 2
@@ -41,8 +41,8 @@ let get_msg receiver =
   in
   let body = Parser.parse raw_body in
   match Parser.get_type body with
-  | ErrorResponse x -> raise EmptyBody
-  | PostMethResponse x -> raise EmptyBody
+  | ErrorResponse x -> raise IllegalResponse
+  | PostMethResponse x -> raise IllegalResponse
   | GetMethResponse lst -> List.map (parser_msg_controller receiver) lst
 
 let register username password =
@@ -60,8 +60,13 @@ let login username password =
   | Some raw_body -> (
       match raw_body |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, x)
-      | GetMethResponse x -> raise EmptyBody
+      | GetMethResponse x -> raise IllegalResponse
       | PostMethResponse x -> (true, ""))
 
-let friend_req = failwith "Unimplemented"
+let friend_req sender receiver msg =
+  let message = Packager.pack_friend_req sender receiver msg in
+  let request = Network.request "Post" ~body:message ~header:[] in
+  let raw_response = Network.status request in
+  raw_response / 100 = 2
+
 let friend_req_reply = failwith "Unimplemented"
