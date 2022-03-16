@@ -21,7 +21,7 @@ eval $(opam env)
 Then run
 
 ```text
-opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc
+opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc cryptokit
 ```
 
 Now install packages specific to the server:
@@ -30,7 +30,7 @@ Now install packages specific to the server:
 opam install -y opium
 ```
 
-You may need to install dependencies for the Opium package using `sudo apt install` or `opam install`.
+You may need to install dependencies for the Opium and Cryptokit packages using `sudo apt install` or `opam install`.
 
 ### Client
 
@@ -49,7 +49,7 @@ eval $(opam env)
 Then run
 
 ```text
-opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc
+opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc cryptokit
 ```
 
 Now install packages specific to the client:
@@ -59,7 +59,7 @@ opam install -y piaf
 opam install ANSITerminal
 ```
 
-You may need to install dependencies for the Piaf package using `sudo apt install` or `opam install`.
+You may need to install dependencies for the Piaf and Cryptokit package using `sudo apt install` or `opam install`.
 
 ## Build & Run
 
