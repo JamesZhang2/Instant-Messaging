@@ -69,4 +69,10 @@ let friend_req sender receiver msg =
   let raw_response = Network.status request in
   raw_response / 100 = 2
 
-let friend_req_reply = failwith "Unimplemented"
+let friend_req_reply sender receiver accepted =
+  let message =
+    Packager.pack_friend_req_reply sender receiver accepted
+  in
+  let request = Network.request "Post" ~body:message ~header:[] in
+  let status = Network.status request in
+  status / 100 = 2
