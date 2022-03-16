@@ -9,8 +9,14 @@ type msg = {
   body : string;
 }
 
+(** [is_successful status] is true if [status] is between 200 and 299
+    inclusive, and false otherwise. *)
+let is_successful status = status / 100 = 2
+
 exception IllegalResponse
 
+(** [header body] is the header containing content-length for the
+    [body]. *)
 let header body =
   [ ("content-length", body |> String.length |> string_of_int) ]
 
@@ -20,7 +26,7 @@ let send_msg sender receiver msg =
     Network.request Post ~body:msg ~header:(header msg)
   in
   let status = Network.status raw_response in
-  status / 100 = 2
+  is_successful status
 
 (** [parser_msg_controller msg receiver] is the controller msg
     representation of the parser [msg] type *)
@@ -50,40 +56,40 @@ let get_msg receiver =
 
 let register username password =
   let message = Packager.pack_register username password in
-  let request =
+  let raw_response =
     Network.request Post ~body:message ~header:(header message)
   in
-  let raw_response = Network.status request in
-  raw_response / 100 = 2
+  let status = Network.status raw_response in
+  is_successful status
 
 let login username password =
   let message = Packager.pack_login username password in
-  let request =
+  let raw_response =
     Network.request Post ~body:message ~header:(header message)
   in
-  let raw_response = Network.response_body request in
-  match raw_response with
+  let raw_body = Network.response_body raw_response in
+  match raw_body with
   | None -> (true, "")
-  | Some raw_body -> (
-      match raw_body |> Parser.parse |> Parser.get_type with
+  | Some raw_body' -> (
+      match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, x)
       | GetMethResponse x -> raise IllegalResponse
       | PostMethResponse x -> (true, ""))
 
 let friend_req sender receiver msg =
   let message = Packager.pack_friend_req sender receiver msg in
-  let request =
+  let raw_response =
     Network.request Post ~body:message ~header:(header message)
   in
-  let raw_response = Network.status request in
-  raw_response / 100 = 2
+  let status = Network.status raw_response in
+  is_successful status
 
 let friend_req_reply sender receiver accepted =
   let message =
     Packager.pack_friend_req_reply sender receiver accepted
   in
-  let request =
+  let raw_response =
     Network.request Post ~body:message ~header:(header message)
   in
-  let status = Network.status request in
-  status / 100 = 2
+  let status = Network.status raw_response in
+  is_successful status
