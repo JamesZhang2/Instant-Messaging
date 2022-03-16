@@ -6,8 +6,12 @@
 type t
 (** The abstract type of response from the server. *)
 
+type req_method =
+  | Post
+  | Get  (** Represents the methods sent to the server*)
+
 val request :
-  string -> ?header:(string * string) list -> ?body:string -> t
+  req_method -> ?header:(string * string) list -> ?body:string -> t
 (** [request meth ?header ?body] is the response from the server by
     sending [meth] as http method, [body] as http request body, and
     [header] as http header. Effect: sends a specified request to the
