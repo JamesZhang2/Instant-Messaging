@@ -124,7 +124,23 @@ let get_input_1 =
    \t\"sender\" : \"sender\", \n\
    \t\"receiver\" : \"receiver\", \n\
    \t\"time\" : \"time\", \n\
+   \t\"msg_type\" : \"Message\", \n\
    \t\"message\" : \"message\"\n\
+   }\n\
+   ]\n\
+   }"
+
+let get_input_2 =
+  "{\n\
+   \t\"type\" : \"Get\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender2\", \n\
+   \t\"receiver\" : \"receiver2\", \n\
+   \t\"time\" : \"time2\", \n\
+   \t\"msg_type\" : \"FriendReq\", \n\
+   \t\"message\" : \"message2\"\n\
    }\n\
    ]\n\
    }"
@@ -151,8 +167,10 @@ let parser_tests =
            test "post test" parse get_type
              (PostMethResponse "Post Message") post_input;
            get_test "get test 1" "sender" get_input_1 msg_sender;
-           get_test "get test 1 message" "message" get_input_1 msg_body;
+           get_test "get test 1 message" "message" get_input_1 msg_plain;
            get_test "get test 1 time" "time" get_input_1 msg_time;
+           get_test "get test 1 type" "Message" get_input_1 msg_type;
+           get_test "get test 2 type" "FriendReq" get_input_2 msg_type;
          ]
 
 let suite =

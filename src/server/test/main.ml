@@ -106,6 +106,7 @@ let get_expected_1 =
    \t\"sender\" : \"sender\", \n\
    \t\"receiver\" : \"receiver\", \n\
    \t\"time\" : \"time\", \n\
+   \t\"msg_type\" : \"Message\", \n\
    \t\"message\" : \"message\"\n\
    }\n\
    ]\n\
@@ -120,12 +121,14 @@ let get_expected_2 =
    \t\"sender\" : \"sender1\", \n\
    \t\"receiver\" : \"receiver1\", \n\
    \t\"time\" : \"time1\", \n\
+   \t\"msg_type\" : \"Message\", \n\
    \t\"message\" : \"message1\"\n\
    }, \n\
    {\n\
    \t\"sender\" : \"sender2\", \n\
    \t\"receiver\" : \"receiver2\", \n\
    \t\"time\" : \"time2\", \n\
+   \t\"msg_type\" : \"FriendReq\", \n\
    \t\"message\" : \"message2\"\n\
    }\n\
    ]\n\
@@ -153,6 +156,7 @@ let packager_tests =
           sender = "sender";
           receiver = "receiver";
           time = "time";
+          msg_type = "Message";
           message = "message";
         };
       ];
@@ -162,12 +166,14 @@ let packager_tests =
           sender = "sender1";
           receiver = "receiver1";
           time = "time1";
+          msg_type = "Message";
           message = "message1";
         };
         {
           sender = "sender2";
           receiver = "receiver2";
           time = "time2";
+          msg_type = "FriendReq";
           message = "message2";
         };
       ];
