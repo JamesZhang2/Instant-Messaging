@@ -35,11 +35,59 @@ let send_msg_1 =
    \"8:00:00 3/1/2022\",\"receiver\": \"Bob\",\"message\": \"Hello \
    world!\"}"
 
+let get_msg_1 =
+  "{\"type\": \"GetMessage\",\"sender\": \"Charlie\",\"time\": \
+   \"8:00:00 3/1/2022\"}"
+
+let register_1 =
+  "{\"type\": \"Register\",\"sender\": \"Daniel\",\"time\": \"8:00:00 \
+   3/1/2022\",\"password\": \"tail recursion\"}"
+
+let login_1 =
+  "{\"type\": \"Login\",\"sender\": \"Elizabeth\",\"time\": \"8:00:00 \
+   3/1/2022\",\"password\": \"stack overflow\"}"
+
+let friend_req_1 =
+  "{\"type\": \"FriendReq\",\"sender\": \"Frank\",\"time\": \"8:00:00 \
+   3/1/2022\",\"receiver\": \"George\",\"message\": \"I'm Frank\"}"
+
+let friend_req_reply_1 =
+  "{\"type\": \"FriendReqReply\",\"sender\": \"Harry\",\"time\": \
+   \"8:00:00 3/1/2022\",\"receiver\": \"Ian\",\"accepted\": true}"
+
+let friend_req_reply_2 =
+  "{\"type\": \"FriendReqReply\",\"sender\": \"Jason\",\"time\": \
+   \"8:00:00 3/1/2022\",\"receiver\": \"Kate\",\"accepted\": false}"
+
 let packager_tests =
   [
     ( "packing SendMessage" >:: fun _ ->
       assert_equal send_msg_1
         (pack_send_msg "Alice" "Bob" "Hello world!")
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing GetMessage" >:: fun _ ->
+      assert_equal get_msg_1
+        (pack_get_msg "Charlie")
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing Register" >:: fun _ ->
+      assert_equal register_1
+        (pack_register "Daniel" "tail recursion")
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing Login" >:: fun _ ->
+      assert_equal login_1
+        (pack_login "Elizabeth" "stack overflow")
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing FriendReq" >:: fun _ ->
+      assert_equal friend_req_1
+        (pack_friend_req "Frank" "George" "I'm Frank")
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing FriendReqReply accepted" >:: fun _ ->
+      assert_equal friend_req_reply_1
+        (pack_friend_req_reply "Harry" "Ian" true)
+        ~cmp:equal_ignore_time ~printer:remove_time );
+    ( "packing FriendReqReply rejected" >:: fun _ ->
+      assert_equal friend_req_reply_2
+        (pack_friend_req_reply "Jason" "Kate" false)
         ~cmp:equal_ignore_time ~printer:remove_time );
   ]
 

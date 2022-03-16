@@ -16,7 +16,6 @@ let string_of_now ~local =
   Printf.sprintf "%i:%s:%s %i/%i/%i" hr min sec month day year
 
 let time_regex =
-  (* TODO: This does not check invalid dates like 2/31/2022. *)
   let hr = "\\([1]?[0-9]\\|2[0-3]\\)" in
   let min = "\\([0-5][0-9]\\)" in
   let sec = min in
@@ -26,4 +25,5 @@ let time_regex =
   Printf.sprintf "%s:%s:%s %s/%s/%s" hr min sec month day yr
 
 let chk_time time =
+  (* TODO: This does not check invalid dates like 2/31/2022. *)
   Str.string_match ("^" ^ time_regex ^ "$" |> Str.regexp) time 0
