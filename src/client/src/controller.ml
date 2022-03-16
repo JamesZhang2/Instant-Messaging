@@ -19,12 +19,8 @@ let send_msg sender receiver msg =
   let raw_response =
     Network.request "Post" ~body:msg ~header:(header msg)
   in
-  (* let raw_body = Network.response_body raw_response in *)
   let status = Network.status raw_response in
-  (* let body = *)
   status / 100 = 2
-(* in let response = body |> Parser.parse |> Parser.get_plain in
-   response *)
 
 (** [parser_msg_controller msg receiver] is the controller msg
     representation of the parser [msg] type *)
