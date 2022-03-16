@@ -8,6 +8,8 @@ type msg = {
   body : string;
 }
 
+exception EmptyBody
+
 val send_msg : string -> string -> string -> bool
 (** [send_msg sender receiver msg] sends [msg] from [sender] to
     [receiver]. Returns: true if the message is successfully sent, false
