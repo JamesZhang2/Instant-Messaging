@@ -6,24 +6,41 @@ type msg = {
 }
 
 type obj =
-  | List of string * obj list
-  | Item of string * string
+  | NestList of string * obj list
+  | ItemList of (string * string) list
+
+let ( ^.^ ) a b = a ^ ", \n" ^ b
+
+(** [parse_item] item parses a string item in json. *)
+let parse_item item =
+  match item with
+  | name, message -> "\t\"" ^ name ^ "\" : \"" ^ message ^ "\""
+
+let rec parse_item_list lst =
+  match lst with
+  | [] -> ""
+  | [ h ] -> parse_item h
+  | h :: t -> parse_item h ^.^ parse_item_list t
 
 (** A recursive json string writer*)
 let rec convert_object objs =
-  let inner =
-    match objs with
-    | Item (name, message) ->
-        "\"" ^ name ^ "\" : " ^ "\"" ^ message ^ "\", "
-    | List (name, objects) ->
-        let rec parse_list lst =
-          match lst with
-          | [] -> ""
-          | h :: t -> convert_object h ^ convert_object (List (name, t))
-        in
-        "\"" ^ name ^ "\" : " ^ "[" ^ parse_list objects ^ "\", "
-  in
-  "{" ^ inner ^ "}"
+  (* let inner = *)
+  match objs with
+  | ItemList lst ->
+      parse_item_list lst
+      (* let mapped = List.map parse_item lst in List.fold_left ( ^ ) ""
+         mapped *)
+  | NestList (name, objects) ->
+      let header = "\"" ^ name ^ "\" : [\n" in
+      let json_obj_lst = List.map (fun x -> [ x ]) objects in
+      let str_list = List.map json_convert json_obj_lst in
+      let json = String.concat ", \n" str_list in
+      header ^ json ^ "\n]"
+
+and json_convert lst =
+  let str_lst = List.map convert_object lst in
+  let concat = String.concat ", \n\t" str_lst in
+  "{\n" ^ concat ^ "\n}"
 
 let message_to_obj msg =
   let lst =
@@ -34,16 +51,21 @@ let message_to_obj msg =
       ("message", msg.message);
     ]
   in
-  let new_list = List.map (fun (a, b) -> Item (a, b)) lst in
-  List ("message", new_list)
+  ItemList lst
 
-let error_parse = Item ("type", "Error")
+let error_parse message =
+  ItemList [ ("type", "Error"); ("message", message) ]
 
-let post_method_response text =
-  if text = "Error" then convert_object error_parse
+let post_method_response ?(error_msg = "") text =
+  if text = "Error" then json_convert [ error_parse error_msg ]
   else
-    let lst = [ (Item ("type", "Post"), Item ("message", text)) ] in
-    failwith "Unimplemented"
+    let lst = [ ItemList [ ("type", "Post"); ("message", text) ] ] in
+    json_convert lst
 
-let get_method_response = failwith "Unimplemented"
-let error_response = failwith "Unimplemented"
+let get_method_response msg_lst =
+  let meth = ItemList [ ("type", "Get") ] in
+  let msg_obj_lst = List.map message_to_obj msg_lst in
+  let body = NestList ("message", msg_obj_lst) in
+  json_convert [ meth; body ]
+
+let error_response msg = ""

@@ -9,9 +9,11 @@ type msg = {
 (** If the client sends a get request, type that each message will be
     transformed into*)
 
-val post_method_response : string -> string
-(** [post_method_response message] Takes the response body text
-    [message] and transforms it into json*)
+val post_method_response : ?error_msg:string -> string -> string
+(** [post_method_response ?error_msg message] Takes the response body
+    text [message] and transforms it into json. If the this post request
+    has an error, that is, [message] = ["Error"], [error_msg] is
+    designed for error messages*)
 
 val get_method_response : msg list -> string
 (** [get_method_responde messages] Takes a list of messages in form of
