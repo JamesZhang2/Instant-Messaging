@@ -1,14 +1,18 @@
 (** This module converts a response message from the server into json*)
 
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  msg_type : string;
-  message : string;
-}
+type msg_type =
+  | FriendReq
+  | Message
+      (** [msg_type] is the type of a message stored on server end. It
+          can either be a [FriendReq] or a direct [Message]*)
+
+type msg
 (** If the client sends a get request, type that each message will be
     transformed into*)
+
+val make_msg : string -> string -> string -> msg_type -> string -> msg
+(**[make_message sender receiver time msg_type message] makes a
+   [Packager.msg] type out of the fields *)
 
 val post_method_response : string -> string
 (** [post_method_response message] Takes the response body text

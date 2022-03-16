@@ -56,6 +56,7 @@ Now install packages specific to the client:
 
 ```text
 opam install -y piaf
+opam install ANSITerminal
 ```
 
 You may need to install dependencies for the Piaf package using `sudo apt install` or `opam install`.
