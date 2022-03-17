@@ -124,8 +124,8 @@ let help_print () =
    receiver" |> str_format 1 |> print_string;
   "[GetMsg receiver] : gets messages to receiver" |> str_format 1
   |> print_string;
-  "[SendMsg sender receiver message] : sends a message from sender to \
-   receiver" |> str_format 1 |> print_string;
+  "[Login username password] : Logs a message from sender to receiver"
+  |> str_format 1 |> print_string;
   "[Register username password] : registers a user" |> str_format 1
   |> print_string;
   "[Login username password] : logs a user in" |> str_format 1
@@ -158,15 +158,15 @@ let rec main () =
       bool_print resp;
       main ()
   | Login parameters ->
-      let resp = register parameters in
+      let resp = login parameters in
       bool_print resp;
       main ()
   | FriendReq parameters ->
-      let resp = register parameters in
+      let resp = friend_req parameters in
       bool_print resp;
       main ()
   | FriendReqRep parameters ->
-      let resp = friend_req parameters in
+      let resp = friend_rep parameters in
       bool_print resp;
       main ()
   | Quit -> exit 0
