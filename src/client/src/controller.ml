@@ -40,9 +40,7 @@ let bool_post_parse raw_response =
 
 let send_msg sender receiver msg =
   let msg = Packager.pack_send_msg sender receiver msg in
-  let raw_response =
-    Network.request Post ~body:msg ~header:(header msg)
-  in
+  let raw_response = Network.request "POST" ~body:msg in
   bool_post_parse raw_response
 
 (** [parser_msg_controller msg receiver] is the controller msg
@@ -57,9 +55,9 @@ let parser_msg_controller receiver msg =
 
 let get_msg receiver =
   let request = Packager.pack_get_msg receiver in
-  let raw_response =
-    Network.request Get ~body:request ~header:(header request)
-  in
+  let _ = print_endline ("receiver" ^ request) in
+  let raw_response = Network.request "GET" ~body:request in
+  let _ = print_endline (string_of_int (Network.status raw_response)) in
   let raw_body =
     match Network.response_body raw_response with
     | None -> "No Response Message"
@@ -74,16 +72,12 @@ let get_msg receiver =
 
 let register username password =
   let message = Packager.pack_register username password in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response
 
 let login username password =
   let message = Packager.pack_login username password in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   let raw_body = Network.response_body raw_response in
   match raw_body with
   | None -> (true, "")
@@ -95,16 +89,12 @@ let login username password =
 
 let friend_req sender receiver msg =
   let message = Packager.pack_friend_req sender receiver msg in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response
 
 let friend_req_reply sender receiver accepted =
   let message =
     Packager.pack_friend_req_reply sender receiver accepted
   in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response

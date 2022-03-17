@@ -32,7 +32,7 @@ open Client.Network
 
 let rec main () =
   begin
-    let x = request ~body:"hello" "POST" in
+    let x = request ~body:"hello" "GET" in
     match response_body x with
     | None -> print_endline "nothing"
     | Some str -> print_endline str
@@ -44,4 +44,5 @@ let rec main () =
    print_endline body; main () | Error error -> let message =
    Error.to_string error in prerr_endline ("Error: " ^ message) *)
 
-let () = main ()
+let () = Client.Interface.run ()
+(* let () = main () *)

@@ -47,7 +47,14 @@ let request ?(header = [ ("", "") ]) ?(body = "") (meth : string) : t =
       get_response res
   | "GET" ->
       let res =
-        Piaf.Client.Oneshot.get (Uri.of_string (url ^ "get/"))
+        if header = [ ("", "") ] then
+          Piaf.Client.Oneshot.post ~body:(Body.of_string body)
+            (Uri.of_string (url ^ "get/"))
+        else
+          Piaf.Client.Oneshot.post ~headers:header
+            ~body:(Body.of_string body)
+            (Uri.of_string (url ^ "get/"))
+        (* Piaf.Client.Oneshot.get (Uri.of_string (url ^ "get/")) *)
       in
       get_response res
   | _ -> raise IncorrectMeth

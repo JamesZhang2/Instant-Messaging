@@ -99,6 +99,7 @@ let handle meth headers body =
     | "GET" -> Get
     | m -> raise (UnknownMethod m)
   in
+  let _ = print_endline ("body" ^ body) in
   let parsed_body = Parser.parse body in
   let sender = Parser.sender parsed_body in
   let time = Parser.time parsed_body in
