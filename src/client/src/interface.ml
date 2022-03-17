@@ -6,12 +6,12 @@ module Command = struct
   type parameters = string list
 
   type command =
-    | SendMsg of parameters
-    | GetMsg of parameters
-    | Register of parameters
-    | Login of parameters
-    | FriendReq of parameters
-    | FriendReqRep of parameters
+    | SendMsg of string * string * string
+    | GetMsg of string
+    | Register of string * string
+    | Login of string * string
+    | FriendReq of string * string * string
+    | FriendReqRep of string * string * string
     | Help
     | Quit
 
@@ -21,61 +21,19 @@ module Command = struct
     let str_list = String.split_on_char ' ' str in
     match str_list with
     | [] -> raise Malformed
-    | [ h ] -> raise Malformed
-    | h :: t -> (
-        match h with
-        | "SendMsg" -> SendMsg t
-        | "GetMsg" -> GetMsg t
-        | "Register" -> Register t
-        | "Login" -> Login t
-        | "FriendReq" -> FriendReq t
-        | "FriendReqReply" -> FriendReqRep t
-        | "quit" -> Quit
-        | "help" -> Help
-        | _ -> raise Malformed)
+    | [ "quit" ] -> Quit
+    | [ "help" ] -> Help
+    | [ "SendMsg"; sender; receiver; msg ] ->
+        SendMsg (sender, receiver, msg)
+    | [ "GetMsg"; sender ] -> GetMsg sender
+    | [ "Register"; username; password ] -> Register (username, password)
+    | [ "Login"; username; password ] -> Login (username, password)
+    | [ "FriendReq"; sender; receiver; msg ] ->
+        FriendReq (sender, receiver, msg)
+    | [ "FriendReqReply"; sender; receiver; accepted ] ->
+        FriendReqRep (sender, receiver, accepted)
+    | _ -> raise Malformed
 end
-
-(**[send_msg lst] takes the parameters in [lst] and sends the message to
-   the server and convert result to a print statement*)
-let send_msg lst =
-  let first, fstlist = (List.hd lst, List.tl lst) in
-  let second, sndlist = (List.hd fstlist, List.tl fstlist) in
-  let third = List.hd sndlist in
-  Controller.send_msg first second third
-
-(** [get_msg str] sends a get request for all messages to be received by
-    receiver [str]*)
-let get_msg str = Controller.get_msg str
-
-(** [register lst] takes the parameters in [lst] and registers a user
-    using this information*)
-let register lst =
-  let first, fstlist = (List.hd lst, List.tl lst) in
-  let second = List.hd fstlist in
-  Controller.register first second
-
-(** [login lst] takes the parameters in [lst] and logins a user using
-    this information*)
-let login lst =
-  let first, fstlist = (List.hd lst, List.tl lst) in
-  let second = List.hd fstlist in
-  Controller.login first second
-
-(**[friend_req lst] takes the parameters in [lst] and sends the
-   friend_request to the server*)
-let friend_req lst =
-  let first, fstlist = (List.hd lst, List.tl lst) in
-  let second, sndlist = (List.hd fstlist, List.tl fstlist) in
-  let third = List.hd sndlist in
-  Controller.friend_req first second third
-
-(**[friend_req lst] takes the parameters in [lst] and sends the
-   friend_request to the server and converts to a print statement*)
-let friend_rep lst =
-  let first, fstlist = (List.hd lst, List.tl lst) in
-  let second, sndlist = (List.hd fstlist, List.tl fstlist) in
-  let third = if List.hd sndlist = "true" then true else false in
-  Controller.friend_req_reply first second third
 
 (** begin new line if 1, if 0 then it's a prompt*)
 let str_format prompt str =
@@ -145,28 +103,30 @@ let rec main () =
   | Help ->
       help_print ();
       main ()
-  | SendMsg parameters ->
-      let resp = send_msg parameters in
+  | SendMsg (sender, receiver, msg) ->
+      let resp = Controller.send_msg sender receiver msg in
       bool_print resp;
       main ()
-  | GetMsg parameters ->
-      let check, msg = get_msg (List.hd parameters) in
+  | GetMsg sender ->
+      let check, msg = Controller.get_msg sender in
       if check then print_messages msg else bool_print (false, "");
       main ()
-  | Register parameters ->
-      let resp = register parameters in
+  | Register (username, password) ->
+      let resp = Controller.register username password in
       bool_print resp;
       main ()
-  | Login parameters ->
-      let resp = login parameters in
+  | Login (username, password) ->
+      let resp = Controller.login username password in
       bool_print resp;
       main ()
-  | FriendReq parameters ->
-      let resp = friend_req parameters in
+  | FriendReq (sender, receiver, msg) ->
+      let resp = Controller.friend_req sender receiver msg in
       bool_print resp;
       main ()
-  | FriendReqRep parameters ->
-      let resp = friend_rep parameters in
+  | FriendReqRep (sender, receiver, accepted) ->
+      let resp =
+        Controller.friend_req_reply sender receiver (accepted = "true")
+      in
       bool_print resp;
       main ()
   | Quit -> exit 0

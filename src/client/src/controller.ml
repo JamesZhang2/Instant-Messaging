@@ -58,7 +58,7 @@ let get_msg receiver =
   let raw_response = Network.request "POST" ~body:request in
   let raw_body =
     match Network.response_body raw_response with
-    | None -> "No Response Message"
+    | None -> raise IllegalResponse
     | Some msg -> msg
   in
   let body = Parser.parse raw_body in
