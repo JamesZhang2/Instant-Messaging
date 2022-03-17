@@ -1,0 +1,4 @@
+**/_build/*
+tutorial/*
+.DS_Store
+*.zip
