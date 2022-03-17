@@ -171,4 +171,6 @@ let rec main () =
       main ()
   | Quit -> exit 0
 
-let run = main ()
+let run =
+  help_print ();
+  main ()
