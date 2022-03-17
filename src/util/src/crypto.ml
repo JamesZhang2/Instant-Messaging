@@ -2,7 +2,8 @@ open Cryptokit
 
 type k = string
 
-let sym_gen () = Random.(string secure_rng 16)
+let sym_gen () = "1234123412341234"
+(* Random.(string secure_rng 16) *)
 (* 16/24/32*)
 
 let sym_enc key msg =

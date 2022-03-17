@@ -39,6 +39,7 @@ let bool_post_parse raw_response =
   (status, message)
 
 let send_msg sender receiver msg =
+  let msg = Util.Crypto.(sym_enc (sym_gen ()) msg) in
   let msg = Packager.pack_send_msg sender receiver msg in
   let raw_response = Network.request "POST" ~body:msg in
   bool_post_parse raw_response
@@ -50,7 +51,9 @@ let parser_msg_controller receiver msg =
     sender = Parser.msg_sender msg;
     receiver;
     time = Parser.msg_time msg;
-    body = Parser.msg_plain msg;
+    body =
+      (let msg = Parser.msg_plain msg in
+       Util.Crypto.(sym_dec (sym_gen ()) msg));
   }
 
 let get_msg receiver =
@@ -58,7 +61,7 @@ let get_msg receiver =
   let raw_response = Network.request "POST" ~body:request in
   let raw_body =
     match Network.response_body raw_response with
-    | None -> raise IllegalResponse
+    | None -> "No Response Message"
     | Some msg -> msg
   in
   let body = Parser.parse raw_body in
