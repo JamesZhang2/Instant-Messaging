@@ -55,9 +55,7 @@ let parser_msg_controller receiver msg =
 
 let get_msg receiver =
   let request = Packager.pack_get_msg receiver in
-  let _ = print_endline ("receiver" ^ request) in
   let raw_response = Network.request "GET" ~body:request in
-  let _ = print_endline (string_of_int (Network.status raw_response)) in
   let raw_body =
     match Network.response_body raw_response with
     | None -> "No Response Message"

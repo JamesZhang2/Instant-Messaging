@@ -40,7 +40,6 @@ let rec parse_messages msg_list =
       { sender; time; message = complete_type } :: parse_messages t
 
 let parse json =
-  let _ = print_endline json in
   let conversion = Yojson.Basic.from_string json in
   let largest = Yojson.Basic.Util.to_assoc conversion in
   let res_type =

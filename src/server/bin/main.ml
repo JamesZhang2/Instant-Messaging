@@ -17,9 +17,7 @@ let get_headers req = req.Request.headers |> Headers.to_list
 let get_meth req = req.Request.meth |> Method.to_string
 
 let process (req : Request.t) =
-  print_endline "get_body req";
   let res = handle (get_meth req) (get_headers req) (get_body req) in
-  let _ = print_endline (res |> status) in
   Response.make
     ~status:(res |> status |> Status.of_string)
       (* ~headers:(res |> response_headers |> Headers.of_list) *)

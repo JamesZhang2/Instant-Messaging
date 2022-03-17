@@ -119,7 +119,7 @@ let bool_print (check, msg) =
     "Request failed" |> str_format 1
     |> ANSITerminal.print_string [ ANSITerminal.magenta ]
 
-let help_print =
+let help_print () =
   "[SendMsg sender receiver message] : sends a message from sender to \
    receiver" |> str_format 1 |> print_string;
   "[GetMsg receiver] : gets messages to receiver" |> str_format 1
@@ -143,7 +143,7 @@ let rec main () =
       illegal_command "Command Illegal: ";
       main ()
   | Help ->
-      help_print;
+      help_print ();
       main ()
   | SendMsg parameters ->
       let resp = send_msg parameters in
