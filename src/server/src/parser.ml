@@ -60,23 +60,16 @@ let parse_friend_req_reply j =
   }
 
 let parse json =
-  if json = "" then
-    {
-      pkt_type = GetMessage;
-      sender = "Unimplemented";
-      time = "time unimplemented";
-    }
-  else
-    let j = from_string json in
-    let type' = get_str_val j "type" in
-    match type' with
-    | "SendMessage" -> parse_send_msg j
-    | "GetMessage" -> parse_get_msg j
-    | "Register" -> parse_register j
-    | "Login" -> parse_login j
-    | "FriendReq" -> parse_friend_req j
-    | "FriendReqReply" -> parse_friend_req_reply j
-    | _ -> raise (SyntaxError "parse")
+  let j = from_string json in
+  let type' = get_str_val j "type" in
+  match type' with
+  | "SendMessage" -> parse_send_msg j
+  | "GetMessage" -> parse_get_msg j
+  | "Register" -> parse_register j
+  | "Login" -> parse_login j
+  | "FriendReq" -> parse_friend_req j
+  | "FriendReqReply" -> parse_friend_req_reply j
+  | _ -> raise (SyntaxError "parse")
 
 let pkt_type pkt = pkt.pkt_type
 let sender pkt = pkt.sender
