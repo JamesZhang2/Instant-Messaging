@@ -11,7 +11,7 @@ module Command = struct
     | Register of string * string
     | Login of string * string
     | FriendReq of string * string * string
-    | FriendReqRep of string * string * string
+    | FriendReqRep of string * string * bool
     | Help
     | Quit
 
@@ -30,8 +30,10 @@ module Command = struct
     | [ "Login"; username; password ] -> Login (username, password)
     | [ "FriendReq"; sender; receiver; msg ] ->
         FriendReq (sender, receiver, msg)
-    | [ "FriendReqReply"; sender; receiver; accepted ] ->
-        FriendReqRep (sender, receiver, accepted)
+    | [ "FriendReqReply"; sender; receiver; "true" ] ->
+        FriendReqRep (sender, receiver, true)
+    | [ "FriendReqReply"; sender; receiver; "false" ] ->
+        FriendReqRep (sender, receiver, false)
     | _ -> raise Malformed
 end
 
@@ -79,17 +81,15 @@ let bool_print (check, msg) =
 
 let help_print () =
   "[SendMsg sender receiver message] : sends a message from sender to \
-   receiver" |> str_format 1 |> print_string;
-  "[GetMsg receiver] : gets messages to receiver" |> str_format 1
+   receiver" |> str_format 0 |> print_string;
+  "[GetMsg receiver] : gets messages to receiver" |> str_format 0
   |> print_string;
-  "[Login username password] : Logs a message from sender to receiver"
-  |> str_format 1 |> print_string;
-  "[Register username password] : registers a user" |> str_format 1
+  "[Register username password] : registers a user" |> str_format 0
   |> print_string;
-  "[Login username password] : logs a user in" |> str_format 1
+  "[Login username password] : logs a user in" |> str_format 0
   |> print_string;
   "[FriendReq sender receiver message] : sends a friend request from \
-   sender to receiver" |> str_format 1 |> print_string;
+   sender to receiver" |> str_format 0 |> print_string;
   "[FriendReqReply sender receiver message] : replies a message from \
    receiver to sender" |> str_format 1 |> print_string
 
@@ -124,9 +124,7 @@ let rec main () =
       bool_print resp;
       main ()
   | FriendReqRep (sender, receiver, accepted) ->
-      let resp =
-        Controller.friend_req_reply sender receiver (accepted = "true")
-      in
+      let resp = Controller.friend_req_reply sender receiver accepted in
       bool_print resp;
       main ()
   | Quit -> exit 0
