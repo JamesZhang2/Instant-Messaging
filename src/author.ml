@@ -1,1 +1,1 @@
-let hours_worked = -1 (* TODO *)
+let hours_worked = 112
