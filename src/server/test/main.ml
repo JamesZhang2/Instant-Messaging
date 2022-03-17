@@ -80,7 +80,7 @@ let post_expected_2 time =
   ^ "\", \n\t\"message\" : \"Post Message\"\n}"
 
 let get_expected_1 time =
-  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
   ^ "\", \n\
      \t\"message\" : [\n\
      {\n\
@@ -94,7 +94,7 @@ let get_expected_1 time =
      }"
 
 let get_expected_2 time =
-  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
   ^ "\", \n\
      \t\"message\" : [\n\
      {\n\
@@ -115,7 +115,7 @@ let get_expected_2 time =
      }"
 
 let get_expected_3 time =
-  "{\n\t\"type\" : \"Get\", \n\t\"time\" : \"" ^ time
+  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
   ^ "\", \n\t\"message\" : [\n\n]\n}"
 
 let error_tests = []

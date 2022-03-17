@@ -40,12 +40,10 @@ let bool_post_parse raw_response =
 
 let send_msg sender receiver msg =
   let msg = Packager.pack_send_msg sender receiver msg in
-  let raw_response =
-    Network.request Post ~body:msg ~header:(header msg)
-  in
+  let raw_response = Network.request "POST" ~body:msg in
   bool_post_parse raw_response
 
-(** [parser_msg_controller msg receiver] is the controller msg
+(** [parser_msg_controller receiver msg] is the controller msg
     representation of the parser [msg] type *)
 let parser_msg_controller receiver msg =
   {
@@ -57,54 +55,44 @@ let parser_msg_controller receiver msg =
 
 let get_msg receiver =
   let request = Packager.pack_get_msg receiver in
-  let raw_response =
-    Network.request Get ~body:request ~header:(header request)
-  in
+  let raw_response = Network.request "POST" ~body:request in
   let raw_body =
     match Network.response_body raw_response with
-    | None -> "No Response Message"
+    | None -> raise IllegalResponse
     | Some msg -> msg
   in
   let body = Parser.parse raw_body in
   match Parser.get_type body with
   | ErrorResponse x -> (false, [])
   | PostMethResponse x -> raise IllegalResponse
-  | GetMethResponse lst ->
+  | GetMsgResponse lst ->
       (true, List.map (parser_msg_controller receiver) lst)
 
 let register username password =
   let message = Packager.pack_register username password in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response
 
 let login username password =
   let message = Packager.pack_login username password in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   let raw_body = Network.response_body raw_response in
   match raw_body with
   | None -> (true, "")
   | Some raw_body' -> (
       match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, x)
-      | GetMethResponse x -> raise IllegalResponse
+      | GetMsgResponse x -> raise IllegalResponse
       | PostMethResponse x -> (true, ""))
 
 let friend_req sender receiver msg =
   let message = Packager.pack_friend_req sender receiver msg in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response
 
 let friend_req_reply sender receiver accepted =
   let message =
     Packager.pack_friend_req_reply sender receiver accepted
   in
-  let raw_response =
-    Network.request Post ~body:message ~header:(header message)
-  in
+  let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response

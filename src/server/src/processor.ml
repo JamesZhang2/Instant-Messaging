@@ -33,8 +33,8 @@ let handle_send_msg req_meth sender time receiver msg =
     Packager.post_method_response res
 
 let handle_get_msg req_meth sender time =
-  if req_meth <> Get then
-    Packager.error_response "GetMessage should use GET method"
+  if req_meth <> Post then
+    Packager.error_response "GetMessage should use POST method"
   else begin
     (* TODO: Retrieve messages from the database *)
     print_endline
@@ -93,29 +93,36 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     Packager.post_method_response res
 
 let handle meth headers body =
-  let req_meth =
-    match meth with
-    | "POST" -> Post
-    | "GET" -> Get
-    | m -> raise (UnknownMethod m)
-  in
-  let parsed_body = Parser.parse body in
-  let sender = Parser.sender parsed_body in
-  let time = Parser.time parsed_body in
-  let res_body =
-    match Parser.pkt_type parsed_body with
-    | SendMessage (receiver, msg) ->
-        handle_send_msg req_meth sender time receiver msg
-    | GetMessage -> handle_get_msg req_meth sender time
-    | Register password -> handle_register req_meth sender time password
-    | Login password -> handle_login req_meth sender time password
-    | FriendReq (receiver, msg) ->
-        handle_friend_req req_meth sender time receiver msg
-    | FriendReqReply (receiver, accepted) ->
-        handle_friend_req_reply req_meth sender time receiver accepted
-  in
-  let res_headers = header res_body in
-  { status = "201"; headers = res_headers; body = res_body }
+  if body = "sleep" then
+    let res_body =
+      Packager.error_response "Server busy, try again later"
+    in
+    { status = "503"; headers = header res_body; body = res_body }
+  else
+    let req_meth =
+      match meth with
+      | "POST" -> Post
+      | "GET" -> Get
+      | m -> raise (UnknownMethod m)
+    in
+    let parsed_body = Parser.parse body in
+    let sender = Parser.sender parsed_body in
+    let time = Parser.time parsed_body in
+    let res_body =
+      match Parser.pkt_type parsed_body with
+      | SendMessage (receiver, msg) ->
+          handle_send_msg req_meth sender time receiver msg
+      | GetMessage -> handle_get_msg req_meth sender time
+      | Register password ->
+          handle_register req_meth sender time password
+      | Login password -> handle_login req_meth sender time password
+      | FriendReq (receiver, msg) ->
+          handle_friend_req req_meth sender time receiver msg
+      | FriendReqReply (receiver, accepted) ->
+          handle_friend_req_reply req_meth sender time receiver accepted
+    in
+    let res_headers = header res_body in
+    { status = "201"; headers = res_headers; body = res_body }
 
 let status res = res.status
 let response_body res = res.body

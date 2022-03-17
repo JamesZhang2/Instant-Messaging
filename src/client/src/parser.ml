@@ -13,7 +13,7 @@ type msg = {
 }
 
 type response_type =
-  | GetMethResponse of msg list
+  | GetMsgResponse of msg list
   | PostMethResponse of string
   | ErrorResponse of string
 
@@ -27,7 +27,6 @@ let rec parse_messages msg_list =
   | [] -> []
   | h :: t ->
       let assoc = Yojson.Basic.Util.to_assoc h in
-
       let util x = List.assoc x assoc |> Yojson.Basic.Util.to_string in
       let sender = util "sender" in
       let msg_type = util "msg_type" in
@@ -52,10 +51,10 @@ let parse json =
   if res_type = "Post" then
     let msg = Yojson.Basic.Util.to_string body_t in
     { time; response = PostMethResponse msg }
-  else if res_type = "Get" then
+  else if res_type = "GetMsg" then
     let json_list = Yojson.Basic.Util.to_list body_t in
     let body = parse_messages json_list in
-    { time; response = GetMethResponse body }
+    { time; response = GetMsgResponse body }
   else if res_type = "Error" then
     let msg = Yojson.Basic.Util.to_string body_t in
     { time; response = ErrorResponse msg }
@@ -79,6 +78,6 @@ let msg_plain msg =
 
 let get_plain t =
   match t.response with
-  | GetMethResponse x -> "List of Messages"
+  | GetMsgResponse x -> "List of Messages"
   | ErrorResponse x -> x
   | PostMethResponse x -> x

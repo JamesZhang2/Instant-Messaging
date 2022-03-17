@@ -20,7 +20,7 @@ let process (req : Request.t) =
   let res = handle (get_meth req) (get_headers req) (get_body req) in
   Response.make
     ~status:(res |> status |> Status.of_string)
-    ~headers:(res |> response_headers |> Headers.of_list)
+      (* ~headers:(res |> response_headers |> Headers.of_list) *)
     ~body:(res |> response_body |> Body.of_string)
     ()
   |> Lwt.return
@@ -52,6 +52,6 @@ let process (req : Request.t) =
 
 let () =
   (* let open App in *)
-  App.empty |> App.get "/get/" process
+  App.empty
   |> App.post "/post/" process
-  |> App.run_command |> ignore
+  |> App.get "/get/" process |> App.run_command |> ignore

@@ -93,7 +93,8 @@ let post_method_response text =
 
 let get_method_response msg_lst =
   let meth =
-    ItemList [ ("type", "Get"); ("time", Util.Time.string_of_now true) ]
+    ItemList
+      [ ("type", "GetMsg"); ("time", Util.Time.string_of_now true) ]
   in
   let msg_obj_lst = List.map message_to_obj msg_lst in
   let body = NestList ("message", msg_obj_lst) in
