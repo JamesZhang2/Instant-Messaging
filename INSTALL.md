@@ -21,7 +21,7 @@ eval $(opam env)
 Then run
 
 ```text
-opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc cryptokit
+opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocamlformat ocamlformat-rpc
 ```
 
 Now install packages specific to the server:
