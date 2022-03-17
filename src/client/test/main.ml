@@ -117,7 +117,7 @@ let post_input =
 
 let get_input_1 =
   "{\n\
-   \t\"type\" : \"Get\", \n\
+   \t\"type\" : \"GetMsg\", \n\
    \t\"time\" : \"time\", \n\
    \t\"message\" : [\n\
    {\n\
@@ -132,7 +132,7 @@ let get_input_1 =
 
 let get_input_2 =
   "{\n\
-   \t\"type\" : \"Get\", \n\
+   \t\"type\" : \"GetMsg\", \n\
    \t\"time\" : \"time\", \n\
    \t\"message\" : [\n\
    {\n\
@@ -152,7 +152,7 @@ let get_test name expected input property =
   | ErrorResponse msg
   | PostMethResponse msg ->
       [ (name >:: fun _ -> assert_equal expected msg) ]
-  | GetMethResponse body ->
+  | GetMsgResponse body ->
       List.map
         (fun x -> name >:: fun _ -> assert_equal expected (property x))
         body

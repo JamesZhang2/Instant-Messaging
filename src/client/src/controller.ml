@@ -55,7 +55,7 @@ let parser_msg_controller receiver msg =
 
 let get_msg receiver =
   let request = Packager.pack_get_msg receiver in
-  let raw_response = Network.request "GET" ~body:request in
+  let raw_response = Network.request "POST" ~body:request in
   let raw_body =
     match Network.response_body raw_response with
     | None -> "No Response Message"
@@ -65,7 +65,7 @@ let get_msg receiver =
   match Parser.get_type body with
   | ErrorResponse x -> (false, [])
   | PostMethResponse x -> raise IllegalResponse
-  | GetMethResponse lst ->
+  | GetMsgResponse lst ->
       (true, List.map (parser_msg_controller receiver) lst)
 
 let register username password =
@@ -82,7 +82,7 @@ let login username password =
   | Some raw_body' -> (
       match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, x)
-      | GetMethResponse x -> raise IllegalResponse
+      | GetMsgResponse x -> raise IllegalResponse
       | PostMethResponse x -> (true, ""))
 
 let friend_req sender receiver msg =

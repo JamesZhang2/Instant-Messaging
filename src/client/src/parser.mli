@@ -15,7 +15,7 @@ type msg
     per user request. *)
 
 type response_type =
-  | GetMethResponse of msg list
+  | GetMsgResponse of msg list
   | PostMethResponse of string
   | ErrorResponse of string
       (** Represents the type of data that the response is for. *)
