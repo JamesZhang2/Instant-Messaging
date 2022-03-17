@@ -29,11 +29,12 @@ let handle_send_msg req_meth sender time receiver msg =
       Printf.sprintf "%s sent a message to %s at %s: %s\n" sender
         receiver time msg
     in
+    print_string res;
     Packager.post_method_response res
 
 let handle_get_msg req_meth sender time =
-  if req_meth <> Get then
-    Packager.error_response "GetMessage should use GET method"
+  if req_meth <> Post then
+    Packager.error_response "GetMessage should use POST method"
   else begin
     (* TODO: Retrieve messages from the database *)
     print_endline
@@ -51,6 +52,7 @@ let handle_register req_meth sender time password =
       Printf.sprintf "%s registers with password %s at %s\n" sender
         password time
     in
+    print_string res;
     Packager.post_method_response res
 
 let handle_login req_meth sender time password =
@@ -62,6 +64,7 @@ let handle_login req_meth sender time password =
       Printf.sprintf "%s logs in with password %s at %s\n" sender
         password time
     in
+    print_string res;
     Packager.post_method_response res
 
 let handle_friend_req req_meth sender time receiver msg =
@@ -73,6 +76,7 @@ let handle_friend_req req_meth sender time receiver msg =
       Printf.sprintf "%s wants to friend %s at %s: %s\n" sender receiver
         time msg
     in
+    print_string res;
     Packager.post_method_response res
 
 let handle_friend_req_reply req_meth sender time receiver accepted =
@@ -85,6 +89,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
         (if accepted then "accepted" else "rejected")
         receiver time
     in
+    print_string res;
     Packager.post_method_response res
 
 let handle meth headers body =

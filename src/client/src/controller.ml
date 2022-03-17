@@ -43,7 +43,7 @@ let send_msg sender receiver msg =
   let raw_response = Network.request "POST" ~body:msg in
   bool_post_parse raw_response
 
-(** [parser_msg_controller msg receiver] is the controller msg
+(** [parser_msg_controller receiver msg] is the controller msg
     representation of the parser [msg] type *)
 let parser_msg_controller receiver msg =
   {
