@@ -92,38 +92,39 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     print_endline res;
     Packager.post_method_response res
 
-let handle meth headers body =
-  if body = "sleep" then
-    let res_body =
-      Packager.error_response "Server busy, try again later"
-    in
-    { status = "503"; headers = header res_body; body = res_body }
-  else
-    let req_meth =
-      match meth with
-      | "POST" -> Post
-      | "GET" -> Get
-      | m -> raise (UnknownMethod m)
-    in
-    let parsed_body = Parser.parse body in
-    let sender = Parser.sender parsed_body in
-    let time = Parser.time parsed_body in
-    let res_body =
-      match Parser.pkt_type parsed_body with
-      | SendMessage (receiver, msg) ->
-          handle_send_msg req_meth sender time receiver msg
-      | GetMessage -> handle_get_msg req_meth sender time
-      | Register password ->
-          handle_register req_meth sender time password
-      | Login password -> handle_login req_meth sender time password
-      | FriendReq (receiver, msg) ->
-          handle_friend_req req_meth sender time receiver msg
-      | FriendReqReply (receiver, accepted) ->
-          handle_friend_req_reply req_meth sender time receiver accepted
-    in
-    let res_headers = header res_body in
-    { status = "201"; headers = res_headers; body = res_body }
+(** [parse req_meth body] parses the body [body] with request method
+    [req_meth] and returns a Lwt.t of the resulting type [t]*)
+let parse req_meth body =
+  let parsed_body = Parser.parse body in
+  let sender = Parser.sender parsed_body in
+  let time = Parser.time parsed_body in
+  let res_body =
+    match Parser.pkt_type parsed_body with
+    | SendMessage (receiver, msg) ->
+        handle_send_msg req_meth sender time receiver msg
+    | GetMessage -> handle_get_msg req_meth sender time
+    | Register password -> handle_register req_meth sender time password
+    | Login password -> handle_login req_meth sender time password
+    | FriendReq (receiver, msg) ->
+        handle_friend_req req_meth sender time receiver msg
+    | FriendReqReply (receiver, accepted) ->
+        handle_friend_req_reply req_meth sender time receiver accepted
+  in
+  let res_headers = header res_body in
+  { status = "201"; headers = res_headers; body = res_body }
+  |> Lwt.return
 
-let status res = res.status
-let response_body res = res.body
+let handle meth (headers : (string * string) list) (body : string Lwt.t)
+    =
+  let req_meth =
+    match meth with
+    | "POST" -> Post
+    | "GET" -> Get
+    | m -> raise (UnknownMethod m)
+  in
+  Lwt.bind body (parse req_meth)
+
+let status res = res.status |> Lwt.return
+let response_body res = res.body |> Lwt.return
+let status_body res = (res.status, res.body) |> Lwt.return
 let response_headers res = res.headers

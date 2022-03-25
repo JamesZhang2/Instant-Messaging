@@ -27,7 +27,7 @@ val register : string -> string -> bool * string
 
 val login : string -> string -> bool * string
 (** [login username password] tries to log in to user [username] with
-    [password]. Returns: [(true, "")] if the user is logged in,
+    [password]. Returns: [(true, feedback)] if the user is logged in,
     [(false, error_msg)] otherwise. *)
 
 val friend_req : string -> string -> string -> bool * string
