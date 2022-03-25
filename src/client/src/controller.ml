@@ -86,7 +86,7 @@ let login username password =
       match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, x)
       | GetMsgResponse x -> raise IllegalResponse
-      | PostMethResponse x -> (true, ""))
+      | PostMethResponse x -> (true, x))
 
 let friend_req sender receiver msg =
   let message = Packager.pack_friend_req sender receiver msg in
