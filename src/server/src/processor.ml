@@ -92,9 +92,9 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     print_endline res;
     Packager.post_method_response res
 
-(** [parsing req_meth body] parses the body [body] with request method
+(** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
-let parsing req_meth body =
+let parse req_meth body =
   let parsed_body = Parser.parse body in
   let sender = Parser.sender parsed_body in
   let time = Parser.time parsed_body in
@@ -122,7 +122,7 @@ let handle meth (headers : (string * string) list) (body : string Lwt.t)
     | "GET" -> Get
     | m -> raise (UnknownMethod m)
   in
-  Lwt.bind body (parsing req_meth)
+  Lwt.bind body (parse req_meth)
 
 let status res = res.status |> Lwt.return
 let response_body res = res.body |> Lwt.return
