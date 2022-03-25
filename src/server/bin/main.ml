@@ -16,14 +16,23 @@ let get_body req =
 let get_headers req = req.Request.headers |> Headers.to_list
 let get_meth req = req.Request.meth |> Method.to_string
 
-let process (req : Request.t) =
-  let res = handle (get_meth req) (get_headers req) (get_body req) in
+(** [response_maker (status, body)] makes a Response Lwt using [status]
+    and [body]*)
+let response_maker (status, body) =
   Response.make
-    ~status:(res |> status |> Status.of_string)
+    ~status:(status |> Status.of_string)
       (* ~headers:(res |> response_headers |> Headers.of_list) *)
-    ~body:(res |> response_body |> Body.of_string)
+    ~body:(body |> Body.of_string)
     ()
   |> Lwt.return
+
+let process (req : Request.t) =
+  let res =
+    handle (get_meth req) (get_headers req)
+      (req.Request.body |> Body.to_string)
+  in
+  let status_body = Lwt.bind res status_body in
+  Lwt.bind status_body response_maker
 
 (* let greet req = let _ = print_endline "called" in let name =
    Router.param req "name" in Printf.sprintf "Hello, %s" name |>
