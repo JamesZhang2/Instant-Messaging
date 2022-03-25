@@ -29,4 +29,5 @@ setup.log
 _opam/
 
 .DS_Store
-Instant-Messaging.zip
+
+*.zip
