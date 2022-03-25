@@ -13,6 +13,9 @@ type msg = {
     inclusive, and false otherwise. *)
 let is_successful status = status / 100 = 2
 
+(** For debug purposes *)
+let use_encryption = false
+
 exception IllegalResponse
 
 (** [header body] is the header containing content-length for the
@@ -39,9 +42,14 @@ let bool_post_parse raw_response =
   (status, message)
 
 let send_msg sender receiver msg =
-  let msg = Util.Crypto.(sym_enc (sym_gen ()) msg) in
-  let msg = Packager.pack_send_msg sender receiver msg in
-  let raw_response = Network.request "POST" ~body:msg in
+  let encrypted_msg =
+    if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
+    else msg
+  in
+  let packed_msg =
+    Packager.pack_send_msg sender receiver encrypted_msg
+  in
+  let raw_response = Network.request "POST" ~body:packed_msg in
   bool_post_parse raw_response
 
 (** [parser_msg_controller receiver msg] is the controller msg
@@ -52,8 +60,10 @@ let parser_msg_controller receiver msg =
     receiver;
     time = Parser.msg_time msg;
     body =
-      (let msg = Parser.msg_plain msg in
-       Util.Crypto.(sym_dec (sym_gen ()) msg));
+      (let unpacked_msg = Parser.msg_plain msg in
+       if use_encryption then
+         Util.Crypto.(sym_dec (sym_gen ()) unpacked_msg)
+       else unpacked_msg);
   }
 
 let get_msg receiver =

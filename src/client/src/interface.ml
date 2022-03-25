@@ -18,7 +18,9 @@ module Command = struct
   (** [parse str] Parses a string command into command type. Raises:
       [Malformed] if the command does not match with any of the types*)
   let parse str =
-    let str_list = String.split_on_char ' ' str in
+    let str_list =
+      str |> String.split_on_char ' ' |> List.filter (fun s -> s <> "")
+    in
     match str_list with
     | [] -> raise Malformed
     | [ "quit" ] -> Quit
