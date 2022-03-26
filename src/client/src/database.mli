@@ -3,11 +3,6 @@
 
 open Util
 
-type state =
-  | True
-  | False
-  | Null
-
 type msg_type =
   | Sent
   | Received
@@ -25,7 +20,7 @@ val delete_dbs : unit -> unit
 (** [delete_dbs ()] deletes the current database if exist. *)
 
 val add_request :
-  string -> string -> string -> msg_type -> state -> bool * string
+  string -> string -> string -> msg_type -> bool option -> bool * string
 (** [add_request username time msg req_type req_state] attempts to add a
     freind request related to [username] at [time] with [msg]. Raises
     [MalformedTime] if [time] format is incorrect. .*)
@@ -33,7 +28,7 @@ val add_request :
 val update_request : string -> bool -> bool * string
 (** [update_request username req_state] updates the request state to
     [req_state]. Raises [IncorrectUser] if [username] does not have a
-    request in the table. Requires [req_state] is [True] or [False], and
+    request in the table. Requires [req_state] is [true] or [false], and
     the request in the tableReturns [(true, feedback)] if the request is
     successfully added, [(false, err_msg)] otherwise currently has state
     [Null]. Returns [(true, feedback)] if the request is successfully
