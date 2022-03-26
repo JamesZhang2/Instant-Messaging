@@ -29,7 +29,8 @@ let process (req : Request.t) =
   let status_body = Lwt.bind res status_body in
   Lwt.bind status_body response_maker
 
-(* let () = (* let open App in *) App.empty |> App.post "/post/" process
-   |> App.get "/get/" process |> App.run_command |> ignore *)
-
-let () = main ()
+let () =
+  (* let open App in *)
+  App.empty
+  |> App.post "/post/" process
+  |> App.get "/get/" process |> App.run_command |> ignore

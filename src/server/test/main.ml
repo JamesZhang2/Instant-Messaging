@@ -130,12 +130,14 @@ let packager_tests =
       "Post Message";
     test get_method_response "get test 1"
       (get_expected_1 (Util.Time.string_of_now true))
-      [ make_msg "sender" "receiver" "time" Message "message" ];
+      [ Msg.make_msg "sender" "receiver" "time" Msg.Message "message" ];
     test get_method_response "get test 2"
       (get_expected_2 (Util.Time.string_of_now true))
       [
-        make_msg "sender1" "receiver1" "time1" Message "message1";
-        make_msg "sender2" "receiver2" "time2" FriendReq "message2";
+        Msg.make_msg "sender1" "receiver1" "time1" Msg.Message
+          "message1";
+        Msg.make_msg "sender2" "receiver2" "time2" Msg.FriendReq
+          "message2";
       ];
     test get_method_response "get test 3"
       (get_expected_3 (Util.Time.string_of_now true))

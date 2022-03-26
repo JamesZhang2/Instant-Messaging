@@ -1,6 +1,8 @@
 (** This module is a database for the server. It stores all user info
     and all the messages. *)
 
+open Util
+
 val create_user_db : unit -> bool * string
 (** [create_user_db ()] creates a new database for user info. Returns
     [(true, feedback)] if a new database is successfully created,
@@ -57,20 +59,6 @@ val add_msg : string -> string -> string -> string -> string -> chk_msg
     in the user database, [UnkonwnMsgType msg_type] if the message type
     is unknown, and [MalformedMsgTime time] if the time is malformed.*)
 
-type msg_type =
-  | FriendReq
-  | Message
-      (** [msg_type] is the type of a message stored on server end. It
-          can either be a [FriendReq] or a direct [Message]*)
-
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  msg_type : msg_type;
-  message : string;
-}
-
-val get_msg_since : string -> string -> msg list
+val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to
     [receiver] after [time]. *)

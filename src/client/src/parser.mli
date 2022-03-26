@@ -1,21 +1,15 @@
 (** This module processes a response body from the server*)
 
+open Util
+
 exception SyntaxError
 (**Raised when the json syntax is incorrect. *)
 
 type t
 (** Abstract type representing a reponse from *)
 
-type message_type =
-  | Message of string
-  | FriendReq of string
-
-type msg
-(** Represents one message entry that the server may send back as a list
-    per user request. *)
-
 type response_type =
-  | GetMsgResponse of msg list
+  | GetMsgResponse of Msg.t list
   | PostMethResponse of string
   | ErrorResponse of string
       (** Represents the type of data that the response is for. *)
@@ -31,27 +25,3 @@ val get_type : t -> response_type
 val get_plain : t -> string
 (** [get_plain parsert] returns the plain message body of the parsed
     representatoin of response*)
-
-val msg_type : msg -> string
-(** [msg_type t] determines what type this message is. "friend request"
-    if a response to a friend request, "message" if a normal message,
-    "other" if any other type of message*)
-
-val msg_sender : msg -> string
-(** [msg_sender msg] determines which user is the message from*)
-
-val get_time : t -> string
-(** [get_time t] is the time that the response [t] was sent by the
-    server*)
-
-val msg_time : msg -> string
-(** [msg_time msg] is the time that hte message [msg] was sent by the
-    other user*)
-
-val msg_body : msg -> message_type
-(** [msg_body msg] is the actual body of the message [msg], including
-    the type of them message as a variant*)
-
-val msg_plain : msg -> string
-(** [msg_body plain] is is the body of the message [msg] without the
-    type*)

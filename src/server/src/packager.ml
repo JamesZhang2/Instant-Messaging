@@ -1,23 +1,8 @@
 open Util
 
-type msg_type =
-  | FriendReq
-  | Message
-
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  msg_type : msg_type;
-  message : string;
-}
-
 type obj =
   | NestList of string * obj list
   | ItemList of (string * string) list
-
-let make_message sender receiver time msg_type message =
-  { sender; receiver; time; msg_type; message }
 
 let ( ^.^ ) a b = a ^ ", \n" ^ b
 
@@ -54,21 +39,18 @@ and json_convert lst =
 
 let message_to_obj msg =
   let msg_t =
-    if msg.msg_type = Message then "Message" else "FriendReq"
+    if Msg.msg_type msg = Msg.Message then "Message" else "FriendReq"
   in
   let lst =
     [
-      ("sender", msg.sender);
-      ("receiver", msg.receiver);
-      ("time", msg.time);
+      ("sender", Msg.sender msg);
+      ("receiver", Msg.receiver msg);
+      ("time", Msg.time msg);
       ("msg_type", msg_t);
-      ("message", msg.message);
+      ("message", Msg.content msg);
     ]
   in
   ItemList lst
-
-let make_msg sender receiver time msg_type message =
-  { sender; receiver; time; msg_type; message }
 
 let error_parse message =
   ItemList

@@ -1,6 +1,7 @@
 open Packager
 open Parser
 open Network
+open Util
 
 type msg = {
   sender : string;
@@ -56,11 +57,11 @@ let send_msg sender receiver msg =
     representation of the parser [msg] type *)
 let parser_msg_controller receiver msg =
   {
-    sender = Parser.msg_sender msg;
+    sender = Msg.sender msg;
     receiver;
-    time = Parser.msg_time msg;
+    time = Msg.time msg;
     body =
-      (let unpacked_msg = Parser.msg_plain msg in
+      (let unpacked_msg = Msg.content msg in
        if use_encryption then
          Util.Crypto.(sym_dec (sym_gen ()) unpacked_msg)
        else unpacked_msg);

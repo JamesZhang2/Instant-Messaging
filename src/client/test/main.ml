@@ -5,7 +5,7 @@ open Interface
 open Network
 open Packager
 open Parser
-open Util.Time
+open Util
 
 (******************** Controller Tests ********************)
 
@@ -24,7 +24,7 @@ let network_tests = []
 (** [remove_time j] removes the value of the time field from the json
     string [j]. *)
 let remove_time j =
-  Str.global_replace (time_regex |> Str.regexp) "<removed>" j
+  Str.global_replace (Time.time_regex |> Str.regexp) "<removed>" j
 
 (** [equal_ignore_time s1 s2] is true if s1 and s2 are equal with the
     value of the time field removed. *)
@@ -93,9 +93,9 @@ let packager_tests =
 
 (******************** Parser Tests ********************)
 
-(**[test name func checker expected input] checks whether checking the
-   property through [checker] after running the [input] through function
-   [func] yields the expected result [expected]*)
+(** [test name func checker expected input] checks whether checking the
+    property through [checker] after running the [input] through
+    function [func] yields the expected result [expected]. *)
 let test name func checker expected input =
   [
     (name >:: fun _ -> assert_equal expected (input |> func |> checker));
@@ -145,7 +145,7 @@ let get_input_2 =
    ]\n\
    }"
 
-(** [get_test name expected input property]*)
+(** [get_test name expected input property] *)
 let get_test name expected input property =
   let resp = parse input in
   match get_type resp with
@@ -157,20 +157,31 @@ let get_test name expected input property =
         (fun x -> name >:: fun _ -> assert_equal expected (property x))
         body
 
+let get_test_type name expected input property =
+  let resp = parse input in
+  match get_type resp with
+  | GetMsgResponse body ->
+      List.map
+        (fun x -> name >:: fun _ -> assert_equal expected (property x))
+        body
+  | _ -> assert false
+
 let parser_tests =
   "parser_tests"
   >::: List.flatten
          [
            test "error test" parse get_type
              (ErrorResponse "error message") error_input_1;
-           test "error test time" parse get_time "time" error_input_1;
            test "post test" parse get_type
              (PostMethResponse "Post Message") post_input;
-           get_test "get test 1" "sender" get_input_1 msg_sender;
-           get_test "get test 1 message" "message" get_input_1 msg_plain;
-           get_test "get test 1 time" "time" get_input_1 msg_time;
-           get_test "get test 1 type" "Message" get_input_1 msg_type;
-           get_test "get test 2 type" "FriendReq" get_input_2 msg_type;
+           get_test "get test 1" "sender" get_input_1 Msg.sender;
+           get_test "get test 1 message" "message" get_input_1
+             Msg.content;
+           get_test "get test 1 time" "time" get_input_1 Msg.time;
+           get_test_type "get test 1 type" Msg.Message get_input_1
+             Msg.msg_type;
+           get_test_type "get test 2 type" Msg.FriendReq get_input_2
+             Msg.msg_type;
          ]
 
 let suite =
