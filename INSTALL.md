@@ -29,9 +29,10 @@ Now install packages specific to the server:
 ```text
 opam install -y opium
 opam install -y cryptokit
+opam install -y sqlite3
 ```
 
-You may need to install dependencies for the Opium and Cryptokit packages using `sudo apt install` or `opam install`.
+You may need to install dependencies for these packages using `sudo apt install` or `opam install`.
 
 ### Client
 
@@ -57,11 +58,12 @@ Now install packages specific to the client:
 
 ```text
 opam install -y piaf
-opam install ANSITerminal
+opam install -y ANSITerminal
 opam install -y cryptokit
+opam install -y sqlite3
 ```
 
-You may need to install dependencies for the Piaf and Cryptokit package using `sudo apt install` or `opam install`.
+You may need to install dependencies for these packages using `sudo apt install` or `opam install`.
 
 ## Build & Run
 

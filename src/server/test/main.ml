@@ -5,10 +5,6 @@ open Parser
 open Processor
 (* open Yojson.Basic *)
 
-(******************** Client Packager Tests ********************)
-
-let packager_tests = []
-
 (******************** Server Parser Tests ********************)
 
 let parser_dir = "data/parser/"
@@ -152,9 +148,6 @@ let processor_tests = []
 
 let suite =
   "test suite for Server"
-  >::: List.flatten
-         [
-           packager_tests; parser_tests; processor_tests; packager_tests;
-         ]
+  >::: List.flatten [ parser_tests; processor_tests; packager_tests ]
 
 let _ = run_test_tt_main suite

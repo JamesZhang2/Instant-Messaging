@@ -1,4 +1,4 @@
 (library
  (name util)
  (public_name Util)
- (libraries yojson unix str cryptokit))
+ (libraries yojson unix str cryptokit sqlite3))

@@ -31,3 +31,6 @@ _opam/
 .DS_Store
 
 *.zip
+
+# Database files
+**/*.db

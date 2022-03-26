@@ -3,6 +3,8 @@ open Util
 open Database
 open Time
 
+(******************** Time Tests ********************)
+
 let chk_time_test
     (name : string)
     (time : string)
@@ -32,7 +34,11 @@ let time_tests =
       true;
   ]
 
+(******************** Database Tests ********************)
+
 let database_tests = []
+
+(******************** Crypto Tests ********************)
 
 let rsa_test msg =
   let open Crypto in
@@ -58,4 +64,6 @@ let suite =
   "test suite for Util"
   >::: List.flatten [ time_tests; database_tests; crypto_tests ]
 
-let _ = run_test_tt_main suite
+let _ =
+  run_test_tt_main suite;
+  db_main ()

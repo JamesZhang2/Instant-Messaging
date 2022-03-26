@@ -6,6 +6,7 @@
 
 open Opium
 open Server.Processor
+open Server.Database
 
 let get_headers req = req.Request.headers |> Headers.to_list
 let get_meth req = req.Request.meth |> Method.to_string
@@ -28,8 +29,7 @@ let process (req : Request.t) =
   let status_body = Lwt.bind res status_body in
   Lwt.bind status_body response_maker
 
-let () =
-  (* let open App in *)
-  App.empty
-  |> App.post "/post/" process
-  |> App.get "/get/" process |> App.run_command |> ignore
+(* let () = (* let open App in *) App.empty |> App.post "/post/" process
+   |> App.get "/get/" process |> App.run_command |> ignore *)
+
+let () = main ()
