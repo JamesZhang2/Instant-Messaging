@@ -17,7 +17,8 @@ let rec parse_item_list lst =
   | [ h ] -> parse_item h
   | h :: t -> parse_item h ^.^ parse_item_list t
 
-(** A recursive json string writer*)
+(** [convert_object obs] converts an [object obj] to a json string
+    recursively*)
 let rec convert_object objs =
   (* let inner = *)
   match objs with
@@ -31,7 +32,7 @@ let rec convert_object objs =
       let str_list = List.map json_convert json_obj_lst in
       let json = String.concat ", \n" str_list in
       header ^ json ^ "\n]"
-
+(** Converts a list of [object] to json string*)
 and json_convert lst =
   let str_lst = List.map convert_object lst in
   let concat = String.concat ", \n\t" str_lst in
