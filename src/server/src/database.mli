@@ -32,3 +32,28 @@ val add_msg : Msg.t -> bool
 val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to
     [receiver] after [time]. *)
+
+val new_fr : string -> string -> string -> string -> bool
+(** [new_fr sender receiver time msg] creates a new line of friend
+    request in database, with [sender] being the requester and
+    [receiver] being the receiving side on this friend request. Returns:
+    true if the line is successfully added, false otherwise. *)
+
+val fr_exist : string -> string -> bool
+(** [fr_exist sender receiver] determines whether an undecided friend
+    request from [sender] to [receiver] exists. Note: this one must be
+    pending, the approved column must be null, instead of rejected or
+    approved. Returns [true] if such a line does exist, [false]
+    otherwise*)
+
+val fr_approve : string -> string -> bool
+(** [fr_approve sender receiver] approves the friend request from
+    [sender] to [receiver], returns true if the operation is sucessful,
+    and false otherwise. Raises [Not_found] if no such friend request
+    exist that is un-determined. *)
+
+val fr_reject : string -> string -> bool
+(** [fr_reject sender receiver] rejects the friend request from [sender]
+    to [receiver], returns true if the operation is sucessful, and false
+    otherwise. Raises [Not_found] if no such friend request exist that
+    is un-determined. *)
