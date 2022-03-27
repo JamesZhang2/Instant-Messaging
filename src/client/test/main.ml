@@ -32,32 +32,33 @@ let equal_ignore_time s1 s2 = remove_time s1 = remove_time s2
 
 let send_msg_1 =
   "{\"type\": \"SendMessage\",\"sender\": \"Alice\",\"time\": \
-   \"8:00:00 3/1/2022\",\"receiver\": \"Bob\",\"message\": \"Hello \
+   \"2000-01-01 08:00:00\",\"receiver\": \"Bob\",\"message\": \"Hello \
    world!\"}"
 
 let get_msg_1 =
   "{\"type\": \"GetMessage\",\"sender\": \"Charlie\",\"time\": \
-   \"8:00:00 3/1/2022\"}"
+   \"2000-01-01 08:00:00\"}"
 
 let register_1 =
-  "{\"type\": \"Register\",\"sender\": \"Daniel\",\"time\": \"8:00:00 \
-   3/1/2022\",\"password\": \"tail recursion\"}"
+  "{\"type\": \"Register\",\"sender\": \"Daniel\",\"time\": \
+   \"2000-01-01 08:00:00\",\"password\": \"tail recursion\"}"
 
 let login_1 =
-  "{\"type\": \"Login\",\"sender\": \"Elizabeth\",\"time\": \"8:00:00 \
-   3/1/2022\",\"password\": \"stack overflow\"}"
+  "{\"type\": \"Login\",\"sender\": \"Elizabeth\",\"time\": \
+   \"2000-01-01 08:00:00\",\"password\": \"stack overflow\"}"
 
 let friend_req_1 =
-  "{\"type\": \"FriendReq\",\"sender\": \"Frank\",\"time\": \"8:00:00 \
-   3/1/2022\",\"receiver\": \"George\",\"message\": \"I'm Frank\"}"
+  "{\"type\": \"FriendReq\",\"sender\": \"Frank\",\"time\": \
+   \"2000-01-01 08:00:00\",\"receiver\": \"George\",\"message\": \"I'm \
+   Frank\"}"
 
 let friend_req_reply_1 =
   "{\"type\": \"FriendReqReply\",\"sender\": \"Harry\",\"time\": \
-   \"8:00:00 3/1/2022\",\"receiver\": \"Ian\",\"accepted\": true}"
+   \"2000-01-01 08:00:00\",\"receiver\": \"Ian\",\"accepted\": true}"
 
 let friend_req_reply_2 =
   "{\"type\": \"FriendReqReply\",\"sender\": \"Jason\",\"time\": \
-   \"8:00:00 3/1/2022\",\"receiver\": \"Kate\",\"accepted\": false}"
+   \"2000-01-01 08:00:00\",\"receiver\": \"Kate\",\"accepted\": false}"
 
 let packager_tests =
   [
@@ -167,22 +168,20 @@ let get_test_type name expected input property =
   | _ -> assert false
 
 let parser_tests =
-  "parser_tests"
-  >::: List.flatten
-         [
-           test "error test" parse get_type
-             (ErrorResponse "error message") error_input_1;
-           test "post test" parse get_type
-             (PostMethResponse "Post Message") post_input;
-           get_test "get test 1" "sender" get_input_1 Msg.sender;
-           get_test "get test 1 message" "message" get_input_1
-             Msg.content;
-           get_test "get test 1 time" "time" get_input_1 Msg.time;
-           get_test_type "get test 1 type" Msg.Message get_input_1
-             Msg.msg_type;
-           get_test_type "get test 2 type" Msg.FriendReq get_input_2
-             Msg.msg_type;
-         ]
+  List.flatten
+    [
+      test "error test" parse get_type (ErrorResponse "error message")
+        error_input_1;
+      test "post test" parse get_type (PostMethResponse "Post Message")
+        post_input;
+      get_test "get test 1" "sender" get_input_1 Msg.sender;
+      get_test "get test 1 message" "message" get_input_1 Msg.content;
+      get_test "get test 1 time" "time" get_input_1 Msg.time;
+      get_test_type "get test 1 type" Msg.Message get_input_1
+        Msg.msg_type;
+      get_test_type "get test 2 type" Msg.FriendReq get_input_2
+        Msg.msg_type;
+    ]
 
 let suite =
   "test suite for Server"
@@ -192,7 +191,7 @@ let suite =
            interface_tests;
            network_tests;
            packager_tests;
-           [ parser_tests ];
+           parser_tests;
          ]
 
 let _ = run_test_tt_main suite

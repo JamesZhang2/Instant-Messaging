@@ -63,10 +63,10 @@ let parser_type_test
 let parser_tests =
   [
     ( "Time of send_msg_1 is correct" >:: fun _ ->
-      assert_equal "8:00:00 3/1/2022" (time send_msg_1)
+      assert_equal "2022-03-01 08:00:00" (time send_msg_1)
         ~printer:(fun x -> x) );
     ( "Time of get_msg_1 is correct" >:: fun _ ->
-      assert_equal "19:15:53 11/16/2022" (time get_msg_1)
+      assert_equal "2022-11-16 19:15:53" (time get_msg_1)
         ~printer:(fun x -> x) );
     ( "Sender of get_msg_1 is Alice" >:: fun _ ->
       assert_equal "Alice" (sender get_msg_1) ~printer:(fun x -> x) );
@@ -110,28 +110,28 @@ let test func name expected input =
 let error_expected_1 =
   "{\n\
    \t\"type\" : \"Error\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : \"error message\"\n\
    }"
 
 let error_expected_2 =
   "{\n\
    \t\"type\" : \"Error\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : \"\"\n\
    }"
 
 let post_expected_2 =
   "{\n\
    \t\"type\" : \"Post\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : \"Post Message\"\n\
    }"
 
 let get_expected_1 =
   "{\n\
    \t\"type\" : \"GetMsg\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : [\n\
    {\n\
    \t\"sender\" : \"sender\", \n\
@@ -146,7 +146,7 @@ let get_expected_1 =
 let get_expected_2 =
   "{\n\
    \t\"type\" : \"GetMsg\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : [\n\
    {\n\
    \t\"sender\" : \"sender1\", \n\
@@ -168,7 +168,7 @@ let get_expected_2 =
 let get_expected_3 =
   "{\n\
    \t\"type\" : \"GetMsg\", \n\
-   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"time\" : \"2000-01-01 08:00:00\", \n\
    \t\"message\" : [\n\n\
    ]\n\
    }"
