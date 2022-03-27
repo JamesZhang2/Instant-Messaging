@@ -3,10 +3,8 @@
 
 open Util
 
-type state =
-  | True
-  | False
-  | Null
+type state = bool option
+(** boolean in table*)
 
 type msg_type =
   | Sent

@@ -1,6 +1,22 @@
 open Util
 
+(** User database columns:
+
+    - username: string Not NULL
+    - password: string not null
+    - public key: string not null
+    - register date: date not null
+
+    Messages Database columns:
+
+    - sender: string not null
+    - receiver: string not null
+    - type: string //fr or dm
+    - content: string not null
+    - time : time not null
+    - retrieved: boolean not null *)
 let create_user_db () = failwith "Unimplemented"
+
 let add_user username pwd time = failwith "Unimplemented"
 
 type chk_user =
