@@ -4,7 +4,7 @@ open Database
 open Packager
 open Parser
 open Processor
-(* open Yojson.Basic *)
+open Util
 
 (******************** Server Database Tests ********************)
 
@@ -12,24 +12,31 @@ open Processor
     remember to change [test] to [true] in database.ml before running
     the tests. *)
 
-let add_user_test
-    (name : string)
-    (username : string)
-    (pwd : string)
-    (key : string)
-    (time : string)
-    (expected_success : bool) : test =
-  name >:: fun _ ->
-  assert_equal expected_success (add_user username pwd key time |> fst)
+let test_add_n_diff n =
+  for i = 1 to n do
+    let added =
+      add_user (string_of_int i) "pwd" "key" "2022-03-27 11:54:50"
+      |> fst
+    in
+    assert added
+  done
 
-let database_tests =
-  [
-    add_user_test "Adding a new user succeeds" "Alice" "apple" "key"
-      "2022-03-27 00:17:15" true
-    (* add_user_test "Adding an existing user fails" "Alice" "apple"
-       "key" "2022-03-27 00:17:15" false; *)
-    (* TODO: Adding more test cases would cause concurrency problems*);
-  ]
+let test_add_n_same n =
+  let added =
+    add_user "Alice" "pwd" "key" "2022-03-27 11:54:50" |> fst
+  in
+  assert added;
+
+  for i = 1 to n do
+    let added =
+      add_user "Alice" "pwd" "key" "2022-03-27 11:54:50" |> fst
+    in
+    assert (not added)
+  done
+
+let run_database_tests () =
+  test_add_n_diff 100;
+  test_add_n_same 100
 
 (******************** Server Parser Tests ********************)
 
@@ -84,90 +91,107 @@ let parser_tests =
 
 (******************** Server Packager Tests ********************)
 
+(** [remove_time j] removes the value of the time field from the json
+    string [j]. *)
+let remove_time j =
+  Str.global_replace (Time.time_regex |> Str.regexp) "<removed>" j
+
+(** [equal_ignore_time s1 s2] is true if s1 and s2 are equal with the
+    value of the time field removed. *)
+let equal_ignore_time s1 s2 = remove_time s1 = remove_time s2
+
 (**[test func name expected input]*)
 let test func name expected input =
   name >:: fun _ ->
-  assert_equal expected (func input) ~printer:(fun x -> x)
+  assert_equal expected (func input)
+    ~printer:(fun x -> x)
+    ~cmp:equal_ignore_time
 
-let error_expected_1 time =
-  "{\n\t\"type\" : \"Error\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\t\"message\" : \"error message\"\n}"
+let error_expected_1 =
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : \"error message\"\n\
+   }"
 
-let error_expected_2 time =
-  "{\n\t\"type\" : \"Error\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\t\"message\" : \"\"\n}"
+let error_expected_2 =
+  "{\n\
+   \t\"type\" : \"Error\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : \"\"\n\
+   }"
 
-let post_expected_2 time =
-  "{\n\t\"type\" : \"Post\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\t\"message\" : \"Post Message\"\n}"
+let post_expected_2 =
+  "{\n\
+   \t\"type\" : \"Post\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : \"Post Message\"\n\
+   }"
 
-let get_expected_1 time =
-  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\
-     \t\"message\" : [\n\
-     {\n\
-     \t\"sender\" : \"sender\", \n\
-     \t\"receiver\" : \"receiver\", \n\
-     \t\"time\" : \"time\", \n\
-     \t\"msg_type\" : \"Message\", \n\
-     \t\"message\" : \"message\"\n\
-     }\n\
-     ]\n\
-     }"
+let get_expected_1 =
+  "{\n\
+   \t\"type\" : \"GetMsg\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender\", \n\
+   \t\"receiver\" : \"receiver\", \n\
+   \t\"time\" : \"time\", \n\
+   \t\"msg_type\" : \"Message\", \n\
+   \t\"message\" : \"message\"\n\
+   }\n\
+   ]\n\
+   }"
 
-let get_expected_2 time =
-  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\
-     \t\"message\" : [\n\
-     {\n\
-     \t\"sender\" : \"sender1\", \n\
-     \t\"receiver\" : \"receiver1\", \n\
-     \t\"time\" : \"time1\", \n\
-     \t\"msg_type\" : \"Message\", \n\
-     \t\"message\" : \"message1\"\n\
-     }, \n\
-     {\n\
-     \t\"sender\" : \"sender2\", \n\
-     \t\"receiver\" : \"receiver2\", \n\
-     \t\"time\" : \"time2\", \n\
-     \t\"msg_type\" : \"FriendReq\", \n\
-     \t\"message\" : \"message2\"\n\
-     }\n\
-     ]\n\
-     }"
+let get_expected_2 =
+  "{\n\
+   \t\"type\" : \"GetMsg\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : [\n\
+   {\n\
+   \t\"sender\" : \"sender1\", \n\
+   \t\"receiver\" : \"receiver1\", \n\
+   \t\"time\" : \"time1\", \n\
+   \t\"msg_type\" : \"Message\", \n\
+   \t\"message\" : \"message1\"\n\
+   }, \n\
+   {\n\
+   \t\"sender\" : \"sender2\", \n\
+   \t\"receiver\" : \"receiver2\", \n\
+   \t\"time\" : \"time2\", \n\
+   \t\"msg_type\" : \"FriendReq\", \n\
+   \t\"message\" : \"message2\"\n\
+   }\n\
+   ]\n\
+   }"
 
-let get_expected_3 time =
-  "{\n\t\"type\" : \"GetMsg\", \n\t\"time\" : \"" ^ time
-  ^ "\", \n\t\"message\" : [\n\n]\n}"
+let get_expected_3 =
+  "{\n\
+   \t\"type\" : \"GetMsg\", \n\
+   \t\"time\" : \"8:00:00 3/1/2022\", \n\
+   \t\"message\" : [\n\n\
+   ]\n\
+   }"
 
 let error_tests = []
 
 let packager_tests =
   let open Util in
   [
-    test error_response "error_test 1"
-      (error_expected_1 (Util.Time.string_of_now true))
-      "error message";
-    test error_response "error_test 2"
-      (error_expected_2 (Util.Time.string_of_now true))
-      "";
-    test post_method_response "post_test 1"
-      (post_expected_2 (Util.Time.string_of_now true))
+    test error_response "error_test 1" error_expected_1 "error message";
+    test error_response "error_test 2" error_expected_2 "";
+    test post_method_response "post_test 1" post_expected_2
       "Post Message";
-    test get_method_response "get test 1"
-      (get_expected_1 (Util.Time.string_of_now true))
+    test get_method_response "get test 1" get_expected_1
       [ Msg.make_msg "sender" "receiver" "time" Msg.Message "message" ];
-    test get_method_response "get test 2"
-      (get_expected_2 (Util.Time.string_of_now true))
+    test get_method_response "get test 2" get_expected_2
       [
         Msg.make_msg "sender1" "receiver1" "time1" Msg.Message
           "message1";
         Msg.make_msg "sender2" "receiver2" "time2" Msg.FriendReq
           "message2";
       ];
-    test get_method_response "get test 3"
-      (get_expected_3 (Util.Time.string_of_now true))
-      [];
+    test get_method_response "get test 3" get_expected_3 [];
   ]
 
 (******************** Processor Tests ********************)
@@ -176,11 +200,9 @@ let processor_tests = []
 
 let suite =
   "test suite for Server"
-  >::: List.flatten
-         [
-           database_tests; parser_tests; processor_tests; packager_tests;
-         ]
+  >::: List.flatten [ parser_tests; processor_tests; packager_tests ]
 
 let _ =
   create_tables ();
-  run_test_tt_main suite
+  run_test_tt_main suite;
+  run_database_tests ()

@@ -24,6 +24,8 @@
 open Sqlite3
 open Util
 
+exception MalformedTime
+
 let test = true
 
 let db_file =
@@ -31,8 +33,8 @@ let db_file =
 
 let server_db = db_open db_file
 
-(** [handle_rc ok_msg] prints [ok_msg] if the return code [rc] is [OK].
-    Otherwise, it prints helpful error messages. *)
+(** [handle_rc ok_msg rc] prints [ok_msg] if the return code [rc] is
+    [OK]. Otherwise, it prints helpful error messages. *)
 let handle_rc ok_msg = function
   | Rc.OK ->
       print_endline ok_msg;
@@ -40,6 +42,14 @@ let handle_rc ok_msg = function
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db)
+
+(** [assert_rc_row rc] asserts that the recurn code [rc] is [ROW]. *)
+let assert_rc_row = function
+  | Rc.ROW -> ()
+  | r ->
+      prerr_endline (Rc.to_string r);
+      prerr_endline (errmsg server_db);
+      assert false
 
 let create_users_sql =
   "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
@@ -73,6 +83,22 @@ let create_tables () =
   create_messages_table ();
   create_friends_table ()
 
+let select_all_sql table = Printf.sprintf "SELECT * from %s" table
+
+let print_option = function
+  | Some s -> print_string (s ^ "|")
+  | None -> print_string "|"
+
+let print_all_cb row header =
+  Array.iter print_option row;
+  print_newline ()
+
+(** [print_all table] prints all the data in [table]. For debugging
+    purposes. *)
+let print_all table =
+  exec server_db ~cb:print_all_cb (select_all_sql table)
+  |> handle_rc "All rows printed"
+
 let insert_user_sql username pwd key time =
   Printf.sprintf "INSERT INTO users VALUES ('%s', '%s', '%s', '%s');"
     username pwd key time
@@ -82,7 +108,7 @@ let insert_user username pwd key time =
 
 let user_exists_sql username =
   Printf.sprintf
-    "SELECT EXISTS (SELECT 1 from users where username = '%s');"
+    "SELECT EXISTS (SELECT 1 from users WHERE username = '%s');"
     username
 
 let user_exists_stmt username =
@@ -90,20 +116,30 @@ let user_exists_stmt username =
 
 (** [user_exists username] is [true] if [username] exists in the users
     table, and [false] otherwise. *)
-let user_exists username = column_bool (user_exists_stmt username) 0
+let user_exists username =
+  let stmt = user_exists_stmt username in
+  step stmt |> assert_rc_row;
+  column_bool stmt 0
+
+let add_ok_str username =
+  Printf.sprintf "User %s sucessfully added" username
+
+let add_exists_str username =
+  Printf.sprintf "User %s already exists" username
 
 let add_user username pwd key time =
-  if user_exists username then (false, "User already exists")
+  if user_exists username then (
+    print_endline (add_exists_str username);
+    print_newline ();
+    (false, add_exists_str username))
   else (
-    insert_user username pwd key time
-    |> handle_rc "User successfully added";
-    (true, "User successfully added"))
+    insert_user username pwd key time |> handle_rc (add_ok_str username);
+    (true, add_ok_str username))
 
 type chk_user =
   | UserOK
   | UnknownUser of string
   | WrongPwd of string
-  | MalformedUserTime of string
 
 let chk_pwd username pwd = failwith "Unimplemented"
 let create_msg_table () = failwith "Unimplemented"

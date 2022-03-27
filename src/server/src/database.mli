@@ -3,29 +3,34 @@
 
 open Util
 
+exception MalformedTime
+
 val create_tables : unit -> unit
 (** [create_tables ()] creates the tables needed for the database. *)
 
 val add_user : string -> string -> string -> string -> bool * string
 (** [add_user username pwd key time] attempts to add user [username]
     with password [pwd], public key [key], and registration time [time]
-    to the user database. Returns [(true, feedback)] if a new user is
-    successfully added, [(false, err_msg)] otherwise.*)
+    to the user database.
+
+    Returns: [(true, feedback)] if a new user is successfully added,
+    [(false, err_msg)] otherwise.
+
+    Raises: [MalformedTime] if the given time is malformed. *)
 
 type chk_user =
   | UserOK
   | UnknownUser of string
   | WrongPwd of string
-  | MalformedUserTime of string
       (** For Login, checking whether username and password are valid. *)
 
 val chk_pwd : string -> string -> chk_user
 (** [chk_pwd username pwd] is [UserOK] if the user database contains a
     user with name [username] and password [pwd], [UnknownUser user] if
     the user is not found, and [WrongPwd pwd] if the password supplied
-    does not match the password of the user in the database. *)
+    does not match the password of the user in the database.
 
-(* type chk_msg = | MsgOK | Error *)
+    Raises: [MalformedTime] if the given time is malformed. *)
 
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a direct message to the database.
@@ -33,11 +38,15 @@ val add_msg : Msg.t -> bool
     Requires: [Msg.msg_type message = Message].
 
     Returns: true if the messages are added successfully, false
-    otherwise. *)
+    otherwise.
+
+    Raises: [MalformedTime] if the given time is malformed. *)
 
 val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to
-    [receiver] after [time]. *)
+    [receiver] after [time].
+
+    Raises: [MalformedTime] if the given time is malformed. *)
 
 (** Three different relationships between users A and B:
 
@@ -54,7 +63,9 @@ val new_fr : Msg.t -> bool
     request between the sender and the receiver, and sender and receiver
     are not friends with each other.
 
-    Returns: true if the line is successfully added, false otherwise. *)
+    Returns: true if the line is successfully added, false otherwise.
+
+    Raises: [MalformedTime] if the given time is malformed. *)
 
 val fr_exist : string -> string -> bool
 (** [fr_exist sender receiver] determines whether a pending friend
