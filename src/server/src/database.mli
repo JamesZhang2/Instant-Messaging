@@ -6,11 +6,11 @@ open Util
 val create_tables : unit -> unit
 (** [create_tables ()] creates the tables needed for the database. *)
 
-val add_user : string -> string -> string -> bool * string
-(** [add_user username pwd time] attempts to add user [username] with
-    password [pwd] and registration time [time] to the user database.
-    Returns [(true, feedback)] if a new user is successfully added,
-    [(false, err_msg)] otherwise.*)
+val add_user : string -> string -> string -> string -> bool * string
+(** [add_user username pwd key time] attempts to add user [username]
+    with password [pwd], public key [key], and registration time [time]
+    to the user database. Returns [(true, feedback)] if a new user is
+    successfully added, [(false, err_msg)] otherwise.*)
 
 type chk_user =
   | UserOK

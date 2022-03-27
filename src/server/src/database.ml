@@ -24,17 +24,22 @@
 open Sqlite3
 open Util
 
-let server_db = db_open "data/database/server.db"
+let test = true
 
-(** [handle_rc db ok_msg] prints [ok_msg] if the return code [rc] is
-    [OK]. Otherwise, it prints helpful error messages. *)
-let handle_rc db ok_msg = function
+let db_file =
+  if test then "data/database/test.db" else "data/database/server.db"
+
+let server_db = db_open db_file
+
+(** [handle_rc ok_msg] prints [ok_msg] if the return code [rc] is [OK].
+    Otherwise, it prints helpful error messages. *)
+let handle_rc ok_msg = function
   | Rc.OK ->
       print_endline ok_msg;
       print_newline ()
   | r ->
       prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg db)
+      prerr_endline (errmsg server_db)
 
 let create_users_sql =
   "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
@@ -43,7 +48,7 @@ let create_users_sql =
 
 let create_users_table () =
   exec server_db create_users_sql
-  |> handle_rc server_db "Users table found or successfully created"
+  |> handle_rc "Users table found or successfully created"
 
 let create_messages_sql =
   "CREATE TABLE IF NOT EXISTS messages (sender TEXT NOT NULL, receiver \
@@ -52,7 +57,7 @@ let create_messages_sql =
 
 let create_messages_table () =
   exec server_db create_messages_sql
-  |> handle_rc server_db "Messages table found or successfully created"
+  |> handle_rc "Messages table found or successfully created"
 
 let create_friends_sql =
   "CREATE TABLE IF NOT EXISTS friends (user_A TEXT NOT NULL, user_B \
@@ -61,15 +66,38 @@ let create_friends_sql =
 
 let create_friends_table () =
   exec server_db create_friends_sql
-  |> handle_rc server_db "Friends table found or successfully created"
+  |> handle_rc "Friends table found or successfully created"
 
 let create_tables () =
   create_users_table ();
   create_messages_table ();
   create_friends_table ()
 
-let create_users_table () = exec server_db create_users_sql
-let add_user username pwd time = failwith "Unimplemented"
+let insert_user_sql username pwd key time =
+  Printf.sprintf "INSERT INTO users VALUES ('%s', '%s', '%s', '%s');"
+    username pwd key time
+
+let insert_user username pwd key time =
+  exec server_db (insert_user_sql username pwd key time)
+
+let user_exists_sql username =
+  Printf.sprintf
+    "SELECT EXISTS (SELECT 1 from users where username = '%s');"
+    username
+
+let user_exists_stmt username =
+  prepare server_db (user_exists_sql username)
+
+(** [user_exists username] is [true] if [username] exists in the users
+    table, and [false] otherwise. *)
+let user_exists username = column_bool (user_exists_stmt username) 0
+
+let add_user username pwd key time =
+  if user_exists username then (false, "User already exists")
+  else (
+    insert_user username pwd key time
+    |> handle_rc "User successfully added";
+    (true, "User successfully added"))
 
 type chk_user =
   | UserOK

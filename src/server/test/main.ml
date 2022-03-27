@@ -1,9 +1,35 @@
 open OUnit2
 open Server
+open Database
 open Packager
 open Parser
 open Processor
 (* open Yojson.Basic *)
+
+(******************** Server Database Tests ********************)
+
+(** Warning: To prevent bad data from going into the server database,
+    remember to change [test] to [true] in database.ml before running
+    the tests. *)
+
+let add_user_test
+    (name : string)
+    (username : string)
+    (pwd : string)
+    (key : string)
+    (time : string)
+    (expected_success : bool) : test =
+  name >:: fun _ ->
+  assert_equal expected_success (add_user username pwd key time |> fst)
+
+let database_tests =
+  [
+    add_user_test "Adding a new user succeeds" "Alice" "apple" "key"
+      "2022-03-27 00:17:15" true
+    (* add_user_test "Adding an existing user fails" "Alice" "apple"
+       "key" "2022-03-27 00:17:15" false; *)
+    (* TODO: Adding more test cases would cause concurrency problems*);
+  ]
 
 (******************** Server Parser Tests ********************)
 
@@ -150,6 +176,11 @@ let processor_tests = []
 
 let suite =
   "test suite for Server"
-  >::: List.flatten [ parser_tests; processor_tests; packager_tests ]
+  >::: List.flatten
+         [
+           database_tests; parser_tests; processor_tests; packager_tests;
+         ]
 
-let _ = run_test_tt_main suite
+let _ =
+  create_tables ();
+  run_test_tt_main suite
