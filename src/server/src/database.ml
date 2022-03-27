@@ -56,6 +56,8 @@ let assert_rc_row = function
       prerr_endline (errmsg server_db);
       assert false
 
+(******************** Create Tables ********************)
+
 let create_users_sql =
   "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
    TEXT NOT NULL, public_key TEXT NOT NULL, date_registered TEXT NOT \
@@ -87,6 +89,8 @@ let create_tables () =
   create_messages_table ();
   create_friends_table ()
 
+(******************** Print All ********************)
+
 let select_all_sql table = Printf.sprintf "SELECT * from %s" table
 
 let print_option = function
@@ -102,6 +106,8 @@ let print_all_cb row header =
 let print_all table =
   exec server_db ~cb:print_all_cb (select_all_sql table)
   |> handle_rc "All rows printed"
+
+(******************** Add User ********************)
 
 let insert_user_sql username pwd key time =
   Printf.sprintf "INSERT INTO users VALUES ('%s', '%s', '%s', '%s');"
@@ -130,7 +136,8 @@ let add_exists_str username =
   Printf.sprintf "User %s already exists" username
 
 let add_user username pwd key time =
-  if user_exists username then (
+  if not (Time.chk_time time) then raise MalformedTime
+  else if user_exists username then (
     print_endline (add_exists_str username);
     print_newline ();
     (false, add_exists_str username))
@@ -138,9 +145,27 @@ let add_user username pwd key time =
     insert_user username pwd key time |> handle_rc (add_ok_str username);
     (true, add_ok_str username))
 
-let chk_pwd username pwd = failwith "Unimplemented"
+(******************** Check password ********************)
+
+let chk_pwd_sql username pwd =
+  Printf.sprintf
+    "SELECT EXISTS (SELECT 1 from users WHERE username = '%s' AND \
+     password = '%s');"
+    username pwd
+
+let chk_pwd_stmt username pwd =
+  prepare server_db (chk_pwd_sql username pwd)
+
+let chk_pwd username pwd =
+  if not (user_exists username) then raise (UnknownUser username)
+  else
+    let stmt = chk_pwd_stmt username pwd in
+    step stmt |> assert_rc_row;
+    column_bool stmt 0
+
 let create_msg_table () = failwith "Unimplemented"
 let add_msg (msg : Msg.t) = failwith "Unimplemented"
+let get_msg receiver = failwith "Unimplemented"
 let get_msg_since receiver time = failwith "Unimplemented"
 let new_fr (req : Msg.t) = failwith "Unimplemented"
 let fr_exist sender receiver = failwith "Unimplemented"

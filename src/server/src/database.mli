@@ -28,8 +28,7 @@ val chk_pwd : string -> string -> bool
     with name [username] and password [pwd], and [false] if the password
     supplied does not match the password of the user in the database.
 
-    Raises: [MalformedTime] if the given time is malformed;
-    [UnknownUser username] if the given user is not found in the
+    Raises: [UnknownUser username] if the given user is not found in the
     database. *)
 
 val add_msg : Msg.t -> bool
@@ -43,6 +42,13 @@ val add_msg : Msg.t -> bool
     Raises: [MalformedTime] if the given time is malformed;
     [UnknownUser username] if either the sender or the receiver is not
     found in the database. *)
+
+val get_msg : string -> Msg.t list
+(** [get_msg receiver time] is a list of all messages sent to
+    [receiver].
+
+    Raises: [UnknownUser username] if the receiver is not found in the
+    database. *)
 
 val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to

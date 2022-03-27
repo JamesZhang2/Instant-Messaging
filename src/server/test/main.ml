@@ -23,20 +23,43 @@ let test_add_n_diff n =
 
 let test_add_n_same n =
   let added =
-    add_user "Alice" "pwd" "key" "2022-03-27 11:54:50" |> fst
+    add_user "Alice" "apple" "key" "2022-03-27 11:54:50" |> fst
   in
   assert added;
 
   for i = 1 to n do
     let added =
-      add_user "Alice" "pwd" "key" "2022-03-27 11:54:50" |> fst
+      add_user "Alice" "apple" "key" "2022-03-27 11:54:50" |> fst
     in
     assert (not added)
   done
 
+let add_more_users () =
+  let added =
+    add_user "Bob" "banana" "key" "2022-03-27 14:55:20" |> fst
+    && add_user "Catherine" "cherry" "key" "2022-03-27 14:58:33" |> fst
+  in
+  assert added
+
+let test_user_exists () =
+  assert (user_exists "Alice");
+  assert (user_exists "Bob");
+  assert (not (user_exists "Foo"))
+
+let test_chk_pwd_true () = assert (chk_pwd "Alice" "apple")
+let test_chk_pwd_false () = assert (not (chk_pwd "Alice" "watermelon"))
+
+let test_chk_pwd_unknown () =
+  assert_raises (UnknownUser "Foo") (fun _ -> chk_pwd "Foo" "banana")
+
 let run_database_tests () =
   test_add_n_diff 100;
-  test_add_n_same 100
+  test_add_n_same 100;
+  add_more_users ();
+  test_user_exists ();
+  test_chk_pwd_true ();
+  test_chk_pwd_false ();
+  test_chk_pwd_unknown ()
 
 (******************** Server Parser Tests ********************)
 
