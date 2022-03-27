@@ -3,6 +3,9 @@
 
 open Util
 
+val create_tables : unit -> unit
+(** [create_tables ()] creates the tables needed for the database. *)
+
 val add_user : string -> string -> string -> bool * string
 (** [add_user username pwd time] attempts to add user [username] with
     password [pwd] and registration time [time] to the user database.
@@ -14,7 +17,7 @@ type chk_user =
   | UnknownUser of string
   | WrongPwd of string
   | MalformedUserTime of string
-      (** for logging in checking whether user and password is valid*)
+      (** For Login, checking whether username and password are valid. *)
 
 val chk_pwd : string -> string -> chk_user
 (** [chk_pwd username pwd] is [UserOK] if the user database contains a
