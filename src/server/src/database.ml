@@ -15,16 +15,21 @@
 
     Friends table columns:
 
-    - user_A: TEXT NOT NULL
-    - user_B: TEXT NOT NULL
-    - A_likes_B: BOOLEAN NOT NULL
+    - userA: TEXT NOT NULL
+    - userB: TEXT NOT NULL
     - time: TEXT NOT NULL
-    - message: TEXT NULLABLE *)
+    - message: TEXT NULLABLE
+
+    (AF: userA is said to "like" userB if a row (userA, userB, time,
+    message) exists. If both userA and userB like each other, they are
+    friends. If userA likes userB but userB doesn't like userA, then
+    there is a pending friend request from userA to userB.) *)
 
 open Sqlite3
 open Util
 
 exception MalformedTime
+exception UnknownUser of string
 
 let test = true
 
@@ -70,9 +75,8 @@ let create_messages_table () =
   |> handle_rc "Messages table found or successfully created"
 
 let create_friends_sql =
-  "CREATE TABLE IF NOT EXISTS friends (user_A TEXT NOT NULL, user_B \
-   TEXT NOT NULL, A_likes_B BOOLEAN NOT NULL, time TEXT NOT NULL, \
-   message TEXT);"
+  "CREATE TABLE IF NOT EXISTS friends (userA TEXT NOT NULL, userB TEXT \
+   NOT NULL, time TEXT NOT NULL, message TEXT);"
 
 let create_friends_table () =
   exec server_db create_friends_sql
@@ -114,8 +118,6 @@ let user_exists_sql username =
 let user_exists_stmt username =
   prepare server_db (user_exists_sql username)
 
-(** [user_exists username] is [true] if [username] exists in the users
-    table, and [false] otherwise. *)
 let user_exists username =
   let stmt = user_exists_stmt username in
   step stmt |> assert_rc_row;
@@ -135,11 +137,6 @@ let add_user username pwd key time =
   else (
     insert_user username pwd key time |> handle_rc (add_ok_str username);
     (true, add_ok_str username))
-
-type chk_user =
-  | UserOK
-  | UnknownUser of string
-  | WrongPwd of string
 
 let chk_pwd username pwd = failwith "Unimplemented"
 let create_msg_table () = failwith "Unimplemented"

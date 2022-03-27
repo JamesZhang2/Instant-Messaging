@@ -4,6 +4,7 @@
 open Util
 
 exception MalformedTime
+exception UnknownUser of string
 
 val create_tables : unit -> unit
 (** [create_tables ()] creates the tables needed for the database. *)
@@ -18,19 +19,18 @@ val add_user : string -> string -> string -> string -> bool * string
 
     Raises: [MalformedTime] if the given time is malformed. *)
 
-type chk_user =
-  | UserOK
-  | UnknownUser of string
-  | WrongPwd of string
-      (** For Login, checking whether username and password are valid. *)
+val user_exists : string -> bool
+(** [user_exists username] is [true] if [username] exists in the
+    database, and [false] otherwise. *)
 
-val chk_pwd : string -> string -> chk_user
-(** [chk_pwd username pwd] is [UserOK] if the user database contains a
-    user with name [username] and password [pwd], [UnknownUser user] if
-    the user is not found, and [WrongPwd pwd] if the password supplied
-    does not match the password of the user in the database.
+val chk_pwd : string -> string -> bool
+(** [chk_pwd username pwd] is [true] if the database contains a user
+    with name [username] and password [pwd], and [false] if the password
+    supplied does not match the password of the user in the database.
 
-    Raises: [MalformedTime] if the given time is malformed. *)
+    Raises: [MalformedTime] if the given time is malformed;
+    [UnknownUser username] if the given user is not found in the
+    database. *)
 
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a direct message to the database.
@@ -40,13 +40,16 @@ val add_msg : Msg.t -> bool
     Returns: true if the messages are added successfully, false
     otherwise.
 
-    Raises: [MalformedTime] if the given time is malformed. *)
+    Raises: [MalformedTime] if the given time is malformed;
+    [UnknownUser username] if either the sender or the receiver is not
+    found in the database. *)
 
 val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to
     [receiver] after [time].
 
-    Raises: [MalformedTime] if the given time is malformed. *)
+    Raises: [MalformedTime] if the given time is malformed;
+    [UnknownUser username] if the receiver is not found in the database. *)
 
 (** Three different relationships between users A and B:
 
@@ -59,27 +62,37 @@ val new_fr : Msg.t -> bool
     [Msg.sender req] being the requester and [Msg.receiver req] being
     the receiving side on this friend request.
 
-    Requires: [Msg.msg_type req = FriendReq], there is no pending
-    request between the sender and the receiver, and sender and receiver
-    are not friends with each other.
+    Requires:
+
+    - [Msg.msg_type req = FriendReq]
+    - There is no pending request between the sender and the receiver
+    - The sender and receiver are not friends with each other.
 
     Returns: true if the line is successfully added, false otherwise.
 
-    Raises: [MalformedTime] if the given time is malformed. *)
+    Raises: [MalformedTime] if the given time is malformed;
+    [UnknownUser username] if either the sender or the receiver is not
+    found in the database. *)
 
 val fr_exist : string -> string -> bool
 (** [fr_exist sender receiver] determines whether a pending friend
     request from [sender] to [receiver] exists.
 
     Returns: [true] if there is a pending friend request, and [false]
-    otherwise. *)
+    otherwise.
+
+    Raises: [UnknownUser username] if either the sender or the receiver
+    is not found in the database. *)
 
 val is_friend : string -> string -> bool
 (** [is_friend sender receiver] determines whether [sender] and
     [receiver] are friends.
 
     Returns: [true] if [sender] and [receiver] are friends, and [false]
-    otherwise. *)
+    otherwise.
+
+    Raises: [UnknownUser username] if either the sender or the receiver
+    is not found in the database. *)
 
 val fr_approve : string -> string -> bool
 (** [fr_approve sender receiver] approves the friend request from
@@ -89,7 +102,8 @@ val fr_approve : string -> string -> bool
     otherwise.
 
     Raises: [Not_found] if there is no pending request between the
-    sender and the receiver. *)
+    sender and the receiver; [UnknownUser username] if either the sender
+    or the receiver is not found in the database. *)
 
 val fr_reject : string -> string -> bool
 (** [fr_reject sender receiver] rejects the friend request from [sender]
@@ -99,8 +113,11 @@ val fr_reject : string -> string -> bool
     otherwise.
 
     Raises: [Not_found] if there is no pending request between the
-    sender and the receiver. *)
+    sender and the receiver; [UnknownUser username] if either the sender
+    or the receiver is not found in the database. *)
 
 val friends_of : string -> string list
 (** [friends_of user] is a list of all users that are friends with
-    [user]. *)
+    [user].
+
+    Raises: [UnknownUser user] if user is not found in the database. *)
