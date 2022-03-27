@@ -23,76 +23,80 @@ val create_dbs : string -> Crypto.k -> bool * string
     created, [(false, err_msg)] if the table has already been created
     before or an issue is encountered. *)
 
-val add_request :
-  string -> string -> string -> msg_dir -> bool option -> bool * string
-(** [add_request username time msg req_type req_state] attempts to add a
-    freind request related to [username] at [time] with [msg]. Raises
-    [MalformedTime] if [time] format is incorrect.
+val add_request : string -> Msg.t -> bool option -> bool * string
+(** [add_request client req req_state] attempts to add a freind request
+    related to [client] with current state [req_state]. Requires: sender
+    and receiver are not friends, [client] is either the sender or
+    receiver. Raises [IncorrectUser] if either requires clause is false.
 
     [req_state] is [None] means the client sent an request but haven't
     receive a response; [Some true] means they are friends; [Some false]
     means the client is rejected.*)
 
-val update_request : string -> bool -> bool * string
-(** [update_request username req_state] updates the request state to
-    [req_state]. Raises [IncorrectUser] if [username] does not have a
-    request in the table. Requires [req_state] is [true] or [false], and
-    the request in the tableReturns [(true, feedback)] if the request
-    currently has state [Null]. Returns [(true, feedback)] if the
-    request is successfully updated, [(false, err_msg)] otherwise. *)
+val update_request : string -> string -> bool -> bool * string
+(** [update_request client username req_state] updates the request state
+    to [req_state]. Raises [IncorrectUser] if [client] is not in the
+    database or [client] does not have does not have a request with
+    [username] in table. Returns [(true, feedback)] if the request is
+    successfully updated, [(false, err_msg)] otherwise. *)
 
-val add_msg : string -> string -> string -> msg_dir -> bool * string
-(** [add_msg username time msg msg_type] adds a message [msg] relative
-    to friend [username] at [time] with [msg_dir]. Raises
-    [IncorrectUser] if [username] is not in the database. Raises
-    [MalformedTime] if [time] format is incorrect. Returns
-    [(true, feedback)] if the message is successfully added,
-    [(false, err_msg)] otherwise.*)
+val add_msg : string -> Msg.t -> bool * string
+(** [add_msg client msg] adds a message [msg] to the [client] table.
+    Requires: sender and receiver are friends. Raises [IncorrectUser] if
+    [client] is not in the database. Returns [(true, feedback)] if the
+    message is successfully added, [(false, err_msg)] otherwise. *)
 
-val get_username : unit -> string
-(** [get_username()] is the username of current client. Raises
-    [DBNotExist] if database has not been created. *)
+(* val get_username : unit -> string (** [get_username()] is the
+   username of current client. Raises [DBNotExist] if database has not
+   been created. *) *)
+(* I think this may be not necessary *)
 
-val get_all_reqs : unit -> Msg.t list
-(** [get_all_reqs()] is a list of all freind requests. Raises
+val get_all_reqs : string -> Msg.t list
+(** [get_all_reqs client] is a list of all freind requests in [client]
+    table. Raises [IncorrectUser] if [client] is not a vlaid. Raises
+    [DBNotExist] if the table has not been created. *)
+
+val get_all_frds : string -> Msg.t list
+(** [get_all_frds client] is a list of all freinds in [client] table.
+    Raises [IncorrectUser] if [client] is not a vlaid. Raises
+    [DBNotExist] if the table has not been created.*)
+
+val get_all_msgs : string -> Msg.t list
+(** [get_all_msgs client] is a list of all messages in [client] table.
+    Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if database has not been created.*)
 
-val get_all_frds : unit -> Msg.t list
-(** [get_all_frds()] is a list of all freind. Raises [DBNotExist] if
-    database has not been created.*)
-
-val get_all_msgs : unit -> Msg.t list
-(** [get_all_msgs()] is a list of all messages related to the client.
+val get_all_msgs_since : string -> string -> Msg.t list
+(** [get_all_msgs_since client time] is a list of all messages in
+    [client] table before [time]. Raises [IncorrectUser] if [client] is
+    not a vlaid. Raises [MalformedTime] if [time] format is incorrect.
     Raises [DBNotExist] if database has not been created.*)
 
-val get_all_msgs_since : string -> Msg.t list
-(** [get_all_msgs_since time] is a list of all messages related to the
-    client before [time]. Raises [MalformedTime] if [time] format is
-    incorrect. Raises [DBNotExist] if database has not been created.*)
+val get_msgs_by_frd : string -> string -> Msg.t list
+(** [get_msgs_by_frd client frd] is a list of all messages between
+    [client] and friend [frd]. Raises [IncorrectUser] if [client] is not
+    valid or [username] is not [client]'s friend. Raises [DBNotExist] if
+    database has not been created.*)
 
-val get_msgs_by_frd : string -> Msg.t list
-(** [get_msgs_by_frd username] is a list of all messages between current
-    client and friend [username]. Raises [IncorrectUser] if [username]
-    is not a friend or is themselves. Raises [DBNotExist] if database
-    has not been created.*)
+val get_msgs_by_frd_since : string -> string -> string -> Msg.t list
+(** [get_msgs_by_frd_since client frd time] is a list of all messages
+    between [client] and friend [frd]. Raises [IncorrectUser] if
+    [client] is not valid or [username] is not [client]'s friend. Raises
+    [MalformedTime] if [time] format is incorrect. Raises [DBNotExist]
+    if database has not been created.*)
 
-val get_msgs_by_frd_since : string -> string -> Msg.t list
-(** [get_msgs_by_frd_since username time] is a list of all messages
-    between the client and friend [username]. Raises [IncorrectUser] if
-    [username] is not a friend or is themselves. Raises [MalformedTime]
-    if [time] format is incorrect. Raises [DBNotExist] if database has
-    not been created.*)
+val get_req_by_name : string -> string -> Msg.t option
+(** [get_req_by_name client username] is [Some req] where [req] is the
+    friend request between [client] and [username] in [client] table if
+    there is such a request, [None] otherwise. Raises [IncorrectUser] if
+    [client] is not valid. Raises [DBNotExist] if database has not been
+    created.*)
 
-val get_req_by_name : string -> Msg.t option
-(** [get_req_by_name username] is [Some req] where [req] is the friend
-    request related to [username] if there is such a request, [None]
-    otherwise. Raises [IncorrectUser] if [username] is not a friend or
-    is themselves. Raises [DBNotExist] if database has not been created.*)
+val isFriend : string -> string -> bool
+(**[isFriend client username] is whether [username] is in the [client]'s
+   friend list. Riases [DBNotExist] if database has not been created. *)
 
-val isFriend : string -> bool
-(**[isFriend username] is whether [username] is in the friend list.
-   Riases [DBNotExist] if database has not been created. *)
-
-val isInRequest : string -> bool
-(** [isInRequest username] is whether [username] is in the friend
-    request list. Raises [DBNotExist] if database has not been created. *)
+val isInRequest : string -> string -> bool
+(** [isInRequest client username] is whether [username] is in the
+    [client]'s friend request list. Raises [DBNotExist] if database has
+    not been created. *)
