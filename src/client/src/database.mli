@@ -23,15 +23,11 @@ val create_dbs : string -> Crypto.k -> bool * string
     created, [(false, err_msg)] if the table has already been created
     before or an issue is encountered. *)
 
-val add_request : string -> Msg.t -> bool option -> bool * string
+val add_request : string -> Msg.t -> bool -> bool * string
 (** [add_request client req req_state] attempts to add a freind request
     related to [client] with current state [req_state]. Requires: sender
     and receiver are not friends, [client] is either the sender or
-    receiver. Raises [IncorrectUser] if either requires clause is false.
-
-    [req_state] is [None] means the client sent an request but haven't
-    receive a response; [Some true] means they are friends; [Some false]
-    means the client is rejected.*)
+    receiver. Raises [IncorrectUser] if either requires clause is false. *)
 
 val update_request : string -> string -> bool -> bool * string
 (** [update_request client username req_state] updates the request state
