@@ -6,7 +6,7 @@
     [key] if approved*)
 type msg_type =
   | FriendReq
-  | FriendReqRep of bool * string (* bool*)
+  | FriendReqRep of (bool * string) (* bool*)
   | Message
 
 type t
