@@ -79,7 +79,7 @@ val get_msgs_by_frd_since : string -> string -> string -> Msg.t list
     between [client] and friend [frd]. Raises [IncorrectUser] if
     [client] is not valid or [username] is not [client]'s friend. Raises
     [MalformedTime] if [time] format is incorrect. Raises [DBNotExist]
-    if database has not been created.*)
+    if database has not been created. *)
 
 val get_req_by_name : string -> string -> Msg.t option
 (** [get_req_by_name client username] is [Some req] where [req] is the
