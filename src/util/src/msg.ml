@@ -1,5 +1,6 @@
 type msg_type =
   | FriendReq
+  | FriendReqRep of bool * string
   | Message
 
 type t = {
