@@ -23,6 +23,10 @@ val user_exists : string -> bool
 (** [user_exists username] is [true] if [username] exists in the
     database, and [false] otherwise. *)
 
+val user_key : string -> string
+(** [user_key username] is the public key associated with [username].
+    Raises: [UnknownUser username] if the user does not exist*)
+
 val chk_pwd : string -> string -> bool
 (** [chk_pwd username pwd] is [true] if the database contains a user
     with name [username] and password [pwd], and [false] if the password
