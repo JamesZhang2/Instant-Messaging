@@ -8,7 +8,14 @@ val handle : string -> (string * string) list -> string Lwt.t -> t Lwt.t
 (** [handle meth headers body] is the response to the client by sending
     [meth] as http method, [body] as http request body, and [header] as
     http header, as a [t Lwt.t]. Effect: sends a specified request to
-    the server. *)
+    the server.
+
+    - FriendReqRep, then if user reply is true, then the other user's
+      public key is returned, otherwise a regular rejection is sent
+    - FriendReq: If pending request in reverse order exists, then an
+      approved friend req is retrievable on get_msg, otherwise sends a
+      new friend request
+    - Login: body is the key for the user. *)
 
 val status : t -> string Lwt.t
 (** [status res] is the status code Lwt.t of the response [res] to the
