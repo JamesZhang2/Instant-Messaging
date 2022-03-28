@@ -9,9 +9,10 @@ val pack_get_msg : string -> string
 (** [pack_get_msg sender] is the json string that encodes getting all
     messages that are sent to [sender]. *)
 
-val pack_register : string -> string -> string
-(** [pack_register username password] is the json string that encodes
-    registering a user with [username] and [password]. *)
+val pack_register : string -> string -> string -> string
+(** [pack_register username password key] is the json string that
+    encodes registering a user with [username], [password], and public
+    [key]. *)
 
 val pack_login : string -> string -> string
 (** [pack_login username password] is the json string that encodes

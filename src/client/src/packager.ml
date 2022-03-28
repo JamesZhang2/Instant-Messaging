@@ -28,10 +28,11 @@ let pack_get_msg sender =
     (pack_type "GetMessage")
     (pack_sender sender) (pack_time ())
 
-let pack_register username password =
-  Printf.sprintf "{%s,%s,%s,%s}" (pack_type "Register")
+let pack_register username password key =
+  Printf.sprintf "{%s,%s,%s,%s, %s}" (pack_type "Register")
     (pack_sender username) (pack_time ())
     (pack "password" password)
+    (pack "key" key)
 
 let pack_login username password =
   Printf.sprintf "{%s,%s,%s,%s}" (pack_type "Login")

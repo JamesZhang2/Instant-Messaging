@@ -27,7 +27,7 @@ let handle_send_msg req_meth sender time receiver msg =
   if req_meth <> Post then
     Packager.error_response "SendMessage should use POST method"
   else
-    let msg = Msg.make_msg sender receiver time Message msg in
+    let msg = Msg.make_msg sender receiver time Util.Msg.Message msg in
     match add_msg msg with
     | exception UnknownUser x ->
         Packager.error_response ("User " ^ x ^ " does not exist")
@@ -68,6 +68,17 @@ let handle_login req_meth sender time password =
     | false -> Packager.post_method_response "Incorrect Password"
   else Packager.post_method_response "Incorrect Username: "
 
+(** [fr_approve_msg sender receiver time] sends approval message to
+    receiver with sender's key *)
+let fr_approve_msg sender receiver time =
+  let sender_key = user_key sender in
+  let msg_receiver =
+    Msg.make_msg sender receiver time
+      (FriendReqRep (true, sender_key))
+      ""
+  in
+  add_msg msg_receiver
+
 let handle_friend_req req_meth sender time receiver msg =
   if req_meth <> Post then
     Packager.error_response "FriendReq should use POST method"
@@ -85,12 +96,18 @@ let handle_friend_req req_meth sender time receiver msg =
         | exception UnknownUser x ->
             Packager.error_response ("Unknown User " ^ x)
         | true, false ->
+            (* if reverse fr exist*)
             let _ = fr_approve receiver sender in
+            let _ = fr_approve_msg sender receiver time in
+            let _ = fr_approve_msg receiver sender time in
+            (* send friend req msg to both*)
             Packager.post_method_response
-              ("You and " ^ receiver ^ "are now friends")
+              ("FriendRequest to " ^ receiver ^ " successfully sent")
         | false, _ ->
             let msg = Msg.make_msg sender receiver time FriendReq msg in
+            (* notification msg*)
             let _ = new_fr msg in
+            (*new fr in db*)
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")
         | true, true ->
@@ -102,14 +119,16 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     Packager.error_response "FriendReqReply should use POST method"
   else
     match
-      is_friend sender receiver && not (fr_exist receiver sender)
+      (is_friend sender receiver, fr_exist receiver sender)
+      (* check whether sender and receiver are already friends, check if
+         a request from receiver to sender exist*)
     with
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
-    | true ->
+    | true, _ ->
         Packager.post_method_response
-          ("You are now friends with" ^ receiver)
-    | false -> (
+          ("You are already friends with" ^ receiver)
+    | false, true -> (
         let successful =
           if accepted then fr_approve receiver sender
           else fr_reject receiver sender
@@ -120,12 +139,21 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
               ("Operation Unsuccessful, friend request from" ^ receiver
              ^ "still pending")
         | true, true ->
-            Packager.post_method_response
-              ("You are now friends with " ^ receiver)
+            let _ = fr_approve receiver sender in
+            let _ = fr_approve_msg receiver sender time in
+            Packager.post_method_response (user_key receiver)
         | true, false ->
+            let _ = fr_reject receiver sender in
+            let msg_receiver =
+              Msg.make_msg sender receiver time
+                (FriendReqRep (false, ""))
+                ("Friend Request to " ^ receiver ^ " rejected")
+            in
+            let _ = add_msg msg_receiver in
             Packager.post_method_response
               ("You rejected " ^ receiver
              ^ "'s friend request succesfully "))
+    | false, false -> Packager.error_response "No such friend request"
 
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
