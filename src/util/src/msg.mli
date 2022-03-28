@@ -5,7 +5,6 @@
     or a direct [Message]*)
 type msg_type =
   | FriendReq
-  | FriendReqRep
   | Message
 
 type t
