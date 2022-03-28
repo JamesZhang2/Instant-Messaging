@@ -39,3 +39,11 @@ val pke_enc : pk -> string -> string * string
 val pke_dec : sk -> string * string -> string
 (** [pke_dec priv ctext] is the plaintext of [ctext] decrypted using
     [priv] key. *)
+
+val get_pub_str : pk -> string
+(** [get_pub_str pub_key] is a storable string representation of the
+    prublic key [pub_key]*)
+
+val pub_from_str : string -> pk
+(** [pub_from_str str_key] is the abstract representation of public key
+    given by string [str_key]*)
