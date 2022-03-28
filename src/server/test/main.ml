@@ -107,7 +107,7 @@ let parser_tests =
     parser_type_test "Type of login_1 is correct" login_1
       (Login "OCaml!");
     parser_type_test "Type of register_1 is correct" register_1
-      (Register "OCaml!");
+      (Register ("OCaml!", "123412341234"));
     parser_type_test "Type of send_msg_1 is correct" send_msg_1
       (SendMessage ("Bob", "Hi"));
   ]
