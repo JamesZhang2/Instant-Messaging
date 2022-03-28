@@ -82,8 +82,8 @@ let get_msg receiver =
   | GetMsgResponse lst ->
       (true, List.map (parser_msg_controller receiver) lst)
 
-let register username password =
-  let message = Packager.pack_register username password in
+let register username password key =
+  let message = Packager.pack_register username password key in
   let raw_response = Network.request "POST" ~body:message in
   bool_post_parse raw_response
 
