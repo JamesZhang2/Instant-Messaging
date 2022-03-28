@@ -23,7 +23,7 @@ val create_dbs : string -> Crypto.k -> bool * string
     created, [(false, err_msg)] if the table has already been created
     before or an issue is encountered. *)
 
-val add_request : string -> Msg.t -> bool -> bool * string
+val add_request : string -> Msg.t -> bool option -> bool * string
 (** [add_request client req req_state] attempts to add a freind request
     related to [client] with current state [req_state]. Requires: sender
     and receiver are not friends, [client] is either the sender or
