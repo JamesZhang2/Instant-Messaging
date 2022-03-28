@@ -54,7 +54,7 @@ let handle_register req_meth username time password public_key =
         Packager.post_method_response
           ("Welcome to IM system, " ^ username)
     | false, x ->
-        Packager.post_method_response
+        Packager.error_response
           "Registration unsuccessful, please try another username"
     | exception MalformedTime ->
         Packager.error_response ("Malformed time " ^ time)
@@ -65,8 +65,8 @@ let handle_login req_meth sender time password =
   else if user_exists sender then
     match chk_pwd sender password with
     | true -> Packager.post_method_response (user_key sender)
-    | false -> Packager.post_method_response "Incorrect Password"
-  else Packager.post_method_response "Incorrect Username: "
+    | false -> Packager.error_response "Incorrect Password"
+  else Packager.error_response "Incorrect Username: "
 
 (** [fr_approve_msg sender receiver time] sends approval message to
     receiver with sender's key *)

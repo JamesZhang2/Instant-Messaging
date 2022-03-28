@@ -15,7 +15,10 @@ val handle : string -> (string * string) list -> string Lwt.t -> t Lwt.t
     - FriendReq: If pending request in reverse order exists, then an
       approved friend req is retrievable on get_msg, otherwise sends a
       new friend request
-    - Login: body is the key for the user. *)
+    - Login: body is the key for the user, if incorrect user or
+      password, error is returned
+    - Register: if username already exists, server will return
+      error_response*)
 
 val status : t -> string Lwt.t
 (** [status res] is the status code Lwt.t of the response [res] to the
