@@ -64,7 +64,7 @@ let handle_login req_meth sender time password =
     Packager.error_response "Login should use POST method"
   else if user_exists sender then
     match chk_pwd sender password with
-    | true -> Packager.post_method_response "Login Successful"
+    | true -> Packager.post_method_response (user_key sender)
     | false -> Packager.post_method_response "Incorrect Password"
   else Packager.post_method_response "Incorrect Username: "
 
