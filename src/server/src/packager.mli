@@ -8,8 +8,8 @@ val post_method_response : string -> string
     an error*)
 
 val get_method_response : Msg.t list -> string
-(** [get_method_responde messages] Takes a list of messages in form of
-    type msg and transforms it into a json. *)
+(** [get_method_responde messages] Takes a list of messages and
+    transforms it into a json. *)
 
 val error_response : string -> string
 (** [error_response message] takes an error message and converts into

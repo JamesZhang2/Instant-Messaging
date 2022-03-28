@@ -11,7 +11,7 @@ exception SyntaxError of string
 type pkt_type =
   | SendMessage of string * string (* Receiver, Message *)
   | GetMessage
-  | Register of string (* Password, (TODO: add public key later) *)
+  | Register of (string * string) (* (password, public key) *)
   | Login of string (* Password *)
   | FriendReq of string * string (* Receiver, Message *)
   | FriendReqReply of string * bool

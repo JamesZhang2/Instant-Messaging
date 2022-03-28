@@ -13,4 +13,5 @@ run:
 	OCAMLRUNPARAM=b dune exec bin/main.exe
 
 test:
+	rm -f data/database/test.db
 	OCAMLRUNPARAM=b dune exec test/main.exe

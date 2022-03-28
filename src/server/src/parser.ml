@@ -6,7 +6,7 @@ exception SyntaxError of string
 type pkt_type =
   | SendMessage of string * string
   | GetMessage
-  | Register of string
+  | Register of (string * string)
   | Login of string
   | FriendReq of string * string
   | FriendReqReply of string * bool
@@ -40,7 +40,8 @@ let parse_get_msg j = { (parse_common j) with pkt_type = GetMessage }
 
 let parse_register j =
   let password = get_str_val j "password" in
-  { (parse_common j) with pkt_type = Register password }
+  let key = get_str_val j "key" in
+  { (parse_common j) with pkt_type = Register (password, key) }
 
 let parse_login j =
   let password = get_str_val j "password" in

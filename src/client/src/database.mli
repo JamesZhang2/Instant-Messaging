@@ -32,9 +32,9 @@ val add_request : string -> Msg.t -> bool -> bool * string
 val update_request : string -> string -> bool -> bool * string
 (** [update_request client username req_state] updates the request state
     to [req_state]. Raises [IncorrectUser] if [client] is not in the
-    database or [client] does not have does not have a request with
-    [username] in table. Returns [(true, feedback)] if the request is
-    successfully updated, [(false, err_msg)] otherwise. *)
+    database or [client] does not have a request with [username] in
+    table. Returns [(true, feedback)] if the request is successfully
+    updated, [(false, err_msg)] otherwise. *)
 
 val add_msg : string -> Msg.t -> bool * string
 (** [add_msg client msg] adds a message [msg] to the [client] table.

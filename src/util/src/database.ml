@@ -6,7 +6,8 @@ open Sqlite3
 let user_db = db_open "data/database/user.db"
 
 let create_table_users_sql =
-  "CREATE TABLE users (username TEXT NOT NULL, password TEXT NOT NULL);"
+  "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
+   TEXT NOT NULL);"
 
 let insert_user_sql username password =
   Printf.sprintf "INSERT INTO users VALUES ('%s','%s');" username
@@ -26,6 +27,14 @@ let handle_rc ok_msg = function
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg user_db)
+
+(** [assert_rc_row rc] asserts that the recurn code [rc] is [ROW]. *)
+let assert_rc_row = function
+  | Rc.ROW -> ()
+  | r ->
+      prerr_endline (Rc.to_string r);
+      prerr_endline (errmsg user_db);
+      assert false
 
 let create_table_users () =
   exec user_db create_table_users_sql |> handle_rc "Created table users"
@@ -72,10 +81,18 @@ let select_alice () =
   exec user_db ~cb:name_pswd_cb select_alice_sql
   |> handle_rc "Selected Alice, printed her password"
 
+let select_alice_stmt () = prepare user_db select_alice_sql
+
+let print_alice () =
+  let stmt = select_alice_stmt () in
+  step stmt |> assert_rc_row;
+  print_endline (column_text stmt 0)
+
 let db_main () =
   create_table_users ();
   insert_alice ();
   insert_bob ();
   insert_charlie ();
   select_all_users ();
-  select_alice ()
+  select_alice ();
+  print_alice ()

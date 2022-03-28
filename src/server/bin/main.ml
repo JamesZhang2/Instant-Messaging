@@ -30,7 +30,7 @@ let process (req : Request.t) =
   Lwt.bind status_body response_maker
 
 let () =
-  (* let open App in *)
+  create_tables ();
   App.empty
   |> App.post "/post/" process
   |> App.get "/get/" process |> App.run_command |> ignore
