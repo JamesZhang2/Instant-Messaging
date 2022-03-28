@@ -72,7 +72,8 @@ let packager_tests =
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing Register" >:: fun _ ->
       assert_equal register_1
-        (pack_register "Daniel" "tail recursion")
+        (pack_register "Daniel" "tail recursion" "key")
+        (* key ungenerated*)
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing Login" >:: fun _ ->
       assert_equal login_1
