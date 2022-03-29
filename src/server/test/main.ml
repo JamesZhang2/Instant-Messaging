@@ -71,8 +71,15 @@ let test_chk_pwd () =
 let msg_alice_bob : Msg.t =
   Msg.make_msg "Alice" "Bob" "2022-03-28 23:09:02" Message "Hello Bob"
 
+let msg_bob_alice_1 : Msg.t =
+  Msg.make_msg "Bob" "Alice" "2022-03-28 23:10:14" Message "Hi Alice"
+
+let msg_bob_alice_2 : Msg.t =
+  Msg.make_msg "Bob" "Alice" "2022-03-28 23:10:35" Message
+    "How are you doing?"
+
 let msg_catherine_alice : Msg.t =
-  Msg.make_msg "Catherine" "Alice" "2022-03-28 23:09:02" Message
+  Msg.make_msg "Catherine" "Alice" "2022-03-27 10:14:41" Message
     "Hey Alice, this is Catherine!"
 
 let msg_foo_alice : Msg.t =
@@ -87,9 +94,48 @@ let msg_bad_time : Msg.t =
 let test_add_msg () =
   assert (add_msg msg_alice_bob);
   assert (add_msg msg_catherine_alice);
+  assert (add_msg msg_bob_alice_1);
+  assert (add_msg msg_bob_alice_2);
   assert_raises (UnknownUser "Foo") (fun _ -> add_msg msg_foo_alice);
   assert_raises (UnknownUser "Bar") (fun _ -> add_msg msg_bob_bar);
   assert_raises MalformedTime (fun _ -> add_msg msg_bad_time)
+
+let chk_alice_bob_msg () =
+  match get_new_msg "Bob" with
+  | [ msg ] ->
+      assert_equal
+        ( Msg.sender msg,
+          Msg.receiver msg,
+          Msg.time msg,
+          Msg.msg_type msg,
+          Msg.content msg )
+        ("Alice", "Bob", "2022-03-28 23:09:02", Message, "Hello Bob")
+  | _ -> assert false
+
+let test_get_msg () =
+  assert_equal
+    (get_new_msg_since "Alice" "2022-03-28 00:00:00" |> List.length)
+    2;
+  assert_equal
+    (get_new_msg_since "Alice" "2022-03-28 00:00:00" |> List.length)
+    0;
+  assert_equal (get_new_msg "Alice" |> List.length) 1;
+  assert_equal (get_new_msg "Alice" |> List.length) 0;
+  assert_equal
+    (get_msg_since "Alice" "2022-03-28 23:10:20" |> List.length)
+    1;
+  assert_equal (get_msg "Alice" |> List.length) 3;
+  chk_alice_bob_msg ();
+  assert_raises (UnknownUser "Foo") (fun _ -> get_msg "Foo");
+  assert_raises (UnknownUser "Foo") (fun _ ->
+      get_msg_since "Foo" "2022-03-28 00:00:00");
+  assert_raises (UnknownUser "Bar") (fun _ -> get_new_msg "Bar");
+  assert_raises (UnknownUser "Bar") (fun _ ->
+      get_new_msg_since "Bar" "2022-03-28 00:00:00");
+  assert_raises MalformedTime (fun _ ->
+      get_msg_since "Alice" "2022-12-34 08:00:00");
+  assert_raises MalformedTime (fun _ ->
+      get_new_msg_since "Catherine" "2022-12-01 12:59:60")
 
 let run_database_tests () =
   test_add_n_diff 100;
@@ -99,6 +145,7 @@ let run_database_tests () =
   test_chk_pwd ();
   test_user_key ();
   test_add_msg ();
+  test_get_msg ();
   print_endline "All database tests passed!"
 
 (******************** Server Parser Tests ********************)

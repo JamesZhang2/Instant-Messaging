@@ -85,23 +85,19 @@ let select_alice () =
   exec user_db ~cb:name_pswd_cb select_alice_sql
   |> handle_rc "Selected Alice, printed her password"
 
-let select_alice_stmt () = prepare user_db select_alice_sql
-
 (* The following are two ways to load the output of a statement to a
    variable, where the output may contain several rows. *)
 
 let print_alice () =
-  let stmt = select_alice_stmt () in
+  let stmt = prepare user_db select_alice_sql in
   let has_row = ref (step stmt |> is_row) in
   while !has_row do
     print_endline (column_text stmt 0);
     has_row := step stmt |> is_row
   done
 
-let select_all_users_stmt () = prepare user_db select_all_users_sql
-
 let print_all_users () =
-  let stmt = select_all_users_stmt () in
+  let stmt = prepare user_db select_all_users_sql in
   let has_row = ref (step stmt |> is_row) in
   while !has_row do
     print_endline (column_text stmt 0);
@@ -119,7 +115,7 @@ let cons_one_user lst (row : Data.t array) =
 (** [get_users_pwd_list ()] is a list of (username, password) pairs for
     all the users. *)
 let get_users_pwd_list () =
-  let stmt = select_all_users_stmt () in
+  let stmt = prepare user_db select_all_users_sql in
   let res = Sqlite3.fold stmt ~f:cons_one_user ~init:[] in
   match res with
   | Rc.DONE, lst -> List.rev lst

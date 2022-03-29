@@ -2,8 +2,8 @@
     messages and friend requests). *)
 
 (** [msg_type] is the type of a message. It can either be a [FriendReq]
-    or a direct [Message], or a [FriendReqRep of decision [bool] and
-    [key] if approved*)
+    or a direct [Message], or a [FriendReqRep (true, key)], or a
+    [FriendReqRep (false, "")]. *)
 type msg_type =
   | FriendReq
   | FriendReqRep of (bool * string) (* approve, and if approve, key*)
@@ -30,3 +30,6 @@ val msg_type : t -> msg_type
 
 val content : t -> string
 (** [content msg] is the content of the message. *)
+
+val string_of_msg : t -> string
+(** [string_of_msg msg] is a string representation of a message. *)

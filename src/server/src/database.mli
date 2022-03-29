@@ -48,15 +48,31 @@ val add_msg : Msg.t -> bool
     found in the database. *)
 
 val get_msg : string -> Msg.t list
-(** [get_msg receiver time] is a list of all messages sent to
-    [receiver].
+(** [get_msg receiver] is a list of all messages sent to [receiver],
+    ordered by time sent in ascending order.
 
     Raises: [UnknownUser username] if the receiver is not found in the
     database. *)
 
 val get_msg_since : string -> string -> Msg.t list
 (** [get_msg_since receiver time] is a list of all messages sent to
-    [receiver] after [time].
+    [receiver] after [time], ordered by time sent in ascending order.
+
+    Raises: [MalformedTime] if the given time is malformed;
+    [UnknownUser username] if the receiver is not found in the database. *)
+
+val get_new_msg : string -> Msg.t list
+(** [get_new_msg receiver] is a list of all messages sent to [receiver]
+    that have not been retrieved, ordered by time sent in ascending
+    order.
+
+    Raises: [UnknownUser username] if the receiver is not found in the
+    database. *)
+
+val get_new_msg_since : string -> string -> Msg.t list
+(** [get_new_msg_since receiver time] is a list of all messages sent to
+    [receiver] after [time] that have not been retrieved, ordered by
+    time sent in ascending order.
 
     Raises: [MalformedTime] if the given time is malformed;
     [UnknownUser username] if the receiver is not found in the database. *)

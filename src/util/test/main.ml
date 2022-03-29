@@ -29,8 +29,8 @@ let time_tests =
     chk_time_test "last second of a day" "2019-09-01 23:59:59" true;
     chk_time_test "first day of a year" "2000-01-01 08:00:00" true;
     chk_time_test "last day of a year" "2000-12-31 08:00:00" true;
-    chk_time_test "earliest time allowed" "0000-01-01 00:00:00" true;
-    chk_time_test "latest time allowed" "9999-12-31 23:59:59" true;
+    chk_time_test "earliest time allowed" Time.earliest_time true;
+    chk_time_test "latest time allowed" Time.latest_time true;
     chk_time_test "Current local time is correctly formatted"
       (string_of_now ~local:true)
       true;

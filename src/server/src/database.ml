@@ -46,7 +46,8 @@ let handle_rc ok_msg = function
       print_newline ()
   | r ->
       prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg server_db)
+      prerr_endline (errmsg server_db);
+      failwith "Server.Database.handle_rc: Return code is not OK"
 
 (** [assert_rc_row rc] asserts that the recurn code [rc] is [ROW]. *)
 let assert_rc_row = function
@@ -54,7 +55,9 @@ let assert_rc_row = function
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db);
-      failwith "A row is expected but none is available."
+      failwith
+        "Server.Database.assert_rc_row: A row is expected but none is \
+         available."
 
 (** [time_ok time] raises [MalformedTime] if [time] is not in the right
     format. Otherwise, it is the identity function. *)
@@ -126,11 +129,8 @@ let user_exists_sql username =
     "SELECT EXISTS (SELECT 1 from users WHERE username = '%s');"
     username
 
-let user_exists_stmt username =
-  prepare server_db (user_exists_sql username)
-
 let user_exists username =
-  let stmt = user_exists_stmt username in
+  let stmt = prepare server_db (user_exists_sql username) in
   step stmt |> assert_rc_row;
   column_bool stmt 0
 
@@ -162,12 +162,9 @@ let select_key_sql username =
   Printf.sprintf "SELECT public_key FROM users WHERE username = '%s'"
     username
 
-let select_key_stmt username =
-  prepare server_db (select_key_sql username)
-
 let user_key username =
   let username = user_ok username in
-  let stmt = select_key_stmt username in
+  let stmt = prepare server_db (select_key_sql username) in
   step stmt |> assert_rc_row;
   column_text stmt 0
 
@@ -179,12 +176,9 @@ let chk_pwd_sql username pwd =
      password = '%s');"
     username pwd
 
-let chk_pwd_stmt username pwd =
-  prepare server_db (chk_pwd_sql username pwd)
-
 let chk_pwd username pwd =
   let username = user_ok username in
-  let stmt = chk_pwd_stmt username pwd in
+  let stmt = prepare server_db (chk_pwd_sql username pwd) in
   step stmt |> assert_rc_row;
   column_bool stmt 0
 
@@ -207,8 +201,92 @@ let add_msg (msg : Msg.t) =
           receiver time content);
   true
 
-let get_msg receiver = failwith "Unimplemented"
-let get_msg_since receiver time = failwith "Unimplemented"
+(******************** Get message ********************)
+
+(** [select_msg_sql receiver time] is the sql string of selecting all
+    messages sent to [receiver] after [time]. *)
+let select_msg_sql receiver time =
+  Printf.sprintf
+    "SELECT * FROM messages WHERE receiver = '%s' AND time > '%s' \
+     ORDER BY time ASC;"
+    receiver time
+
+(** [select_msg_sql receiver time] is the sql string of selecting all
+    messages sent to [receiver] after [time] that have not been
+    retrieved earlier. *)
+let select_new_msg_sql receiver time =
+  Printf.sprintf
+    "SELECT * FROM messages WHERE receiver = '%s' AND time > '%s' AND \
+     retrieved = FALSE ORDER BY time ASC;"
+    receiver time
+
+(** [mark_as_retreved_sql receiver time] sets all messages sent to
+    [receiver] after [time] as retrieved. *)
+let mark_as_retrieved_sql receiver time =
+  Printf.sprintf
+    "UPDATE messages SET retrieved = TRUE WHERE receiver = '%s' AND \
+     time > '%s'"
+    receiver time
+
+(** [mark_as_retrieved receiver time] marks all messages sent to
+    [receiver] after [time] as retrieved. Requires: [receiver] is found
+    in the user table and [time] is in the correct format. *)
+let mark_as_retrieved receiver time =
+  exec server_db (mark_as_retrieved_sql receiver time)
+  |> handle_rc
+       (Printf.sprintf
+          "Messages sent to %s after %s are marked as retrieved"
+          receiver time)
+
+(** [cons_one_msg lst row] adds [row] to [lst]. Requires: [row]
+    represents a valid message. *)
+let cons_one_msg lst (row : Data.t array) =
+  match (row.(0), row.(1), row.(2), row.(3)) with
+  | ( Data.TEXT sender,
+      Data.TEXT receiver,
+      Data.TEXT content,
+      Data.TEXT time ) ->
+      Msg.make_msg sender receiver time Message content :: lst
+  | _ ->
+      failwith
+        "Server.Database.cons_one_msg: row is in the wrong format"
+
+(** Debug *)
+let print_msg_list (lst : Msg.t list) =
+  lst |> List.map Msg.string_of_msg |> List.map print_endline |> ignore
+
+let get_msg_aux receiver time ~new_only =
+  let receiver = user_ok receiver in
+  let time = time_ok time in
+  let sql =
+    if new_only then select_new_msg_sql receiver time
+    else select_msg_sql receiver time
+  in
+  let stmt = prepare server_db sql in
+  let res = Sqlite3.fold stmt ~f:cons_one_msg ~init:[] in
+  match res with
+  | Rc.DONE, lst ->
+      mark_as_retrieved receiver time;
+      Printf.printf "Retrived messages sent to %s after %s\n\n" receiver
+        time;
+      (* if test then print_msg_list (List.rev lst); *)
+      List.rev lst
+  | r, _ ->
+      prerr_endline (Rc.to_string r);
+      prerr_endline (errmsg server_db);
+      failwith "Server.Database.get_msg_aux: Return code is not DONE"
+
+let get_msg_since receiver time =
+  get_msg_aux receiver time ~new_only:false
+
+let get_msg receiver = get_msg_since receiver Time.earliest_time
+
+let get_new_msg_since receiver time =
+  get_msg_aux receiver time ~new_only:true
+
+let get_new_msg receiver = get_new_msg_since receiver Time.earliest_time
+
+(******************** Friend Requests ********************)
 let new_fr (req : Msg.t) = failwith "Unimplemented"
 let fr_exist sender receiver = failwith "Unimplemented"
 let is_friend sender receiver = failwith "Unimplemented"
