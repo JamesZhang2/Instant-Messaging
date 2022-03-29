@@ -1,6 +1,8 @@
 (** Reference: https://github.com/cedlemo/ocaml-sqlite3-notes;
     https://github.com/cedlemo/ocaml-sqlite3-notes/blob/master/README_sqlite3_tutorial.md *)
 
+(** This is a prototype for Sqlite experimentation. It will be deleted. *)
+
 open Sqlite3
 
 let user_db = db_open "data/database/user.db"
@@ -28,9 +30,11 @@ let handle_rc ok_msg = function
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg user_db)
 
-(** [assert_rc_row rc] asserts that the recurn code [rc] is [ROW]. *)
-let assert_rc_row = function
-  | Rc.ROW -> ()
+(** [is_row rc] is [true] if [rc] is [ROW], [false] if [rc] is [DONE],
+    and raises an exception if [rc] is anything else. *)
+let is_row = function
+  | Rc.ROW -> true
+  | Rc.DONE -> false
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg user_db);
@@ -83,10 +87,53 @@ let select_alice () =
 
 let select_alice_stmt () = prepare user_db select_alice_sql
 
+(* The following are two ways to load the output of a statement to a
+   variable, where the output may contain several rows. *)
+
 let print_alice () =
   let stmt = select_alice_stmt () in
-  step stmt |> assert_rc_row;
-  print_endline (column_text stmt 0)
+  let has_row = ref (step stmt |> is_row) in
+  while !has_row do
+    print_endline (column_text stmt 0);
+    has_row := step stmt |> is_row
+  done
+
+let select_all_users_stmt () = prepare user_db select_all_users_sql
+
+let print_all_users () =
+  let stmt = select_all_users_stmt () in
+  let has_row = ref (step stmt |> is_row) in
+  while !has_row do
+    print_endline (column_text stmt 0);
+    has_row := step stmt |> is_row
+  done
+
+(** [cons_one_user lst row] adds [row] to [lst]. Requires: The first
+    element of [row] represents the username and the second element of
+    [row] represents the password. *)
+let cons_one_user lst (row : Data.t array) =
+  match (row.(0), row.(1)) with
+  | Data.TEXT username, Data.TEXT pwd -> (username, pwd) :: lst
+  | _ -> assert false
+
+(** [get_users_pwd_list ()] is a list of (username, password) pairs for
+    all the users. *)
+let get_users_pwd_list () =
+  let stmt = select_all_users_stmt () in
+  let res = Sqlite3.fold stmt ~f:cons_one_user ~init:[] in
+  match res with
+  | Rc.DONE, lst -> List.rev lst
+  | r, _ ->
+      prerr_endline (Rc.to_string r);
+      prerr_endline (errmsg user_db);
+      assert false
+
+let print_all_users_pwds () =
+  List.map
+    (fun (username, pwd) ->
+      Printf.printf "Username: %s, password: %s\n" username pwd)
+    (get_users_pwd_list ())
+  |> ignore
 
 let db_main () =
   create_table_users ();
@@ -95,4 +142,6 @@ let db_main () =
   insert_charlie ();
   select_all_users ();
   select_alice ();
-  print_alice ()
+  print_alice ();
+  print_all_users ();
+  print_all_users_pwds ()
