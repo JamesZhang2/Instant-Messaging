@@ -2,9 +2,11 @@
     messages and friend requests). *)
 
 (** [msg_type] is the type of a message. It can either be a [FriendReq]
-    or a direct [Message]*)
+    or a direct [Message], or a [FriendReqRep of decision [bool] and
+    [key] if approved*)
 type msg_type =
   | FriendReq
+  | FriendReqRep of (bool * string) (* approve, and if approve, key*)
   | Message
 
 type t

@@ -23,6 +23,10 @@ val user_exists : string -> bool
 (** [user_exists username] is [true] if [username] exists in the
     database, and [false] otherwise. *)
 
+val user_key : string -> string
+(** [user_key username] is the public key associated with [username].
+    Raises: [UnknownUser username] if the user does not exist*)
+
 val chk_pwd : string -> string -> bool
 (** [chk_pwd username pwd] is [true] if the database contains a user
     with name [username] and password [pwd], and [false] if the password
@@ -34,7 +38,7 @@ val chk_pwd : string -> string -> bool
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a direct message to the database.
 
-    Requires: [Msg.msg_type message = Message].
+    Requires: [Msg.msg_type message = Msg.Message].
 
     Returns: true if the messages are added successfully, false
     otherwise.
@@ -70,7 +74,7 @@ val new_fr : Msg.t -> bool
 
     Requires:
 
-    - [Msg.msg_type req = FriendReq]
+    - [Msg.msg_type req = Msg.FriendReq]
     - There is no pending request between the sender and the receiver
     - The sender and receiver are not friends with each other.
 

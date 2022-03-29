@@ -1,4 +1,5 @@
 open Controller
+open Util
 
 module Command = struct
   exception Malformed
@@ -57,9 +58,9 @@ let illegal_command str =
 (**[print_message msg] prints one message represented by Controller type
    [msg]*)
 let print_message msg =
-  let sender = "from: " ^ msg.sender in
-  let time = "time: " ^ msg.time in
-  let message = "\n" ^ msg.body in
+  let sender = "from: " ^ Msg.sender msg in
+  let time = "time: " ^ Msg.time msg in
+  let message = "\n" ^ Msg.content msg in
   sender |> str_format 0 |> print_endline;
   time |> str_format 0 |> print_endline;
   message |> str_format 0 |> print_endline

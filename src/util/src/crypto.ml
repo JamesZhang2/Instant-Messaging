@@ -52,3 +52,6 @@ let pke_dec key = function
       sym_dec (String.sub symk (String.length symk - 16) 16) str2
 (* let test str = let key = pke_gen () in let ctxt = pke_enc (get_pub
    key) str in pke_dec key ctxt *)
+
+let get_pub_str key = failwith "Unimplemented"
+let pub_from_str str = failwith "Unimplemented"

@@ -163,6 +163,7 @@ let chk_pwd username pwd =
     step stmt |> assert_rc_row;
     column_bool stmt 0
 
+let user_key user = failwith "Unimplemented"
 let add_msg (msg : Msg.t) = failwith "Unimplemented"
 let get_msg receiver = failwith "Unimplemented"
 let get_msg_since receiver time = failwith "Unimplemented"

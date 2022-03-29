@@ -40,7 +40,11 @@ and json_convert lst =
 
 let message_to_obj msg =
   let msg_t =
-    if Msg.msg_type msg = Msg.Message then "Message" else "FriendReq"
+    match Msg.msg_type msg with 
+    | Msg.Message ->  "Message" 
+    | Msg.FriendReq -> "FriendReq"
+    | Msg.FriendReqRep (bo, key) -> 
+      if bo then "T" ^ key else "F"
   in
   let lst =
     [

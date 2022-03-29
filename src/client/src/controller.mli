@@ -1,3 +1,4 @@
+open Util
 (** The controller is called by the client's interface to complete
     operations. *)
 
@@ -15,7 +16,7 @@ val send_msg : string -> string -> string -> bool * string
     [receiver]. Returns: [(true, feedback)] if the message is
     successfully sent, [(false, feedback)] otherwise. *)
 
-val get_msg : string -> bool * msg list
+val get_msg : string -> bool * Msg.t list
 (** [get_msg reciever] fetches all the messages sent to [receiver].
     Returns [(true, msglist)] if request successful, else
     [(false, \[\])]*)
@@ -38,7 +39,7 @@ val friend_req : string -> string -> string -> bool * string
 
 val friend_req_reply : string -> string -> bool -> bool * string
 (** [friend_req_reply sender receiver accepted] accepts the friend
-    request from [receiver] if [accepted] is true, and rejects the
-    friend request from [receiver] if [accepted] is false. Returns
-    [(true, feedback)] if it is successfully sent, else
-    [(false, error_msg)]*)
+    request from [receiver], or sends the [receiver] the response if
+    [accepted] is true, and rejects the friend request from [receiver]
+    if [accepted] is false. Returns [(true, feedback)] if it is
+    successfully sent, else [(false, error_msg)]*)

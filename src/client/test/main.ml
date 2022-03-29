@@ -41,7 +41,8 @@ let get_msg_1 =
 
 let register_1 =
   "{\"type\": \"Register\",\"sender\": \"Daniel\",\"time\": \
-   \"2000-01-01 08:00:00\",\"password\": \"tail recursion\"}"
+   \"2000-01-01 08:00:00\",\"password\": \"tail recursion\",\"key\": \
+   \"key\"}"
 
 let login_1 =
   "{\"type\": \"Login\",\"sender\": \"Elizabeth\",\"time\": \
@@ -72,7 +73,8 @@ let packager_tests =
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing Register" >:: fun _ ->
       assert_equal register_1
-        (pack_register "Daniel" "tail recursion")
+        (pack_register "Daniel" "tail recursion" "key")
+        (* key ungenerated*)
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing Login" >:: fun _ ->
       assert_equal login_1
