@@ -12,6 +12,11 @@ open Util
     remember to change [test] to [true] in database.ml before running
     the tests. *)
 
+(** Note: We are not using ounit to test the database because ounit
+    tests are parallel, whereas we need the database tests to be
+    sequential. For instance, we must first add a user before testing
+    that the user exists in the database. *)
+
 let test_add_n_diff n =
   for i = 1 to n do
     let added =
@@ -58,15 +63,43 @@ let test_chk_pwd_false () = assert (not (chk_pwd "Alice" "watermelon"))
 let test_chk_pwd_unknown () =
   assert_raises (UnknownUser "Foo") (fun _ -> chk_pwd "Foo" "banana")
 
+let test_chk_pwd () =
+  test_chk_pwd_true ();
+  test_chk_pwd_false ();
+  test_chk_pwd_unknown ()
+
+let msg_alice_bob : Msg.t =
+  Msg.make_msg "Alice" "Bob" "2022-03-28 23:09:02" Message "Hello Bob"
+
+let msg_catherine_alice : Msg.t =
+  Msg.make_msg "Catherine" "Alice" "2022-03-28 23:09:02" Message
+    "Hey Alice, this is Catherine!"
+
+let msg_foo_alice : Msg.t =
+  Msg.make_msg "Foo" "Alice" "2022-03-28 23:09:02" Message "Hi"
+
+let msg_bob_bar : Msg.t =
+  Msg.make_msg "Bob" "Bar" "2022-03-28 23:09:02" Message "Hi"
+
+let msg_bad_time : Msg.t =
+  Msg.make_msg "Alice" "Bob" "2022-03-28 24:09:02" Message "Hi"
+
+let test_add_msg () =
+  assert (add_msg msg_alice_bob);
+  assert (add_msg msg_catherine_alice);
+  assert_raises (UnknownUser "Foo") (fun _ -> add_msg msg_foo_alice);
+  assert_raises (UnknownUser "Bar") (fun _ -> add_msg msg_bob_bar);
+  assert_raises MalformedTime (fun _ -> add_msg msg_bad_time)
+
 let run_database_tests () =
   test_add_n_diff 100;
   test_add_n_same 100;
   add_more_users ();
   test_user_exists ();
-  test_chk_pwd_true ();
-  test_chk_pwd_false ();
-  test_chk_pwd_unknown ();
-  test_user_key ()
+  test_chk_pwd ();
+  test_user_key ();
+  test_add_msg ();
+  print_endline "All database tests passed!"
 
 (******************** Server Parser Tests ********************)
 

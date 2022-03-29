@@ -56,6 +56,11 @@ let assert_rc_row = function
       prerr_endline (errmsg server_db);
       failwith "A row is expected but none is available."
 
+(** [time_ok time] raises [MalformedTime] if [time] is not in the right
+    format. Otherwise, it is the identity function. *)
+let time_ok time =
+  if Time.chk_time time then time else raise MalformedTime
+
 (******************** Create Tables ********************)
 
 let create_users_sql =
@@ -129,11 +134,11 @@ let user_exists username =
   step stmt |> assert_rc_row;
   column_bool stmt 0
 
-(** [chk_user username] raises [UnknownUser] if [username] is not found
+(** [user_ok username] raises [UnknownUser] if [username] is not found
     in the database. Otherwise, it is the identity function. *)
-let chk_user username =
-  if not (user_exists username) then raise (UnknownUser username)
-  else username
+let user_ok username =
+  if user_exists username then username
+  else raise (UnknownUser username)
 
 let add_ok_str username =
   Printf.sprintf "User %s sucessfully added" username
@@ -142,8 +147,8 @@ let add_exists_str username =
   Printf.sprintf "User %s already exists" username
 
 let add_user username pwd key time =
-  if not (Time.chk_time time) then raise MalformedTime
-  else if user_exists username then (
+  let time = time_ok time in
+  if user_exists username then (
     print_endline (add_exists_str username);
     print_newline ();
     (false, add_exists_str username))
@@ -161,7 +166,7 @@ let select_key_stmt username =
   prepare server_db (select_key_sql username)
 
 let user_key username =
-  let username = chk_user username in
+  let username = user_ok username in
   let stmt = select_key_stmt username in
   step stmt |> assert_rc_row;
   column_text stmt 0
@@ -178,12 +183,30 @@ let chk_pwd_stmt username pwd =
   prepare server_db (chk_pwd_sql username pwd)
 
 let chk_pwd username pwd =
-  let username = chk_user username in
+  let username = user_ok username in
   let stmt = chk_pwd_stmt username pwd in
   step stmt |> assert_rc_row;
   column_bool stmt 0
 
-let add_msg (msg : Msg.t) = failwith "Unimplemented"
+(******************** Add message ********************)
+
+let insert_msg_sql sender receiver content time =
+  Printf.sprintf
+    "INSERT INTO messages VALUES ('%s', '%s', '%s', '%s', FALSE);"
+    sender receiver content time
+
+let add_msg (msg : Msg.t) =
+  assert (Msg.msg_type msg = Msg.Message);
+  let sender = Msg.sender msg |> user_ok in
+  let receiver = Msg.receiver msg |> user_ok in
+  let content = Msg.content msg in
+  let time = Msg.time msg |> time_ok in
+  exec server_db (insert_msg_sql sender receiver content time)
+  |> handle_rc
+       (Printf.sprintf "%s sent a message to %s at %s: %s" sender
+          receiver time content);
+  true
+
 let get_msg receiver = failwith "Unimplemented"
 let get_msg_since receiver time = failwith "Unimplemented"
 let new_fr (req : Msg.t) = failwith "Unimplemented"
