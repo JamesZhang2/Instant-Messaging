@@ -7,23 +7,25 @@ open Sqlite3
 
 let user_db = db_open "data/database/user.db"
 
-let create_table_users_sql =
-  "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
-   TEXT NOT NULL);"
+(** [assert_rc rc expected err_msg] asserts that [rc] is [expected]. *)
+let assert_rc rc expected =
+  if rc <> expected then (
+    prerr_endline (Rc.to_string rc);
+    prerr_endline (errmsg user_db);
+    let err_msg =
+      "Util.Database: Return code is not " ^ Rc.to_string expected
+    in
+    failwith err_msg)
 
-let insert_user_sql username password =
-  Printf.sprintf "INSERT INTO users VALUES ('%s','%s');" username
-    password
-(* Note: This can be vulnerable to BOBBY DROP TABLES attacks! We'll
-   worry about that later. *)
+let assert_ok rc = assert_rc rc Rc.OK
+let assert_row rc = assert_rc rc Rc.ROW
+let assert_done rc = assert_rc rc Rc.DONE
 
-let insert_user username password =
-  exec user_db (insert_user_sql username password)
-
-(** [handle_rc ok_msg] prints [ok_msg] if the return code [rc] is [OK].
-    Otherwise, it prints helpful error messages. *)
+(** [handle_rc ok_msg] prints [ok_msg] if the return code [rc] is [OK]
+    or [DONE]. Otherwise, it prints helpful error messages. *)
 let handle_rc ok_msg = function
-  | Rc.OK ->
+  | Rc.OK
+  | Rc.DONE ->
       print_endline ok_msg;
       print_newline ()
   | r ->
@@ -40,8 +42,20 @@ let is_row = function
       prerr_endline (errmsg user_db);
       assert false
 
+let create_table_users_sql =
+  "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
+   TEXT NOT NULL);"
+
 let create_table_users () =
   exec user_db create_table_users_sql |> handle_rc "Created table users"
+
+let insert_user_sql =
+  "INSERT INTO users (username, password) VALUES (?, ?);"
+
+let insert_user username password =
+  let stmt = prepare user_db insert_user_sql in
+  bind_values stmt [ TEXT username; TEXT password ] |> assert_ok;
+  step stmt
 
 let insert_alice () =
   insert_user "Alice" "apple"
@@ -60,8 +74,7 @@ let insert_charlie () =
 let name_pswd_cb row header =
   match (row.(0), row.(1)) with
   | Some username, Some password ->
-      print_endline
-        (Printf.sprintf "Username: %s, password: %s" username password)
+      Printf.printf "Username: %s, password: %s\n" username password
   | _ -> assert false
 
 let select_all_users_sql = "SELECT * FROM users;"
@@ -75,8 +88,7 @@ let select_all_users () =
     password. Requires: [row] is a row with username and password. *)
 let pswd_cb row header =
   match row.(1) with
-  | Some password ->
-      print_endline (Printf.sprintf "Password: %s" password)
+  | Some password -> Printf.printf "Password: %s\n" password
   | _ -> assert false
 
 let select_alice_sql = "SELECT * FROM users WHERE username = 'Alice';"

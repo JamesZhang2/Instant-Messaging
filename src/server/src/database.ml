@@ -39,25 +39,29 @@ let db_file =
 let server_db = db_open db_file
 
 (** [handle_rc ok_msg rc] prints [ok_msg] if the return code [rc] is
-    [OK]. Otherwise, it prints helpful error messages. *)
+    [OK] or [DONE]. Otherwise, it prints helpful error messages. *)
 let handle_rc ok_msg = function
-  | Rc.OK ->
+  | Rc.OK
+  | Rc.DONE ->
       print_endline ok_msg;
       print_newline ()
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db);
-      failwith "Server.Database.handle_rc: Return code is not OK"
+      failwith "Server.Database: Return code is not OK"
 
-(** [assert_rc_row rc] asserts that the recurn code [rc] is [ROW]. *)
-let assert_rc_row = function
-  | Rc.ROW -> ()
-  | r ->
-      prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg server_db);
-      failwith
-        "Server.Database.assert_rc_row: A row is expected but none is \
-         available."
+(** [assert_rc rc expected err_msg] asserts that [rc] is [expected]. *)
+let assert_rc rc expected =
+  if rc <> expected then (
+    prerr_endline (Rc.to_string rc);
+    prerr_endline (errmsg server_db);
+    let err_msg =
+      "Server.Database: Return code is not " ^ Rc.to_string expected
+    in
+    failwith err_msg)
+
+let assert_ok rc = assert_rc rc Rc.OK
+let assert_row rc = assert_rc rc Rc.ROW
 
 (** [time_ok time] raises [MalformedTime] if [time] is not in the right
     format. Otherwise, it is the identity function. *)
@@ -97,8 +101,10 @@ let create_tables () =
   create_messages_table ();
   create_friends_table ()
 
-(******************** Print All ********************)
+(******************** Print All (Debug) ********************)
 
+(* This has no injection issues because [print_all] is only used
+   internally. *)
 let select_all_sql table = Printf.sprintf "SELECT * from %s" table
 
 let print_option = function
@@ -117,21 +123,23 @@ let print_all table =
 
 (******************** Add User ********************)
 
-let insert_user_sql username pwd key time =
-  Printf.sprintf "INSERT INTO users VALUES ('%s', '%s', '%s', '%s');"
-    username pwd key time
+let insert_user_sql =
+  "INSERT INTO users (username, password, public_key, time_registered) \
+   VALUES (?, ?, ?, ?);"
 
 let insert_user username pwd key time =
-  exec server_db (insert_user_sql username pwd key time)
+  let stmt = prepare server_db insert_user_sql in
+  bind_values stmt [ TEXT username; TEXT pwd; TEXT key; TEXT time ]
+  |> assert_ok;
+  step stmt
 
-let user_exists_sql username =
-  Printf.sprintf
-    "SELECT EXISTS (SELECT 1 from users WHERE username = '%s');"
-    username
+let user_exists_sql =
+  "SELECT EXISTS (SELECT 1 from users WHERE username = ?);"
 
 let user_exists username =
-  let stmt = prepare server_db (user_exists_sql username) in
-  step stmt |> assert_rc_row;
+  let stmt = prepare server_db user_exists_sql in
+  bind_text stmt 1 username |> assert_ok;
+  step stmt |> assert_row;
   column_bool stmt 0
 
 (** [user_ok username] raises [UnknownUser] if [username] is not found
@@ -158,36 +166,33 @@ let add_user username pwd key time =
 
 (******************** User key ********************)
 
-let select_key_sql username =
-  Printf.sprintf "SELECT public_key FROM users WHERE username = '%s'"
-    username
+let select_key_sql = "SELECT public_key FROM users WHERE username = ?"
 
 let user_key username =
   let username = user_ok username in
-  let stmt = prepare server_db (select_key_sql username) in
-  step stmt |> assert_rc_row;
+  let stmt = prepare server_db select_key_sql in
+  bind_text stmt 1 username |> assert_ok;
+  step stmt |> assert_row;
   column_text stmt 0
 
 (******************** Check password ********************)
 
-let chk_pwd_sql username pwd =
-  Printf.sprintf
-    "SELECT EXISTS (SELECT 1 from users WHERE username = '%s' AND \
-     password = '%s');"
-    username pwd
+let chk_pwd_sql =
+  "SELECT EXISTS (SELECT 1 from users WHERE username = ? AND password \
+   = ?);"
 
 let chk_pwd username pwd =
   let username = user_ok username in
-  let stmt = prepare server_db (chk_pwd_sql username pwd) in
-  step stmt |> assert_rc_row;
+  let stmt = prepare server_db chk_pwd_sql in
+  bind_values stmt [ TEXT username; TEXT pwd ] |> assert_ok;
+  step stmt |> assert_row;
   column_bool stmt 0
 
 (******************** Add message ********************)
 
-let insert_msg_sql sender receiver content time =
-  Printf.sprintf
-    "INSERT INTO messages VALUES ('%s', '%s', '%s', '%s', FALSE);"
-    sender receiver content time
+let insert_msg_sql =
+  "INSERT INTO messages (sender, receiver, content, time, retrieved) \
+   VALUES (?, ?, ?, ?, FALSE);"
 
 let add_msg (msg : Msg.t) =
   assert (Msg.msg_type msg = Msg.Message);
@@ -195,7 +200,11 @@ let add_msg (msg : Msg.t) =
   let receiver = Msg.receiver msg |> user_ok in
   let content = Msg.content msg in
   let time = Msg.time msg |> time_ok in
-  exec server_db (insert_msg_sql sender receiver content time)
+  let stmt = prepare server_db insert_msg_sql in
+  bind_values stmt
+    [ TEXT sender; TEXT receiver; TEXT content; TEXT time ]
+  |> assert_ok;
+  step stmt
   |> handle_rc
        (Printf.sprintf "%s sent a message to %s at %s: %s" sender
           receiver time content);
@@ -203,36 +212,24 @@ let add_msg (msg : Msg.t) =
 
 (******************** Get message ********************)
 
-(** [select_msg_sql receiver time] is the sql string of selecting all
-    messages sent to [receiver] after [time]. *)
-let select_msg_sql receiver time =
-  Printf.sprintf
-    "SELECT * FROM messages WHERE receiver = '%s' AND time > '%s' \
-     ORDER BY time ASC;"
-    receiver time
+let select_msg_sql =
+  "SELECT * FROM messages WHERE receiver = ? AND time > ? ORDER BY \
+   time ASC;"
 
-(** [select_msg_sql receiver time] is the sql string of selecting all
-    messages sent to [receiver] after [time] that have not been
-    retrieved earlier. *)
-let select_new_msg_sql receiver time =
-  Printf.sprintf
-    "SELECT * FROM messages WHERE receiver = '%s' AND time > '%s' AND \
-     retrieved = FALSE ORDER BY time ASC;"
-    receiver time
+let select_new_msg_sql =
+  "SELECT * FROM messages WHERE receiver = ? AND time > ? AND \
+   retrieved = FALSE ORDER BY time ASC;"
 
-(** [mark_as_retreved_sql receiver time] sets all messages sent to
-    [receiver] after [time] as retrieved. *)
-let mark_as_retrieved_sql receiver time =
-  Printf.sprintf
-    "UPDATE messages SET retrieved = TRUE WHERE receiver = '%s' AND \
-     time > '%s'"
-    receiver time
+let mark_as_retrieved_sql =
+  "UPDATE messages SET retrieved = TRUE WHERE receiver = ? AND time > ?"
 
 (** [mark_as_retrieved receiver time] marks all messages sent to
     [receiver] after [time] as retrieved. Requires: [receiver] is found
     in the user table and [time] is in the correct format. *)
 let mark_as_retrieved receiver time =
-  exec server_db (mark_as_retrieved_sql receiver time)
+  let stmt = prepare server_db mark_as_retrieved_sql in
+  bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
+  step stmt
   |> handle_rc
        (Printf.sprintf
           "Messages sent to %s after %s are marked as retrieved"
@@ -258,11 +255,9 @@ let print_msg_list (lst : Msg.t list) =
 let get_msg_aux receiver time ~new_only =
   let receiver = user_ok receiver in
   let time = time_ok time in
-  let sql =
-    if new_only then select_new_msg_sql receiver time
-    else select_msg_sql receiver time
-  in
+  let sql = if new_only then select_new_msg_sql else select_msg_sql in
   let stmt = prepare server_db sql in
+  bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
   let res = Sqlite3.fold stmt ~f:cons_one_msg ~init:[] in
   match res with
   | Rc.DONE, lst ->

@@ -17,6 +17,11 @@ open Util
     sequential. For instance, we must first add a user before testing
     that the user exists in the database. *)
 
+let injection_str = "Robert\'); DROP TABLE users; --"
+(* SQL injection attack *)
+
+let strange_chars = "`~!@#$%^&*()-_=+[]{}\\|;:\'\",.<>/?\t\n"
+
 let test_add_n_diff n =
   for i = 1 to n do
     let added =
@@ -43,6 +48,9 @@ let add_more_users () =
   let added =
     add_user "Bob" "banana" "key B" "2022-03-27 14:55:20" |> fst
     && add_user "Catherine" "cherry" "key C" "2022-03-27 14:58:33"
+       |> fst
+    && add_user injection_str strange_chars strange_chars
+         "2022-03-29 19:12:28"
        |> fst
   in
   assert added
@@ -76,11 +84,11 @@ let msg_bob_alice_1 : Msg.t =
 
 let msg_bob_alice_2 : Msg.t =
   Msg.make_msg "Bob" "Alice" "2022-03-28 23:10:35" Message
-    "How are you doing?"
+    "How's it going?"
 
 let msg_catherine_alice : Msg.t =
   Msg.make_msg "Catherine" "Alice" "2022-03-27 10:14:41" Message
-    "Hey Alice, this is Catherine!"
+    ("Hey Alice, this is Catherine!" ^ injection_str ^ strange_chars)
 
 let msg_foo_alice : Msg.t =
   Msg.make_msg "Foo" "Alice" "2022-03-28 23:09:02" Message "Hi"
