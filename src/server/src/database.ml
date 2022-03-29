@@ -3,7 +3,7 @@
     - username: TEXT NOT NULL
     - password: TEXT NOT NULL
     - public_key: TEXT NOT NULL
-    - date_registered: TEXT NOT NULL
+    - time_registered: TEXT NOT NULL
 
     Messages table columns:
 
@@ -54,13 +54,13 @@ let assert_rc_row = function
   | r ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db);
-      assert false
+      failwith "A row is expected but none is available."
 
 (******************** Create Tables ********************)
 
 let create_users_sql =
   "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
-   TEXT NOT NULL, public_key TEXT NOT NULL, date_registered TEXT NOT \
+   TEXT NOT NULL, public_key TEXT NOT NULL, time_registered TEXT NOT \
    NULL);"
 
 let create_users_table () =
@@ -129,6 +129,12 @@ let user_exists username =
   step stmt |> assert_rc_row;
   column_bool stmt 0
 
+(** [chk_user username] raises [UnknownUser] if [username] is not found
+    in the database. Otherwise, it is the identity function. *)
+let chk_user username =
+  if not (user_exists username) then raise (UnknownUser username)
+  else username
+
 let add_ok_str username =
   Printf.sprintf "User %s sucessfully added" username
 
@@ -145,6 +151,21 @@ let add_user username pwd key time =
     insert_user username pwd key time |> handle_rc (add_ok_str username);
     (true, add_ok_str username))
 
+(******************** User key ********************)
+
+let select_key_sql username =
+  Printf.sprintf "SELECT public_key FROM users WHERE username = '%s'"
+    username
+
+let select_key_stmt username =
+  prepare server_db (select_key_sql username)
+
+let user_key username =
+  let username = chk_user username in
+  let stmt = select_key_stmt username in
+  step stmt |> assert_rc_row;
+  column_text stmt 0
+
 (******************** Check password ********************)
 
 let chk_pwd_sql username pwd =
@@ -157,13 +178,11 @@ let chk_pwd_stmt username pwd =
   prepare server_db (chk_pwd_sql username pwd)
 
 let chk_pwd username pwd =
-  if not (user_exists username) then raise (UnknownUser username)
-  else
-    let stmt = chk_pwd_stmt username pwd in
-    step stmt |> assert_rc_row;
-    column_bool stmt 0
+  let username = chk_user username in
+  let stmt = chk_pwd_stmt username pwd in
+  step stmt |> assert_rc_row;
+  column_bool stmt 0
 
-let user_key user = failwith "Unimplemented"
 let add_msg (msg : Msg.t) = failwith "Unimplemented"
 let get_msg receiver = failwith "Unimplemented"
 let get_msg_since receiver time = failwith "Unimplemented"
