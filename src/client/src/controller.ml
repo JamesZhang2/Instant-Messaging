@@ -4,18 +4,11 @@ open Parser
 open Network
 open Util
 
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  body : string;
-}
-
 (** [is_successful status] is true if [status] is between 200 and 299
     inclusive, and false otherwise. *)
 let is_successful status = status / 100 = 2
 
-(** It is the memory locatio that stores the current key of user*)
+(** It is the memory location that stores the current key of user*)
 let key_ref = ref (Crypto.sym_gen ())
 
 (** memory documentation of the current user*)

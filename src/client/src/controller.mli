@@ -2,13 +2,6 @@ open Util
 (** The controller is called by the client's interface to complete
     operations. *)
 
-type msg = {
-  sender : string;
-  receiver : string;
-  time : string;
-  body : string;
-}
-
 exception IllegalResponse
 
 val send_msg : string -> string -> string -> bool * string
