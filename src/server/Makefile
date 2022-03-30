@@ -7,6 +7,7 @@ utop:
 	OCAMLRUNPARAM=b dune utop src
 
 clean:
+	rm -f data/database/*.db
 	dune clean
 
 run:

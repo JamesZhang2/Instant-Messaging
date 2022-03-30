@@ -37,7 +37,7 @@ let send_msg_1 =
 
 let get_msg_1 =
   "{\"type\": \"GetMessage\",\"sender\": \"Charlie\",\"time\": \
-   \"2000-01-01 08:00:00\"}"
+   \"2000-01-01 08:00:00\",\"message\": \"unread\"}"
 
 let register_1 =
   "{\"type\": \"Register\",\"sender\": \"Daniel\",\"time\": \

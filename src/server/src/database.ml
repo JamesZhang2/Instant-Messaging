@@ -33,10 +33,11 @@ open Util
 exception MalformedTime
 exception UnknownUser of string
 
-let test = true
+let test = false
 
 let db_file =
-  if test then "data/database/test.db" else "data/database/server.db"
+  "data" ^ Filename.dir_sep ^ "database" ^ Filename.dir_sep
+  ^ if test then "test.db" else "server.db"
 
 let server_db = db_open db_file
 
