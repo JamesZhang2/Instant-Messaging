@@ -1,45 +1,6 @@
 open Controller
 open Util
 
-module Command = struct
-  exception Malformed
-
-  type parameters = string list
-
-  type command =
-    | SendMsg of string * string * string
-    | GetMsg of string
-    | Register of string * string
-    | Login of string * string
-    | FriendReq of string * string * string
-    | FriendReqRep of string * string * bool
-    | Help
-    | Quit
-
-  (** [parse str] Parses a string command into command type. Raises:
-      [Malformed] if the command does not match with any of the types*)
-  let parse str =
-    let str_list =
-      str |> String.split_on_char ' ' |> List.filter (fun s -> s <> "")
-    in
-    match str_list with
-    | [] -> raise Malformed
-    | [ "quit" ] -> Quit
-    | [ "help" ] -> Help
-    | [ "SendMsg"; sender; receiver; msg ] ->
-        SendMsg (sender, receiver, msg)
-    | [ "GetMsg"; sender ] -> GetMsg sender
-    | [ "Register"; username; password ] -> Register (username, password)
-    | [ "Login"; username; password ] -> Login (username, password)
-    | [ "FriendReq"; sender; receiver; msg ] ->
-        FriendReq (sender, receiver, msg)
-    | [ "FriendReqReply"; sender; receiver; "true" ] ->
-        FriendReqRep (sender, receiver, true)
-    | [ "FriendReqReply"; sender; receiver; "false" ] ->
-        FriendReqRep (sender, receiver, false)
-    | _ -> raise Malformed
-end
-
 (** begin new line if 1, if 0 then it's a prompt*)
 let str_format prompt str =
   if prompt = 0 then "> " ^ str ^ "\n" else "> " ^ str ^ "\n> "
@@ -64,6 +25,14 @@ let print_message msg =
   sender |> str_format 0 |> print_endline;
   time |> str_format 0 |> print_endline;
   message |> str_format 0 |> print_endline
+
+(** Prints all strings in [lst]*)
+let printlist lst =
+  let func x =
+    print_endline x;
+    x
+  in
+  List.map func lst
 
 (** [print_messages msg_list] prints the list of messages [msg_list]*)
 let rec print_messages msg_list =
@@ -94,7 +63,13 @@ let help_print () =
   "[FriendReq sender receiver message] : sends a friend request from \
    sender to receiver" |> str_format 0 |> print_string;
   "[FriendReqReply sender receiver message] : replies a message from \
-   receiver to sender" |> str_format 1 |> print_string
+   receiver to sender" |> str_format 1 |> print_string;
+  "[ReadAll] : Reads all recent messages" |> str_format 1
+  |> print_string;
+  "[Read from <friend>] : reads all recent messages from <friend> "
+  |> str_format 1 |> print_string;
+  "[Friends] : Shows the list of friends of current logged in user "
+  |> str_format 1 |> print_string
 
 let rec main () =
   begin_print;
@@ -130,8 +105,24 @@ let rec main () =
       let resp = Controller.friend_req_reply receiver accepted in
       bool_print resp;
       main ()
+  | ReadAll ->
+      let check, messages = Controller.read_msg () in
+      if check then print_messages messages
+      else bool_print (false, "Message History Fetch Unsuccessful");
+      main ()
+  | ReadFrom friend ->
+      let check, messages = Controller.read_msg_from friend in
+      if check then print_messages messages
+      else bool_print (false, "Friend History fetch unsuccessful")
+  | ListFriend ->
+      let check, friends = Controller.lst_of_friends () in
+      if check then
+        let _ = printlist friends in
+        ()
+      else bool_print (false, "Unable to fetch list of friends");
+      main ()
   | Quit -> exit 0
 
-let run =
+let run () =
   help_print ();
   main ()
