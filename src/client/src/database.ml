@@ -1,3 +1,27 @@
+(** Main table columns: tablename=client
+
+    - id INTEGER PRIMARY KEY AUTOINCREMENT
+    - username TEXT NOT NULL UNIQUE
+    - key TEXT NOT NULL
+
+    Client [x]'s friend request table columns: tablename=x_req
+
+    - id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user TEXT NOT NULL
+    - key TEXT NOT NULL
+    - message TEXT
+    - isSender BOOL NOT NULL
+    - time TEXT NOT NULL
+    - accepted BOOL
+
+    Client [x]'s message table columns: tablename=x_msg
+
+    - id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user TEXT NOT NULL
+    - message TEXT NOT NULL
+    - isSender BOOL NOT NULL
+    - time TEXT NOT NULL *)
+
 open Sqlite3
 open Util.Msg
 open Util.Time
@@ -9,6 +33,8 @@ type msg_dir =
 exception MalformedTime
 exception IncorrectUser
 exception DBNotExist
+
+(******************** General Helper Functions ********************)
 
 let db_dir_prefix =
   "data" ^ Filename.dir_sep ^ "database" ^ Filename.dir_sep
