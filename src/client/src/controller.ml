@@ -12,7 +12,7 @@ let is_successful status = status / 100 = 2
 let key_ref = ref (Crypto.sym_gen ())
 
 (** memory documentation of the current user*)
-let username_ref = ref "none"
+let username_ref = ref ""
 
 (** For debug purposes *)
 let use_encryption = false
@@ -48,10 +48,10 @@ let rec db_op meth input =
   let success, resp = meth input in
   if success then () else db_op meth input
 
-let send_msg sender receiver msg =
-  if receiver <> !username_ref then
-    (false, "Incorrect user login credential")
+let send_msg receiver msg =
+  if !username_ref = "" then (false, "Incorrect user login credential")
   else
+    let sender = !username_ref in
     let encrypted_msg =
       if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
       else msg
@@ -83,9 +83,10 @@ let msg_processor receiver msg =
    | FriendReq -> db_op (add_request receiver msg) None);
   msg
 
-let update_msg ?(amount = "unread") receiver =
-  if receiver <> !username_ref then (false, [])
+let update_msg ?(amount = "unread") () =
+  if "" = !username_ref then (false, [])
   else
+    let receiver = !username_ref in
     let request = Packager.pack_get_msg receiver amount in
     let raw_response = Network.request "POST" ~body:request in
     let raw_body =
@@ -129,15 +130,16 @@ let login username password =
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
           let messages =
-            if is_client username then update_msg username
-            else update_msg "2022-03-29 17:00:00"
+            if is_client username then update_msg ()
+            else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
           in
           messages)
 
-let friend_req sender receiver msg =
-  if sender <> !username_ref then (false, "User Not Logged in")
+let friend_req receiver msg =
+  if "" = !username_ref then (false, "User Not Logged in")
   else
+    let sender = !username_ref in
     let message = Packager.pack_friend_req sender receiver msg in
     let raw_response = Network.request "POST" ~body:message in
     let success, resp = bool_post_parse raw_response in
@@ -154,17 +156,50 @@ let friend_req sender receiver msg =
     in
     (success, resp)
 
-let friend_req_reply sender receiver accepted =
-  let message =
-    Packager.pack_friend_req_reply sender receiver accepted
-  in
-  let raw_response = Network.request "POST" ~body:message in
-  let successful, resp = bool_post_parse raw_response in
-  if successful then
-    if accepted then
-      let _ = update_request sender receiver true in
-      (successful, resp)
-    else
-      let _ = update_request sender receiver false in
-      (successful, resp)
-  else (successful, resp)
+let friend_req_reply receiver accepted =
+  if "" = !username_ref then (false, "User not logged in")
+  else
+    let sender = !username_ref in
+    let message =
+      Packager.pack_friend_req_reply sender receiver accepted
+    in
+    let raw_response = Network.request "POST" ~body:message in
+    let successful, resp = bool_post_parse raw_response in
+    if successful then
+      if accepted then
+        let _ = update_request sender receiver true in
+        (successful, resp)
+      else
+        let _ = update_request sender receiver false in
+        (successful, resp)
+    else (successful, resp)
+
+let incorrect_usermsg =
+  [
+    Msg.make_msg "server" !username_ref "2022-03-29 17:00:00" Message
+      "Incorrect User";
+  ]
+
+let read_msg () =
+  if "" = !username_ref then (false, incorrect_usermsg)
+  else
+    let username = !username_ref in
+    match get_all_msgs_since username "2022-03-29 17:00:00" with
+    | exception IncorrectUser -> (false, incorrect_usermsg)
+    | messages -> (true, messages)
+
+let read_msg_from sender =
+  if "" = !username_ref then (false, incorrect_usermsg)
+  else
+    let username = !username_ref in
+    match
+      get_msgs_by_frd_since username sender "2022-03-29 17:00:00"
+    with
+    | exception IncorrectUser -> (false, incorrect_usermsg)
+    | messages -> (true, messages)
+
+let lst_of_friends () =
+  if "" = !username_ref then (false, [ "User Not Logged In" ])
+  else
+    let lst = get_all_frds !username_ref in
+    (true, lst)

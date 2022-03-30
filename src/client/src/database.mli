@@ -55,7 +55,7 @@ val get_all_reqs : string -> Msg.t list
     table. Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created. *)
 
-val get_all_frds : string -> Msg.t list
+val get_all_frds : string -> string list
 (** [get_all_frds client] is a list of all freinds in [client] table.
     Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created.*)

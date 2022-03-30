@@ -107,11 +107,11 @@ let rec main () =
       help_print ();
       main ()
   | SendMsg (sender, receiver, msg) ->
-      let resp = Controller.send_msg sender receiver msg in
+      let resp = Controller.send_msg receiver msg in
       bool_print resp;
       main ()
   | GetMsg sender ->
-      let check, msg = Controller.get_msg sender in
+      let check, msg = Controller.update_msg () in
       if check then print_messages msg else bool_print (false, "");
       main ()
   | Register (username, password) ->
@@ -123,11 +123,11 @@ let rec main () =
       if check then print_messages msg else bool_print (false, "");
       main ()
   | FriendReq (sender, receiver, msg) ->
-      let resp = Controller.friend_req sender receiver msg in
+      let resp = Controller.friend_req receiver msg in
       bool_print resp;
       main ()
   | FriendReqRep (sender, receiver, accepted) ->
-      let resp = Controller.friend_req_reply sender receiver accepted in
+      let resp = Controller.friend_req_reply receiver accepted in
       bool_print resp;
       main ()
   | Quit -> exit 0

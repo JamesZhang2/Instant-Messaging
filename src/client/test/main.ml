@@ -69,7 +69,7 @@ let packager_tests =
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing GetMessage" >:: fun _ ->
       assert_equal get_msg_1
-        (pack_get_msg "Charlie")
+        (pack_get_msg "Charlie" "unread")
         ~cmp:equal_ignore_time ~printer:remove_time );
     ( "packing Register" >:: fun _ ->
       assert_equal register_1
