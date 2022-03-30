@@ -25,6 +25,9 @@ val login : string -> string -> bool * Msg.t list
     [password]. Returns: [(true, new_msg list)] if the user is logged
     in, [(false, error_msg)] otherwise. *)
 
+val logout : unit -> string
+(** [logout] logs out the current user. *)
+
 val friend_req : string -> string -> bool * string
 (** [friend_req receiver msg] sends a friend request from [sender], the
     currently logged in user to [receiver] with message [msg]. Returns:

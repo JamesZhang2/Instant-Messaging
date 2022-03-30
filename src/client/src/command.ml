@@ -7,6 +7,7 @@ type command =
   | GetMsg of string
   | Register of string * string
   | Login of string * string
+  | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
   | ReadAll
@@ -39,4 +40,5 @@ let parse str =
   | [ "ReadAll" ] -> ReadAll
   | [ "Read"; "from"; sender ] -> ReadFrom sender
   | [ "Friends" ] -> ListFriend
+  | [ "Logout" ] -> Logout
   | _ -> raise Malformed

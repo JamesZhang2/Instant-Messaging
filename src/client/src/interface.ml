@@ -97,6 +97,10 @@ let rec main () =
       let check, msg = Controller.login username password in
       if check then print_messages msg else bool_print (false, "");
       main ()
+  | Logout ->
+      let msg = Controller.logout () in
+      msg |> str_format 1 |> print_string;
+      main ()
   | FriendReq (sender, receiver, msg) ->
       let resp = Controller.friend_req receiver msg in
       bool_print resp;

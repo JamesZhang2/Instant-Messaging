@@ -7,6 +7,7 @@ type command =
   | GetMsg of string
   | Register of string * string
   | Login of string * string
+  | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
   | ReadAll

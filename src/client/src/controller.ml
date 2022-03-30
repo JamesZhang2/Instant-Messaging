@@ -38,9 +38,15 @@ let bool_post_parse raw_response =
   let raw_body =
     raw_response |> Network.response_body |> option_unpack
   in
-  let body = Parser.parse raw_body in
-  let message = Parser.get_plain body in
-  (status, message)
+  if not status then (false, "Network Error")
+  else
+    let body = Parser.parse raw_body in
+    match Parser.get_type body with
+    | ErrorResponse x -> (false, x)
+    | GetMsgResponse x -> (false, "don't use bool_post_parse")
+    | PostMethResponse x -> (true, x)
+(* let message = Parser.get_plain body in (Parser.get_type body,
+   message) *)
 
 (** [db_op meth input] does the database operation [meth] until a
     success is returned. *)
@@ -129,12 +135,17 @@ let login username password =
       | PostMethResponse x ->
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
+          db_op init_dbs ();
           let messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
           in
           messages)
+
+let logout () =
+  username_ref := "";
+  "You have logged out"
 
 let friend_req receiver msg =
   if "" = !username_ref then (false, "User Not Logged in")
