@@ -36,11 +36,15 @@ let handle_send_msg req_meth sender time receiver msg =
     | true -> Packager.post_method_response "Message successfully sent"
     | false -> Packager.error_response "Message send unsuccessful."
 
-let handle_get_msg req_meth receiver time =
+let handle_get_msg req_meth receiver time amount =
   if req_meth <> Post then
     Packager.error_response "GetMessage should use POST method"
   else
-    match get_msg receiver with
+    let func =
+      if amount = "unread" then fun x -> get_new_msg receiver
+      else fun x -> get_msg_since receiver amount
+    in
+    match func () with
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
     | lst -> Packager.get_method_response lst
@@ -165,7 +169,7 @@ let parse req_meth body =
     match Parser.pkt_type parsed_body with
     | SendMessage (receiver, msg) ->
         handle_send_msg req_meth sender time receiver msg
-    | GetMessage -> handle_get_msg req_meth sender time
+    | GetMessage message -> handle_get_msg req_meth sender time
     | Register (password, key) ->
         handle_register req_meth sender time password key
     | Login password -> handle_login req_meth sender time password

@@ -5,7 +5,7 @@ exception SyntaxError of string
 
 type pkt_type =
   | SendMessage of string * string
-  | GetMessage
+  | GetMessage of string
   | Register of (string * string)
   | Login of string
   | FriendReq of string * string
@@ -26,7 +26,8 @@ let get_str_val j property = j |> member property |> to_string
     from j, but pkt_type is set to a dummy value and should be replaced. *)
 let parse_common j =
   {
-    pkt_type = GetMessage (* dummy value, should be replaced later *);
+    pkt_type =
+      GetMessage "str" (* dummy value, should be replaced later *);
     sender = get_str_val j "sender";
     time = get_str_val j "time";
   }
@@ -36,7 +37,11 @@ let parse_send_msg j =
   let msg = get_str_val j "message" in
   { (parse_common j) with pkt_type = SendMessage (receiver, msg) }
 
-let parse_get_msg j = { (parse_common j) with pkt_type = GetMessage }
+let parse_get_msg j =
+  {
+    (parse_common j) with
+    pkt_type = GetMessage (get_str_val j "message");
+  }
 
 let parse_register j =
   let password = get_str_val j "password" in
