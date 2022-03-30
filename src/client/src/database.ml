@@ -1,5 +1,6 @@
 open Sqlite3
 open Util.Msg
+open Util.Time
 
 type msg_dir =
   | Sent
@@ -12,24 +13,42 @@ exception DBNotExist
 let db_dir_prefix =
   "data" ^ Filename.dir_sep ^ "database" ^ Filename.dir_sep
 
+(** [open_db name] opens database named [name] in the designated
+    directory. *)
 let open_db name = db_open (db_dir_prefix ^ name ^ ".db")
-let clt_req name = name ^ "_req"
-let clt_msg name = name ^ "_msg"
-let time_ok time = time
-(* if Time.chk_time time then time else raise MalformedTime *)
 
+(** [clt_req name] is the friend request table name for client [name]*)
+let clt_req name = name ^ "_req"
+
+(** [clt_msg name] is the message table name for client [name]. *)
+let clt_msg name = name ^ "_msg"
+
+(** [time_ok time] is [time] if its formatting is correct. Raise
+    [MalformedTime] otherwise. *)
+let time_ok time = if chk_time time then time else raise MalformedTime
+
+(** [bool_op_to_str f] is ["1"] if [f] is [Some true], ["0"] if [f] is
+    [Some false], ["NULL"] if [f] is [None]. *)
 let bool_op_to_str = function
   | None -> "NULL"
   | Some f -> if f then "1" else "0"
 
+(** [bool_to_str f] is ["1"] if [f] is [true], ["0"] if [f] is [false]. *)
 let bool_to_str f = if f then "1" else "0"
 
+(** [str_op_to_str op] is [s] if [op] is [Some s], [""] if [op] is
+    [None]. *)
 let str_op_to_str = function
   | None -> ""
   | Some s -> s
 
+(** [handle_rc ok_msg rc] is a pair [(f, msg)] where [f] is if the
+    return code indicates successful, and [msg] is the helpful message
+    attached. Side Effects: prints [ok_msg] if the return code [rc] is
+    successful, prints error message otherwise. *)
 let handle_rc ok_msg = function
-  | Rc.OK ->
+  | Rc.OK
+  | Rc.DONE ->
       print_endline ok_msg;
       print_newline ();
       (true, ok_msg)
@@ -39,6 +58,7 @@ let handle_rc ok_msg = function
       print_newline ();
       (false, "NOT " ^ ok_msg)
 
+(** [dir_handle h] is whether [h] indicates success. *)
 let dir_handle (h : bool * header) =
   match h with
   | f, _ -> f
@@ -49,6 +69,7 @@ let rec print_list = function
       print_string (h ^ " ");
       print_list t
 
+(** [data_to_string data] converts [data] to a string. *)
 let data_to_string (data : Data.t) =
   match data with
   | NONE
@@ -59,8 +80,10 @@ let data_to_string (data : Data.t) =
   | BLOB str -> str
   | INT num -> Int64.to_string num
 
+(** [put] is an alias for [Printf.sprintf]. *)
 let put = Printf.sprintf
 
+(** [cmb_rc lst] combines the response list to one response. *)
 let cmb_rc (lst : (bool * header) list) =
   let rec inner acc = function
     | [] -> acc
@@ -84,7 +107,8 @@ let init_dbs () =
      AUTOINCREMENT,username TEXT NOT NULL UNIQUE,key TEXT NOT NULL);"
   |> handle_rc "Client main table created or already existed. "
 
-(** Requires: name has not been added. *)
+(** [add_client name key] adds [client] and [key] to main table.
+    Requires: name has not been added. *)
 let add_client name key =
   exec (open_db "client")
     (put "INSERT INTO client (username, key) VALUES ('%s', '%s');" name
@@ -104,7 +128,8 @@ let is_client name =
 
 (******************** Client Tables Creation ********************)
 
-(** Requires: username is new *)
+(** [create_msg_table username] creates the message table for [username]
+    if not exists. *)
 let create_msg_table username =
   exec
     (open_db (clt_msg username))
@@ -281,15 +306,14 @@ let get_all_frds client =
         fold
           (prepare
              (open_db (clt_req client))
-             (put
-                "SELECT user, isSender, message, time, accepted FROM %s"
+             (put "SELECT user FROM %s WHERE accepted=true"
                 (clt_req client)))
           ~f:(fun x ar ->
             (Array.map data_to_string ar |> Array.to_list) @ x)
           ~init:[]
       in
       match res with
-      | _, lst -> form_frd_lsts client lst
+      | _, lst -> lst
     else
       failwith
         (put
@@ -484,9 +508,7 @@ let request_test () =
     (fun x -> print_endline (sender x ^ " AND " ^ receiver x))
     lst;
   let lst = get_all_frds "alice" in
-  List.iter
-    (fun x -> print_endline (sender x ^ " AND " ^ receiver x))
-    lst
+  List.iter (fun x -> print_endline x) lst
 
 let msg_test () =
   (let a = init_dbs () in
