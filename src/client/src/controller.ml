@@ -83,10 +83,10 @@ let msg_processor receiver msg =
    | FriendReq -> db_op (add_request receiver msg) None);
   msg
 
-let get_msg receiver =
+let update_msg ?(amount = "unread") receiver =
   if receiver <> !username_ref then (false, [])
   else
-    let request = Packager.pack_get_msg receiver in
+    let request = Packager.pack_get_msg receiver amount in
     let raw_response = Network.request "POST" ~body:request in
     let raw_body =
       match Network.response_body raw_response with
@@ -97,7 +97,10 @@ let get_msg receiver =
     match Parser.get_type body with
     | ErrorResponse x -> (false, [])
     | PostMethResponse x -> raise IllegalResponse
-    | GetMsgResponse lst -> (true, lst)
+    | GetMsgResponse lst ->
+        (*processes the fetched messages*)
+        let _ = List.map (msg_processor receiver) lst in
+        (true, lst)
 
 let register username password =
   let crypto = Util.Crypto.sym_gen () in
@@ -117,15 +120,20 @@ let login username password =
   let raw_response = Network.request "POST" ~body:message in
   let raw_body = Network.response_body raw_response in
   match raw_body with
-  | None -> (true, "")
+  | None -> (true, [])
   | Some raw_body' -> (
       match raw_body' |> Parser.parse |> Parser.get_type with
-      | ErrorResponse x -> (false, x)
+      | ErrorResponse x -> (false, [])
       | GetMsgResponse x -> raise IllegalResponse
       | PostMethResponse x ->
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
-          (true, x))
+          let messages =
+            if is_client username then update_msg username
+            else update_msg "2022-03-29 17:00:00"
+            (* hard coded time: TODO change later*)
+          in
+          messages)
 
 let friend_req sender receiver msg =
   if sender <> !username_ref then (false, "User Not Logged in")

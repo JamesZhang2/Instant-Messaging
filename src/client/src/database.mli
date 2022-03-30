@@ -62,7 +62,7 @@ val get_all_frds : string -> Msg.t list
 
 val get_all_msgs : string -> Msg.t list
 (** [get_all_msgs client] is a list of all messages in [client] table.
-    Raises [IncorrectUser] if [client] is not a vlaid. Raises
+    Raises [IncorrectUser] if [client] is not a valid. Raises
     [DBNotExist] if database has not been created.*)
 
 val get_all_msgs_since : string -> string -> Msg.t list
@@ -99,3 +99,7 @@ val isInRequest : string -> string -> bool
 (** [isInRequest client username] is whether [username] is in the
     [client]'s friend request list. Raises [DBNotExist] if database has
     not been created. *)
+
+val is_client : string -> bool
+(** [is_client username] determines whether the device has records on
+    this [username]*)

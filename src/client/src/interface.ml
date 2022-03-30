@@ -119,8 +119,8 @@ let rec main () =
       bool_print resp;
       main ()
   | Login (username, password) ->
-      let resp = Controller.login username password in
-      bool_print resp;
+      let check, msg = Controller.login username password in
+      if check then print_messages msg else bool_print (false, "");
       main ()
   | FriendReq (sender, receiver, msg) ->
       let resp = Controller.friend_req sender receiver msg in

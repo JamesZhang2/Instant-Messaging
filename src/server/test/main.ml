@@ -198,7 +198,8 @@ let parser_tests =
       (FriendReqReply ("Bob", false));
     parser_type_test "Type of friend_req_1 is correct" friend_req_1
       (FriendReq ("Bob", "Hi, I'm Alice."));
-    parser_type_test "Type of get_msg_1 is correct" get_msg_1 GetMessage;
+    parser_type_test "Type of get_msg_1 is correct" get_msg_1
+      (GetMessage "unread");
     parser_type_test "Type of login_1 is correct" login_1
       (Login "OCaml!");
     parser_type_test "Type of register_1 is correct" register_1

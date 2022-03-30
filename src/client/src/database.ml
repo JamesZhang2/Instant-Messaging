@@ -6,6 +6,7 @@ exception MalformedTime
 exception IncorrectUser
 exception DBNotExist
 
+let is_client = failwith "Unimplemented"
 let init_dbs = failwith "Unimplemented"
 let create_dbs = failwith "Unimplemented"
 let add_request = failwith "Unimplemented"

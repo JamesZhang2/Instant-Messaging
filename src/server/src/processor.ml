@@ -169,7 +169,7 @@ let parse req_meth body =
     match Parser.pkt_type parsed_body with
     | SendMessage (receiver, msg) ->
         handle_send_msg req_meth sender time receiver msg
-    | GetMessage message -> handle_get_msg req_meth sender time
+    | GetMessage message -> handle_get_msg req_meth sender time message
     | Register (password, key) ->
         handle_register req_meth sender time password key
     | Login password -> handle_login req_meth sender time password

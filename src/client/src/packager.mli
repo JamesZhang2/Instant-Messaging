@@ -5,9 +5,12 @@ val pack_send_msg : string -> string -> string -> string
 (** [pack_send_msg sender receiver msg] is the json string that encodes
     sending [msg] from [sender] to [receiver]. *)
 
-val pack_get_msg : string -> string
-(** [pack_get_msg sender] is the json string that encodes getting all
-    messages that are sent to [sender]. *)
+val pack_get_msg : string -> string -> string
+(** [pack_get_msg sender amount] is the json string that encodes getting
+    all messages that are sent to [sender], with the amount represented
+    by [amount]. Requires: [amount] is either a valid time string or is
+    ["unread"], if ["unread"], then gets all unread messages, otherwise
+    gets all messages since time [amount]. *)
 
 val pack_register : string -> string -> string -> string
 (** [pack_register username password key] is the json string that
