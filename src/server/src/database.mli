@@ -38,7 +38,11 @@ val chk_pwd : string -> string -> bool
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a direct message to the database.
 
-    Requires: [Msg.msg_type message = Msg.Message].
+    Requires:
+
+    - [Msg.msg_type message = Msg.Message]
+    - [Msg.msg_sender message] and [Msg.msg_receiver message] are
+      friends with each other.
 
     Returns: true if the messages are added successfully, false
     otherwise.
@@ -94,7 +98,8 @@ val new_fr : Msg.t -> bool
     - There is no pending request between the sender and the receiver
     - The sender and receiver are not friends with each other.
 
-    Returns: true if the line is successfully added, false otherwise.
+    Returns: [true] if the line is successfully added, and [false]
+    otherwise.
 
     Raises: [MalformedTime] if the given time is malformed;
     [UnknownUser username] if either the sender or the receiver is not
@@ -104,8 +109,8 @@ val fr_exist : string -> string -> bool
 (** [fr_exist sender receiver] determines whether a pending friend
     request from [sender] to [receiver] exists.
 
-    Returns: [true] if there is a pending friend request, and [false]
-    otherwise.
+    Returns: [true] if there is a pending friend request (and that
+    sender and receiver are not already friends), and [false] otherwise.
 
     Raises: [UnknownUser username] if either the sender or the receiver
     is not found in the database. *)

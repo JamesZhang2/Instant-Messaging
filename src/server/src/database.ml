@@ -15,15 +15,17 @@
 
     Friends table columns:
 
-    - userA: TEXT NOT NULL
-    - userB: TEXT NOT NULL
-    - time: TEXT NOT NULL
-    - message: TEXT NULLABLE
+    - requester: TEXT NOT NULL
+    - receiver: TEXT NOT NULL
+    - time: TEXT NULLABLE (null if approving)
+    - message: TEXT NULLABLE (null if approving)
 
-    (AF: userA is said to "like" userB if a row (userA, userB, time,
+    AF: userA is said to "like" userB if a row (userA, userB, time,
     message) exists. If both userA and userB like each other, they are
     friends. If userA likes userB but userB doesn't like userA, then
-    there is a pending friend request from userA to userB.) *)
+    there is a pending friend request from userA to userB.
+
+    RI: No two users have the same username. *)
 
 open Sqlite3
 open Util
@@ -89,8 +91,8 @@ let create_messages_table () =
   |> handle_rc "Messages table found or successfully created"
 
 let create_friends_sql =
-  "CREATE TABLE IF NOT EXISTS friends (userA TEXT NOT NULL, userB TEXT \
-   NOT NULL, time TEXT NOT NULL, message TEXT);"
+  "CREATE TABLE IF NOT EXISTS friends (requester TEXT NOT NULL, \
+   receiver TEXT NOT NULL, time TEXT, message TEXT);"
 
 let create_friends_table () =
   exec server_db create_friends_sql
@@ -127,6 +129,9 @@ let insert_user_sql =
   "INSERT INTO users (username, password, public_key, time_registered) \
    VALUES (?, ?, ?, ?);"
 
+(** [insert_user username pwd key time] inserts the user into the
+    database with the given fields. Requires: [username] does not exist
+    in the database. *)
 let insert_user username pwd key time =
   let stmt = prepare server_db insert_user_sql in
   bind_values stmt [ TEXT username; TEXT pwd; TEXT key; TEXT time ]
@@ -282,9 +287,110 @@ let get_new_msg_since receiver time =
 let get_new_msg receiver = get_new_msg_since receiver Time.earliest_time
 
 (******************** Friend Requests ********************)
-let new_fr (req : Msg.t) = failwith "Unimplemented"
-let fr_exist sender receiver = failwith "Unimplemented"
-let is_friend sender receiver = failwith "Unimplemented"
-let fr_approve sender receiver = failwith "Unimplemented"
-let fr_reject sender receiver = failwith "Unimplemented"
-let friends_of user = failwith "Unimplemented"
+
+let insert_req_sql =
+  "INSERT INTO friends (requester, receiver, time, message) VALUES (?, \
+   ?, ?, ?);"
+
+let new_fr (req : Msg.t) =
+  assert (Msg.msg_type req = Msg.FriendReq);
+  let sender = Msg.sender req |> user_ok in
+  let receiver = Msg.receiver req |> user_ok in
+  let message = Msg.content req in
+  let time = Msg.time req |> time_ok in
+  let stmt = prepare server_db insert_req_sql in
+  bind_values stmt
+    [ TEXT sender; TEXT receiver; TEXT time; TEXT message ]
+  |> assert_ok;
+  step stmt
+  |> handle_rc
+       (Printf.sprintf "New friend request from %s to %s at %s: %s"
+          sender receiver time message);
+  true
+
+let like_exists_sql =
+  "SELECT EXISTS (SELECT 1 from friends WHERE requester = ? AND \
+   receiver = ?);"
+
+(** [likes userA userB] is [true] if userA "likes" userB (that is, there
+    is a row (userA, userB, time, message) in friends), and [false]
+    otherwise. Requires: [userA] and [userB] exist in the table of
+    users. *)
+let likes userA userB =
+  let stmt = prepare server_db like_exists_sql in
+  bind_values stmt [ TEXT userA; TEXT userB ] |> assert_ok;
+  step stmt |> assert_row;
+  column_bool stmt 0
+
+let fr_exist sender receiver =
+  let sender = user_ok sender in
+  let receiver = user_ok receiver in
+  likes sender receiver && not (likes receiver sender)
+
+let is_friend sender receiver =
+  let sender = user_ok sender in
+  let receiver = user_ok receiver in
+  likes sender receiver && likes receiver sender
+
+let approve_req_sql =
+  "INSERT INTO friends (requester, receiver, time, message) VALUES (?, \
+   ?, NULL, NULL);"
+
+let fr_approve sender receiver =
+  let sender = user_ok sender in
+  let receiver = user_ok receiver in
+  if not (fr_exist sender receiver) then raise Not_found;
+  let stmt = prepare server_db approve_req_sql in
+  bind_values stmt [ TEXT receiver; TEXT sender ] |> assert_ok;
+  (* Note that the receiver and sender are reversed: We want to add a
+     line that says receiver likes the sender. *)
+  step stmt
+  |> handle_rc
+       (Printf.sprintf "The friend request from %s to %s is approved"
+          sender receiver);
+  true
+
+let reject_req_sql =
+  "DELETE FROM friends WHERE requester = ? AND receiver = ?;"
+
+let fr_reject sender receiver =
+  let sender = user_ok sender in
+  let receiver = user_ok receiver in
+  if not (fr_exist sender receiver) then raise Not_found;
+  let stmt = prepare server_db reject_req_sql in
+  bind_values stmt [ TEXT sender; TEXT receiver ] |> assert_ok;
+  (* Deletes the friend request from sender to receiver. *)
+  step stmt
+  |> handle_rc
+       (Printf.sprintf "The friend request from %s to %s is rejected"
+          sender receiver);
+  true
+
+let select_liked_sql =
+  "SELECT receiver FROM friends WHERE requester = ?"
+
+(** [cons_one_user lst row] adds [row] to [lst]. Requires: [row] is the
+    username of a user. *)
+let cons_one_user lst (row : Data.t array) =
+  match row.(0) with
+  | Data.TEXT username -> username :: lst
+  | _ ->
+      failwith
+        "Server.Database.cons_one_user: row is in the wrong format"
+
+(** [like_list user] is a list of all users that [user] likes. Requires:
+    [user] is found in the table of users. *)
+let like_list user =
+  let stmt = prepare server_db select_liked_sql in
+  bind_text stmt 1 user |> assert_ok;
+  let res = Sqlite3.fold stmt ~f:cons_one_user ~init:[] in
+  match res with
+  | Rc.DONE, lst -> lst
+  | r, _ ->
+      prerr_endline (Rc.to_string r);
+      prerr_endline (errmsg server_db);
+      failwith "Server.Database.like_list: Return code is not DONE"
+
+let friends_of user =
+  let user = user_ok user in
+  List.filter (fun u -> likes u user) (like_list user)

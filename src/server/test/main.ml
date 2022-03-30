@@ -17,6 +17,9 @@ open Util
     sequential. For instance, we must first add a user before testing
     that the user exists in the database. *)
 
+(** [assert_false x] asserts that [x] is [false]. *)
+let assert_false x = assert (not x)
+
 let injection_str = "Robert\'); DROP TABLE users; --"
 (* SQL injection attack *)
 
@@ -58,7 +61,7 @@ let add_more_users () =
 let test_user_exists () =
   assert (user_exists "Alice");
   assert (user_exists "Bob");
-  assert (not (user_exists "Foo"))
+  assert_false (user_exists "Foo")
 
 let test_user_key () =
   assert_equal (user_key "Alice") "key A";
@@ -66,7 +69,7 @@ let test_user_key () =
   assert_equal (user_key "Catherine") "key C"
 
 let test_chk_pwd_true () = assert (chk_pwd "Alice" "apple")
-let test_chk_pwd_false () = assert (not (chk_pwd "Alice" "watermelon"))
+let test_chk_pwd_false () = assert_false (chk_pwd "Alice" "watermelon")
 
 let test_chk_pwd_unknown () =
   assert_raises (UnknownUser "Foo") (fun _ -> chk_pwd "Foo" "banana")
@@ -145,6 +148,65 @@ let test_get_msg () =
   assert_raises MalformedTime (fun _ ->
       get_new_msg_since "Catherine" "2022-12-01 12:59:60")
 
+let fr_alice_bob : Msg.t =
+  Msg.make_msg "Alice" "Bob" "2022-03-30 17:29:34" FriendReq
+    "Let's be best friends!"
+
+let fr_catherine_alice : Msg.t =
+  Msg.make_msg "Catherine" "Alice" "2022-03-30 20:08:04" FriendReq
+    (injection_str ^ strange_chars)
+
+let fr_foo_alice : Msg.t =
+  Msg.make_msg "Foo" "Alice" "2022-03-30 20:08:04" FriendReq "Hi"
+
+let fr_alice_bar : Msg.t =
+  Msg.make_msg "Alice" "Bar" "2022-03-30 20:08:04" FriendReq "Hi"
+
+let fr_bad_time : Msg.t =
+  Msg.make_msg "Bob" "Catherine" "2022-03-32 20:08:04" FriendReq "Hi"
+
+let test_friend_requests () =
+  (* Status check before any friend requests *)
+  assert_false (fr_exist "Alice" "Bob");
+  assert_false (is_friend "Alice" "Bob");
+  assert_equal (friends_of "Alice") [];
+
+  (* New friend requests *)
+  assert (new_fr fr_alice_bob);
+  assert (new_fr fr_catherine_alice);
+  assert_raises (UnknownUser "Foo") (fun _ -> new_fr fr_foo_alice);
+  assert_raises (UnknownUser "Bar") (fun _ -> new_fr fr_alice_bar);
+  assert_raises MalformedTime (fun _ -> new_fr fr_bad_time);
+
+  (* Status check for pending requests *)
+  assert (fr_exist "Alice" "Bob");
+  assert_false (fr_exist "Bob" "Alice");
+  assert_false (is_friend "Alice" "Bob");
+  assert (fr_exist "Catherine" "Alice");
+  assert_false (fr_exist "Alice" "Catherine");
+  assert_false (is_friend "Catherine" "Alice");
+  assert_equal (friends_of "Alice") [];
+  assert_equal (friends_of "Bob") [];
+  assert_equal (friends_of "Catherine") [];
+
+  (* Approve *)
+  assert (fr_approve "Alice" "Bob");
+  assert (is_friend "Alice" "Bob");
+  assert (is_friend "Bob" "Alice");
+  assert_false (fr_exist "Alice" "Bob");
+  assert_false (fr_exist "Bob" "Alice");
+  assert_equal (friends_of "Alice") [ "Bob" ];
+  assert_equal (friends_of "Bob") [ "Alice" ];
+
+  (* Reject *)
+  assert (fr_reject "Catherine" "Alice");
+  assert_false (is_friend "Catherine" "Alice");
+  assert_false (is_friend "Alice" "Catherine");
+  assert_false (fr_exist "Catherine" "Alice");
+  assert_false (fr_exist "Alice" "Catherine");
+  assert_equal (friends_of "Alice") [ "Bob" ];
+  assert_equal (friends_of "Catherine") []
+
 let run_database_tests () =
   test_add_n_diff 100;
   test_add_n_same 100;
@@ -154,6 +216,7 @@ let run_database_tests () =
   test_user_key ();
   test_add_msg ();
   test_get_msg ();
+  test_friend_requests ();
   print_endline "All database tests passed!"
 
 (******************** Server Parser Tests ********************)
