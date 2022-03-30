@@ -67,8 +67,7 @@ let send_msg receiver msg =
   else
     let sender = !username_ref in
     let encrypted_msg =
-      if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
-      else msg
+      if use_encryption then Util.Crypto.(sym_enc !key_ref msg) else msg
     in
     let packed_msg =
       Packager.pack_send_msg sender receiver encrypted_msg
@@ -135,7 +134,7 @@ let register username password =
   if successful then (
     let _ = key_ref := crypto in
     username_ref := username;
-    db_op (create_dbs username) crypto)
+    db_op (create_dbs username) (Crypto.get_pub_str crypto))
   else ();
   (successful, resp)
 

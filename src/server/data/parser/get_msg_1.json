@@ -1,5 +1,6 @@
 {
   "type": "GetMessage",
   "sender": "Alice",
-  "time": "2022-11-16 19:15:53"
+  "time": "2022-11-16 19:15:53",
+  "message": "unread"
 }
