@@ -15,7 +15,8 @@ type pkt_type =
   | Login of string (* Password *)
   | FriendReq of string * string (* Receiver, Message *)
   | FriendReqReply of string * bool
-(* Receiver, Accept or Reject *)
+  (* Receiver, Accept or Reject *)
+  | FetchKey of string
 
 val parse : string -> t
 (** [parse json] is the packet of information parsed from [json].

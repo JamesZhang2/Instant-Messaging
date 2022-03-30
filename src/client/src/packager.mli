@@ -26,6 +26,10 @@ val pack_friend_req : string -> string -> string -> string
     sending a friend request from [sender] to [receiver] with message
     [msg]. *)
 
+val pack_fetch_key : string -> string
+(** [pack_fetch_key username] is the json string that encodes fetching a
+    key of a user.*)
+
 val pack_friend_req_reply : string -> string -> bool -> string
 (** [pack_friend_req_reply sender receiver accepted] is the json string
     that encodes accepting or rejecting a friend request from [receiver]

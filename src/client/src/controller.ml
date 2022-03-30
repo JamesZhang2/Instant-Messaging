@@ -48,6 +48,14 @@ let bool_post_parse raw_response =
 (* let message = Parser.get_plain body in (Parser.get_type body,
    message) *)
 
+(** [fetch_key user] fetches the key for [user] from server*)
+let fetch_key user =
+  let fetchkey = Packager.pack_fetch_key user in
+  let fetch_resp = Network.request "POST" ~body:fetchkey in
+  let fetch_success, key = bool_post_parse fetch_resp in
+  if not fetch_success then (false, "Unable to find user " ^ user)
+  else (true, key)
+
 (** [db_op meth input] does the database operation [meth] until a
     success is returned. *)
 let rec db_op meth input =
@@ -80,13 +88,22 @@ let send_msg receiver msg =
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
-  (let msg_type = Msg.msg_type msg in
+  (let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
+   let decrypt =
+     Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
+       (Msg.msg_type msg) ptext
+   in
+   let msg_type = Msg.msg_type msg in
    match msg_type with
-   | Message -> db_op (add_msg receiver) msg
+   | Message -> db_op (add_msg receiver) decrypt
    | FriendReqRep (approve, key) ->
        let from = Msg.content msg in
        db_op (update_request receiver from) approve
-   | FriendReq -> db_op (add_request receiver msg) None);
+   | FriendReq ->
+       let sender = Msg.sender msg in
+       let success, key = fetch_key sender in
+       let add_key = if not success then None else Some key in
+       db_op (add_request receiver decrypt add_key) None);
   msg
 
 let update_msg ?(amount = "unread") () =
@@ -150,22 +167,26 @@ let logout () =
 let friend_req receiver msg =
   if "" = !username_ref then (false, "User Not Logged in")
   else
-    let sender = !username_ref in
-    let message = Packager.pack_friend_req sender receiver msg in
-    let raw_response = Network.request "POST" ~body:message in
-    let success, resp = bool_post_parse raw_response in
-    let req =
-      Msg.make_msg sender receiver
-        (Time.string_of_now true)
-        FriendReq msg
-    in
-    let _ =
-      if success then
-        let _ = add_request sender req None in
-        ()
-      else ()
-    in
-    (success, resp)
+    let fetch_success, key = fetch_key receiver in
+    if not fetch_success then (false, "Unable to find user " ^ receiver)
+    else
+      let sender = !username_ref in
+      let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
+      let message = Packager.pack_friend_req sender receiver encrypt in
+      let raw_response = Network.request "POST" ~body:message in
+      let success, resp = bool_post_parse raw_response in
+      let req =
+        Msg.make_msg sender receiver
+          (Time.string_of_now true)
+          FriendReq msg
+      in
+      let _ =
+        if success then
+          let _ = add_request sender req (Some key) None in
+          ()
+        else ()
+      in
+      (success, resp)
 
 let friend_req_reply receiver accepted =
   if "" = !username_ref then (false, "User not logged in")

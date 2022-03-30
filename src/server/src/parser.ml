@@ -10,6 +10,7 @@ type pkt_type =
   | Login of string
   | FriendReq of string * string
   | FriendReqReply of string * bool
+  | FetchKey of string
 
 type t = {
   pkt_type : pkt_type;
@@ -65,6 +66,10 @@ let parse_friend_req_reply j =
     pkt_type = FriendReqReply (receiver, accepted);
   }
 
+let parse_fetch_key j =
+  let username = get_str_val j "username" in
+  { (parse_common j) with pkt_type = FetchKey username }
+
 let parse json =
   let j = from_string json in
   let type' = get_str_val j "type" in
@@ -75,6 +80,7 @@ let parse json =
   | "Login" -> parse_login j
   | "FriendReq" -> parse_friend_req j
   | "FriendReqReply" -> parse_friend_req_reply j
+  | "FetchKey" -> parse_fetch_key j
   | _ -> raise (SyntaxError "parse")
 
 let pkt_type pkt = pkt.pkt_type

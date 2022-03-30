@@ -51,3 +51,9 @@ let pack_friend_req_reply sender receiver accepted =
     (pack_sender sender) (pack_time ())
     (pack_receiver receiver)
     (Printf.sprintf "\"%s\": %B" "accepted" accepted)
+
+let pack_fetch_key username =
+  Printf.sprintf "{%s,%s, %s, %s}" (pack_type "FetchKey")
+    (pack_sender "unimportant")
+    (pack_time ())
+    (pack "username" username)

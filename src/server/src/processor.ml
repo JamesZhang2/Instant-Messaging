@@ -159,6 +159,12 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
              ^ "'s friend request succesfully "))
     | false, false -> Packager.error_response "No such friend request"
 
+let handle_fetch_key username =
+  match user_key username with
+  | exception UnknownUser username ->
+      Packager.error_response "Incorrect Username"
+  | key -> Packager.post_method_response key
+
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
 let parse req_meth body =
@@ -177,6 +183,7 @@ let parse req_meth body =
         handle_friend_req req_meth sender time receiver msg
     | FriendReqReply (receiver, accepted) ->
         handle_friend_req_reply req_meth sender time receiver accepted
+    | FetchKey username -> handle_fetch_key username
   in
   let res_headers = header res_body in
   { status = "201"; headers = res_headers; body = res_body }
