@@ -94,8 +94,15 @@ let rec main () =
       bool_print resp;
       main ()
   | Login (username, password) ->
-      let check, msg = Controller.login username password in
-      if check then print_messages msg else bool_print (false, "");
+      (let check, msg = Controller.login username password in
+       if check then print_messages msg
+       else
+         let message =
+           match msg with
+           | [] -> "error"
+           | h :: t -> Msg.content h
+         in
+         bool_print (false, message));
       main ()
   | Logout ->
       let msg = Controller.logout () in

@@ -16,3 +16,6 @@ run:
 test:
 	rm -f data/database/test.db
 	OCAMLRUNPARAM=b dune exec test/main.exe
+
+switch:
+	opam switch project-experiment

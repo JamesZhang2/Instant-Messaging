@@ -15,3 +15,6 @@ run:
 
 test:
 	OCAMLRUNPARAM=b dune exec test/main.exe
+
+switch: 
+	opam switch cs3110-project

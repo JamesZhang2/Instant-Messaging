@@ -57,16 +57,17 @@ let fetch_key user =
 
 (** [db_op meth input] does the database operation [meth] until a
     success is returned. *)
-let rec db_op meth input =
+let db_op meth input =
   let success, resp = meth input in
-  if success then () else db_op meth input
+  if success then () else print_endline resp
 
 let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login credential")
   else
     let sender = !username_ref in
     let encrypted_msg =
-      if use_encryption then Util.Crypto.(sym_enc !key_ref msg) else msg
+      if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
+      else msg
     in
     let packed_msg =
       Packager.pack_send_msg sender receiver encrypted_msg
@@ -146,18 +147,20 @@ let login username password =
   | None -> (true, [])
   | Some raw_body' -> (
       match raw_body' |> Parser.parse |> Parser.get_type with
-      | ErrorResponse x -> (false, [])
+      | ErrorResponse x -> (false, [ Msg.make_msg "" "" "" Message x ])
       | GetMsgResponse x -> raise IllegalResponse
       | PostMethResponse x ->
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
           db_op init_dbs ();
+          print_endline "get there";
           let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
           in
           let login_notification =
+            print_endline "get there";
             Msg.make_msg "" "" "" Message "Login Successful"
           in
           (success, login_notification :: messages))

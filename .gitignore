@@ -34,3 +34,5 @@ _opam/
 
 # Database files
 **/*.db
+src/server/Makefile
+src/client/Makefile
