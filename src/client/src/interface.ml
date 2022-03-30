@@ -21,10 +21,10 @@ let illegal_command str =
 let print_message msg =
   let sender = "from: " ^ Msg.sender msg in
   let time = "time: " ^ Msg.time msg in
-  let message = "\n" ^ Msg.content msg in
-  sender |> str_format 0 |> print_endline;
-  time |> str_format 0 |> print_endline;
-  message |> str_format 0 |> print_endline
+  let message = "\n> " ^ Msg.content msg in
+  sender |> str_format 1 |> print_endline;
+  time |> str_format 1 |> print_endline;
+  message |> str_format 1 |> print_endline
 
 (** Prints all strings in [lst]*)
 let printlist lst =
@@ -48,7 +48,7 @@ let rec print_messages msg_list =
 let bool_print (check, msg) =
   if check then msg |> str_format 1 |> print_string
   else
-    "Request failed" |> str_format 1
+    msg |> str_format 1
     |> ANSITerminal.print_string [ ANSITerminal.magenta ]
 
 let help_print () =
@@ -63,11 +63,11 @@ let help_print () =
   "[FriendReq sender receiver message] : sends a friend request from \
    sender to receiver" |> str_format 0 |> print_string;
   "[FriendReqReply sender receiver message] : replies a message from \
-   receiver to sender" |> str_format 1 |> print_string;
-  "[ReadAll] : Reads all recent messages" |> str_format 1
+   receiver to sender" |> str_format 0 |> print_string;
+  "[ReadAll] : Reads all recent messages" |> str_format 0
   |> print_string;
   "[Read from <friend>] : reads all recent messages from <friend> "
-  |> str_format 1 |> print_string;
+  |> str_format 0 |> print_string;
   "[Friends] : Shows the list of friends of current logged in user "
   |> str_format 1 |> print_string
 

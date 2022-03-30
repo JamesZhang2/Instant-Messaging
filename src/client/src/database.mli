@@ -62,10 +62,10 @@ val get_all_frds : string -> string list
     Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created.*)
 
-(* val get_all_msgs : string -> Msg.t list (** [get_all_msgs client] is
-   a list of all messages in [client] table. Raises [IncorrectUser] if
-   [client] is not a valid. Raises [DBNotExist] if database has not been
-   created.*) *)
+(* val get_all_msgs : string -> Msg.t list *)
+(** [get_all_msgs client] is a list of all messages in [client] table.
+    Raises [IncorrectUser] if [client] is not a valid. Raises
+    [DBNotExist] if database has not been created.*)
 
 val get_all_msgs_since : string -> string -> Msg.t list
 (** [get_all_msgs_since client time] is a list of all messages in

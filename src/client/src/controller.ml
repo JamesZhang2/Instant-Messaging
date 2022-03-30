@@ -38,13 +38,12 @@ let bool_post_parse raw_response =
   let raw_body =
     raw_response |> Network.response_body |> option_unpack
   in
-  if not status then (false, "Network Error")
-  else
-    let body = Parser.parse raw_body in
-    match Parser.get_type body with
-    | ErrorResponse x -> (false, x)
-    | GetMsgResponse x -> (false, "don't use bool_post_parse")
-    | PostMethResponse x -> (true, x)
+  (* if not status then (false, "Network Error") else *)
+  let body = Parser.parse raw_body in
+  match Parser.get_type body with
+  | ErrorResponse x -> (false, x)
+  | GetMsgResponse x -> (false, "don't use bool_post_parse")
+  | PostMethResponse x -> (true, x)
 (* let message = Parser.get_plain body in (Parser.get_type body,
    message) *)
 
@@ -134,6 +133,7 @@ let register username password =
   if successful then (
     let _ = key_ref := crypto in
     username_ref := username;
+    db_op init_dbs ();
     db_op (create_dbs username) (Crypto.get_pub_str crypto))
   else ();
   (successful, resp)
@@ -152,12 +152,15 @@ let login username password =
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
           db_op init_dbs ();
-          let messages =
+          let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
           in
-          messages)
+          let login_notification =
+            Msg.make_msg "" "" "" Message "Login Successful"
+          in
+          (success, login_notification :: messages))
 
 let logout () =
   username_ref := "";
@@ -165,11 +168,15 @@ let logout () =
 
 let friend_req receiver msg =
   if "" = !username_ref then (false, "User Not Logged in")
+    (* else if isFriend !username_ref receiver then (true, "Already
+       Friends") *)
+    (*TODO: put back in later*)
   else
     let fetch_success, key = fetch_key receiver in
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
+      let _ = print_endline key in
       let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in

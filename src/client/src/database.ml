@@ -481,6 +481,8 @@ let get_msgs_by_frd_since client frd time =
            client)
   else failwith (put "Client %s does not exist. " client)
 
+(* let get_all_msgs = failwith "Unimplemented" *)
+
 let request_test () =
   (match
      let a = init_dbs () in
