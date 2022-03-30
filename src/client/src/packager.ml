@@ -23,10 +23,10 @@ let pack_send_msg sender receiver msg =
     (pack_receiver receiver)
     (pack "message" msg)
 
-let pack_get_msg sender =
-  Printf.sprintf "{%s,%s,%s}"
+let pack_get_msg sender amount =
+  Printf.sprintf "{%s,%s,%s,%s}"
     (pack_type "GetMessage")
-    (pack_sender sender) (pack_time ())
+    (pack_sender sender) (pack_time ()) (pack "message" amount)
 
 let pack_register username password key =
   Printf.sprintf "{%s,%s,%s,%s,%s}" (pack_type "Register")
@@ -51,3 +51,9 @@ let pack_friend_req_reply sender receiver accepted =
     (pack_sender sender) (pack_time ())
     (pack_receiver receiver)
     (Printf.sprintf "\"%s\": %B" "accepted" accepted)
+
+let pack_fetch_key username =
+  Printf.sprintf "{%s,%s, %s, %s}" (pack_type "FetchKey")
+    (pack_sender "unimportant")
+    (pack_time ())
+    (pack "username" username)

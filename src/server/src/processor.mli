@@ -18,7 +18,8 @@ val handle : string -> (string * string) list -> string Lwt.t -> t Lwt.t
     - Login: body is the key for the user, if incorrect user or
       password, error is returned
     - Register: if username already exists, server will return
-      error_response*)
+      error_response
+    - GetMsg: two types: get_msg since, get unread_msg *)
 
 val status : t -> string Lwt.t
 (** [status res] is the status code Lwt.t of the response [res] to the

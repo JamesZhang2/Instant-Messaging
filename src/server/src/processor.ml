@@ -36,11 +36,15 @@ let handle_send_msg req_meth sender time receiver msg =
     | true -> Packager.post_method_response "Message successfully sent"
     | false -> Packager.error_response "Message send unsuccessful."
 
-let handle_get_msg req_meth receiver time =
+let handle_get_msg req_meth receiver time amount =
   if req_meth <> Post then
     Packager.error_response "GetMessage should use POST method"
   else
-    match get_msg receiver with
+    let func =
+      if amount = "unread" then fun x -> get_new_msg receiver
+      else fun x -> get_msg_since receiver amount
+    in
+    match func () with
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
     | lst -> Packager.get_method_response lst
@@ -155,6 +159,12 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
              ^ "'s friend request succesfully "))
     | false, false -> Packager.error_response "No such friend request"
 
+let handle_fetch_key username =
+  match user_key username with
+  | exception UnknownUser username ->
+      Packager.error_response "Incorrect Username"
+  | key -> Packager.post_method_response key
+
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
 let parse req_meth body =
@@ -165,7 +175,7 @@ let parse req_meth body =
     match Parser.pkt_type parsed_body with
     | SendMessage (receiver, msg) ->
         handle_send_msg req_meth sender time receiver msg
-    | GetMessage -> handle_get_msg req_meth sender time
+    | GetMessage message -> handle_get_msg req_meth sender time message
     | Register (password, key) ->
         handle_register req_meth sender time password key
     | Login password -> handle_login req_meth sender time password
@@ -173,6 +183,7 @@ let parse req_meth body =
         handle_friend_req req_meth sender time receiver msg
     | FriendReqReply (receiver, accepted) ->
         handle_friend_req_reply req_meth sender time receiver accepted
+    | FetchKey username -> handle_fetch_key username
   in
   let res_headers = header res_body in
   { status = "201"; headers = res_headers; body = res_body }

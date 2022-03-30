@@ -44,7 +44,7 @@ let message_to_obj msg =
     | Msg.Message ->  "Message" 
     | Msg.FriendReq -> "FriendReq"
     | Msg.FriendReqRep (bo, key) -> 
-      if bo then "T" ^ key else "F"
+      if bo then key else "F"
   in
   let lst =
     [

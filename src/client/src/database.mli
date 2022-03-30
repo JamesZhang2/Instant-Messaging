@@ -26,12 +26,13 @@ val create_dbs : string -> string -> bool * string
 val add_request :
   string -> Msg.t -> string option -> bool option -> bool * string
 (** [add_request client req key req_state] attempts to add a freind
-    request related to [client] with current state [req_state].
-    Requires: sender and receiver are not friends, [client] is either
-    the sender or receiver. Raises [IncorrectUser] if either requires
-    clause is false. Returns [(true, feedback)] if a new friend request
-    is successfully added, [(false, err_msg)] if the table has already
-    been created before or an issue is encountered. *)
+    request related to [client] with current state [req_state] and [key]
+    as public key of this possible . Requires: sender and receiver are
+    not friends, [client] is either the sender or receiver. Raises
+    [IncorrectUser] if either requires clause is false. Returns
+    [(true, feedback)] if a new friend request is successfully added,
+    [(false, err_msg)] if the table has already been created before or
+    an issue is encountered. *)
 
 val update_request : string -> string -> bool -> bool * string
 (** [update_request client username req_state] updates the request state
@@ -56,14 +57,14 @@ val get_all_reqs : string -> Msg.t list
     table. Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created. *)
 
-val get_all_frds : string -> Msg.t list
+val get_all_frds : string -> string list
 (** [get_all_frds client] is a list of all freinds in [client] table.
     Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created.*)
 
 val get_all_msgs : string -> Msg.t list
 (** [get_all_msgs client] is a list of all messages in [client] table.
-    Raises [IncorrectUser] if [client] is not a vlaid. Raises
+    Raises [IncorrectUser] if [client] is not a valid. Raises
     [DBNotExist] if database has not been created.*)
 
 val get_all_msgs_since : string -> string -> Msg.t list
@@ -100,3 +101,7 @@ val isInRequest : string -> string -> bool
 (** [isInRequest client username] is whether [username] is in the
     [client]'s friend request list. Raises [DBNotExist] if database has
     not been created. *)
+
+val is_client : string -> bool
+(** [is_client username] determines whether the device has records on
+    this [username]*)
