@@ -141,7 +141,8 @@ let create_msg_table username =
   |> handle_rc
        (put "%s's message table created or already existed. " username)
 
-(** Requires: username is new *)
+(** [create_req_table username] creates the friend request table for
+    [username] if not exists. *)
 let create_req_table username =
   exec
     (open_db (clt_req username))
@@ -166,7 +167,7 @@ let create_dbs username key =
 
 (******************** Friend Request Table ********************)
 
-let in_req_tbl client user =
+let is_in_req client user =
   let res =
     fold
       (prepare
@@ -178,7 +179,7 @@ let in_req_tbl client user =
   match res with
   | _, ar -> Array.length ar <> 0
 
-let isFriend client user =
+let is_frd client user =
   let res =
     fold
       (prepare
@@ -201,7 +202,7 @@ let add_request client req key req_state =
         let user =
           if sender req = client then receiver req else sender req
         in
-        if in_req_tbl client user |> not then
+        if is_in_req client user |> not then
           exec
             (open_db (clt_req client))
             (put
@@ -231,7 +232,7 @@ let add_request client req key req_state =
 let update_request client username req_state =
   if is_client client then
     if create_req_table client |> dir_handle then
-      if in_req_tbl client username then
+      if is_in_req client username then
         exec
           (open_db (clt_req client))
           (put "UPDATE %s SET accepted=%s WHERE user='%s';"
@@ -253,6 +254,8 @@ let update_request client username req_state =
           client )
   else (false, put "Client %s does not exist. " client)
 
+(** [form_req_lsts client lst] group [lst] by 4 to form a new list of
+    requests. *)
 let rec form_req_lsts client = function
   | u :: i :: m :: t :: tail ->
       if i = "1" then
@@ -286,17 +289,12 @@ let get_all_reqs client =
            client)
   else failwith (put "Client %s does not exist. " client)
 
-let rec form_frd_lsts client = function
-  | u :: i :: m :: t :: a :: tail ->
-      if a = "1" then
-        if i = "1" then
-          make_msg client u t FriendReq m :: form_frd_lsts client tail
-        else if i = "0" then
-          make_msg u client t FriendReq m :: form_frd_lsts client tail
-        else failwith "Friend list has issues with partitioning. "
-      else form_frd_lsts client tail
-  | [] -> []
-  | _ -> failwith "Friend list has issues with partitioning. "
+(* let rec form_frd_lsts client = function | u :: i :: m :: t :: a ::
+   tail -> if a = "1" then if i = "1" then make_msg client u t FriendReq
+   m :: form_frd_lsts client tail else if i = "0" then make_msg u client
+   t FriendReq m :: form_frd_lsts client tail else failwith "Friend list
+   has issues with partitioning. " else form_frd_lsts client tail | []
+   -> [] | _ -> failwith "Friend list has issues with partitioning. " *)
 
 (* should return t list or string list?*)
 let get_all_frds client =
@@ -321,8 +319,6 @@ let get_all_frds client =
             be created. "
            client)
   else failwith (put "Client %s does not exist. " client)
-
-let isInRequest client username = in_req_tbl client username
 
 let get_req_by_name client username =
   if is_client client then
@@ -368,7 +364,7 @@ let add_msg client msg =
         let user =
           if sender msg = client then receiver msg else sender msg
         in
-        if isFriend client user then
+        if is_frd client user then
           exec
             (open_db (clt_msg client))
             (put
@@ -392,6 +388,8 @@ let add_msg client msg =
           client )
   else (false, put "Client %s does not exist. " client)
 
+(** [form_msg_lsts client lst] group [lst] by 4 to form a new list of
+    messages. *)
 let rec form_msg_lsts client = function
   | u :: m :: t :: i :: tail ->
       if i = "1" then
@@ -432,7 +430,7 @@ let get_all_msgs_since client time =
 let get_msgs_by_frd client frd =
   if is_client client then
     if create_msg_table client |> dir_handle then
-      if isFriend client frd then
+      if is_frd client frd then
         let res =
           fold
             (prepare
@@ -459,7 +457,7 @@ let get_msgs_by_frd client frd =
 let get_msgs_by_frd_since client frd time =
   if is_client client then
     if create_msg_table client |> dir_handle then
-      if isFriend client frd then
+      if is_frd client frd then
         let res =
           fold
             (prepare
@@ -483,8 +481,6 @@ let get_msgs_by_frd_since client frd time =
            client)
   else failwith (put "Client %s does not exist. " client)
 
-let get_all_msgs = failwith "Unimplemented"
-
 let request_test () =
   (match
      let a = init_dbs () in
@@ -500,8 +496,7 @@ let request_test () =
   | f, m ->
       if f then print_endline ("TRUE: " ^ m)
       else print_endline ("FALSE: " ^ m));
-  if isInRequest "alice" "bob" then
-    print_endline "Bob is in Alice's list"
+  if is_in_req "alice" "bob" then print_endline "Bob is in Alice's list"
   else print_endline "Bob is NOT in Alice's list";
   let lst = get_all_reqs "alice" in
   List.iter

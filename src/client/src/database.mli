@@ -62,10 +62,10 @@ val get_all_frds : string -> string list
     Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created.*)
 
-val get_all_msgs : string -> Msg.t list
-(** [get_all_msgs client] is a list of all messages in [client] table.
-    Raises [IncorrectUser] if [client] is not a valid. Raises
-    [DBNotExist] if database has not been created.*)
+(* val get_all_msgs : string -> Msg.t list (** [get_all_msgs client] is
+   a list of all messages in [client] table. Raises [IncorrectUser] if
+   [client] is not a valid. Raises [DBNotExist] if database has not been
+   created.*) *)
 
 val get_all_msgs_since : string -> string -> Msg.t list
 (** [get_all_msgs_since client time] is a list of all messages in
@@ -93,12 +93,12 @@ val get_req_by_name : string -> string -> Msg.t option
     [client] is not valid. Raises [DBNotExist] if database has not been
     created.*)
 
-val isFriend : string -> string -> bool
-(**[isFriend client username] is whether [username] is in the [client]'s
+val is_frd : string -> string -> bool
+(**[is_frd client username] is whether [username] is in the [client]'s
    friend list. Riases [DBNotExist] if database has not been created. *)
 
-val isInRequest : string -> string -> bool
-(** [isInRequest client username] is whether [username] is in the
+val is_in_req : string -> string -> bool
+(** [is_in_req client username] is whether [username] is in the
     [client]'s friend request list. Raises [DBNotExist] if database has
     not been created. *)
 
