@@ -19,28 +19,43 @@ type command =
 
 (** [parse str] Parses a string command into command type. Raises:
     [Malformed] if the command does not match with any of the types*)
-let parse str =
+let parse ~(maybe_user : string option) str =
   let str_list =
     str |> String.split_on_char ' ' |> List.filter (fun s -> s <> "")
   in
-  match str_list with
-  | [] -> raise Malformed
-  | [ "quit" ] -> Quit
-  | [ "help" ] -> Help
-  | "SendMsg" :: sender :: receiver :: t ->
-      SendMsg (sender, receiver, String.concat " " t)
-  | [ "GetMsg"; sender ] -> GetMsg sender
-  | [ "Register"; username; password ] -> Register (username, password)
-  | [ "Login"; username; password ] -> Login (username, password)
-  | [ "FriendReq"; sender; receiver; msg ] ->
-      FriendReq (sender, receiver, msg)
-  | [ "FriendReqReply"; sender; receiver; "true" ] ->
-      FriendReqRep (sender, receiver, true)
-  | [ "FriendReqReply"; sender; receiver; "false" ] ->
-      FriendReqRep (sender, receiver, false)
-  | [ "ReadAll" ] -> ReadMsg
-  | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
-  | [ "FriendRequests" ] -> ReadFR
-  | [ "Friends" ] -> ListFriend
-  | [ "Logout" ] -> Logout
-  | _ -> raise Malformed
+  match maybe_user with
+  | None -> (
+      match str_list with
+      | [ "Quit" ]
+      | [ "quit" ] ->
+          Quit
+      | [ "Help" ]
+      | [ "help" ] ->
+          Help
+      | [ "Register"; username; password ] ->
+          Register (username, password)
+      | [ "Login"; username; password ] -> Login (username, password)
+      | _ -> raise Malformed)
+  | Some user -> (
+      match str_list with
+      | [ "Quit" ]
+      | [ "quit" ] ->
+          Quit
+      | [ "Help" ]
+      | [ "help" ] ->
+          Help
+      | "SendMsg" :: receiver :: t ->
+          SendMsg (user, receiver, String.concat " " t)
+      | [ "GetMsg" ] -> GetMsg user
+      | [ "Register"; username; password ] ->
+          Register (username, password)
+      | [ "Login"; username; password ] -> Login (username, password)
+      | [ "FriendReq"; receiver; msg ] -> FriendReq (user, receiver, msg)
+      | [ "Approve"; receiver ] -> FriendReqRep (user, receiver, true)
+      | [ "Reject"; receiver ] -> FriendReqRep (user, receiver, false)
+      | [ "ReadMsg" ] -> ReadMsg
+      | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
+      | [ "FriendRequests" ] -> ReadFR
+      | [ "Friends" ] -> ListFriend
+      | [ "Logout" ] -> Logout
+      | _ -> raise Malformed)

@@ -17,6 +17,6 @@ type command =
   | Help
   | Quit
 
-val parse : string -> command
+val parse : maybe_user:string option -> string -> command
 (** [parse str] Parses a string command into command type. Raises:
     [Malformed] if the command does not match with any of the types*)

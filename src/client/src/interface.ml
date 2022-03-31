@@ -59,37 +59,53 @@ let bool_print (check, msg) =
     msg |> str_format 1
     |> ANSITerminal.print_string [ ANSITerminal.magenta ]
 
-let help_print () =
-  "[SendMsg sender receiver message] : sends a message from sender to \
-   receiver" |> str_format 0 |> print_string;
-  "[GetMsg receiver] : gets messages to receiver" |> str_format 0
-  |> print_string;
-  "[Register username password] : registers a user" |> str_format 0
-  |> print_string;
-  "[Login username password] : logs a user in" |> str_format 0
-  |> print_string;
-  "[FriendReq sender receiver message] : sends a friend request from \
-   sender to receiver" |> str_format 0 |> print_string;
-  "[FriendReqReply sender receiver message] : replies a message from \
-   receiver to sender" |> str_format 0 |> print_string;
-  "[ReadMsg] : Reads all recent messages" |> str_format 0
-  |> print_string;
-  "[Read from <friend>] : reads all recent messages from <friend> "
-  |> str_format 0 |> print_string;
-  "[FriendRequests] : reads all recent friend reequests" |> str_format 0
-  |> print_string;
-  "[Friends] : Shows the list of friends of current logged in user "
-  |> str_format 1 |> print_string
+let print_help () =
+  match current_user () with
+  | None ->
+      "[Register username password] : registers a new user"
+      |> str_format 0 |> print_string;
+      "[Login username password] : logs in an existing user"
+      |> str_format 0 |> print_string;
+      "[Help] : displays instructions" |> str_format 0 |> print_string;
+      "[Quit] : quits the IM program" |> str_format 1 |> print_string
+  | Some user ->
+      "You are currently logged in as " ^ user
+      |> str_format 0 |> print_string;
+      "[SendMsg receiver message] : sends a message to a friend"
+      |> str_format 0 |> print_string;
+      "[GetMsg] : gets all your new messages" |> str_format 0
+      |> print_string;
+      "[Register username password] : registers a new user"
+      |> str_format 0 |> print_string;
+      "[Login username password] : switches to another user"
+      |> str_format 0 |> print_string;
+      "[FriendReq receiver message] : sends a friend request to \
+       another user" |> str_format 0 |> print_string;
+      "[Approve user] : approves a friend request from user"
+      |> str_format 0 |> print_string;
+      "[Reject user] : rejects a friend request from user"
+      |> str_format 0 |> print_string;
+      "[ReadMsg] : Reads all recent messages" |> str_format 0
+      |> print_string;
+      "[Read from <friend>] : reads all recent messages from <friend> "
+      |> str_format 0 |> print_string;
+      "[FriendRequests] : reads all recent friend reequests"
+      |> str_format 0 |> print_string;
+      "[Friends] : Shows the list of friends of current logged in user "
+      |> str_format 0 |> print_string;
+      "[Help] : displays instructions" |> str_format 0 |> print_string;
+      "[Quit] : quits the IM program" |> str_format 1 |> print_string
 
 let rec main () =
   begin_print;
+  let maybe_user = current_user () in
   let read = read_line () in
-  match Command.parse read with
+  match Command.parse maybe_user read with
   | exception Command.Malformed ->
       illegal_command "Command Illegal: ";
       main ()
   | Help ->
-      help_print ();
+      print_help ();
       main ()
   | SendMsg (sender, receiver, msg) ->
       let resp = Controller.send_msg receiver msg in
@@ -102,6 +118,7 @@ let rec main () =
   | Register (username, password) ->
       let resp = Controller.register username password in
       bool_print resp;
+      print_help ();
       main ()
   | Login (username, password) ->
       (let check, msg = Controller.login username password in
@@ -150,5 +167,5 @@ let rec main () =
   | Quit -> exit 0
 
 let run () =
-  help_print ();
+  print_help ();
   main ()

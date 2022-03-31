@@ -57,3 +57,7 @@ val read_FR : unit -> bool * Msg.t list
 val lst_of_friends : unit -> bool * string list
 (** [lst_of_friends ()] returns a list of friends of the current logged
     in user. *)
+
+val current_user : unit -> string option
+(** [current_user ()] is [Some user] if [user] is the user currently
+    logged in, or [None] if no user is currently logged in. *)

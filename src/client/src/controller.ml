@@ -65,7 +65,7 @@ let send_msg receiver msg =
   else
     let sender = !username_ref in
     if not (is_frd sender receiver) then
-      (false, "You are not friends with" ^ receiver)
+      (false, "You are not friends with " ^ receiver)
     else
       let encrypted_msg =
         if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
@@ -265,3 +265,6 @@ let lst_of_friends () =
   else
     let lst = get_all_frds !username_ref in
     (true, lst)
+
+let current_user () =
+  if !username_ref = "" then None else Some !username_ref
