@@ -86,7 +86,11 @@ let send_msg receiver msg =
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
-  let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
+  let ptext =
+    try Crypto.sym_dec !key_ref (Msg.content msg) with
+    | x -> "message"
+  in
+  (* let _ = print_endline "got there" in *)
   let decrypt =
     Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
       (Msg.msg_type msg) ptext
@@ -115,6 +119,7 @@ let update_msg ?(amount = "unread") () =
       | None -> "No Response Message"
       | Some msg -> msg
     in
+    (* let _ = print_endline raw_body in *)
     let body = Parser.parse raw_body in
     match Parser.get_type body with
     | ErrorResponse x -> (false, [])
@@ -145,6 +150,7 @@ let login username password =
   match raw_body with
   | None -> (true, [])
   | Some raw_body' -> (
+      (* print_endline raw_body'; *)
       match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, [ Msg.make_msg "" "" "" Message x ])
       | GetMsgResponse x -> raise IllegalResponse
@@ -159,7 +165,7 @@ let login username password =
             (* hard coded time: TODO change later*)
           in
           let login_notification =
-            print_endline "get there";
+            (* print_endline "get there"; *)
             Msg.make_msg "" "" "" Message "Login Successful"
           in
           (success, login_notification :: messages))
@@ -224,7 +230,7 @@ let read_msg () =
   else
     let username = !username_ref in
     match get_all_msgs_since username "2022-03-29 17:00:00" with
-    | exception IncorrectUser -> (false, incorrect_usermsg)
+    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, messages)
 
 let read_msg_from sender =
@@ -234,7 +240,7 @@ let read_msg_from sender =
     match
       get_msgs_by_frd_since username sender "2022-03-29 17:00:00"
     with
-    | exception IncorrectUser -> (false, incorrect_usermsg)
+    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, messages)
 
 let read_FR () =
@@ -242,7 +248,7 @@ let read_FR () =
   else
     let username = !username_ref in
     match get_all_reqs username with
-    | exception IncorrectUser -> (false, incorrect_usermsg)
+    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, messages)
 
 let lst_of_friends () =

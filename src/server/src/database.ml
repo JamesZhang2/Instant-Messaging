@@ -262,8 +262,9 @@ let cons_one_msg lst (row : Data.t array) =
         | "FriendReq" -> Msg.FriendReq
         | "Message" -> Message
         | "FriendReqRep" ->
+            let _ = print_endline content in
             let bo = String.get content 0 = 'T' in
-            FriendReqRep (bo, "")
+            FriendReqRep (bo, "T")
         | _ -> failwith "Error"
       in
       Msg.make_msg sender receiver time msg_t content :: lst
@@ -280,15 +281,21 @@ let get_msg_aux receiver time ~new_only =
   let time = time_ok time in
   let sql = if new_only then select_new_msg_sql else select_msg_sql in
   let stmt = prepare server_db sql in
+  let _ = print_endline "got there 1" in
   bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
+  let _ = print_endline "got there 2" in
   let res = Sqlite3.fold stmt ~f:cons_one_msg ~init:[] in
+  let _ = print_endline "got there 3" in
   match res with
   | Rc.DONE, lst ->
+      let _ = print_endline "got there 4" in
       mark_as_retrieved receiver time;
       Printf.printf "Retrived messages sent to %s after %s\n\n" receiver
         time;
       (* if test then print_msg_list (List.rev lst); *)
-      List.rev lst
+      let temp = List.rev lst in
+      let _ = print_endline "got there 5" in
+      temp
   | r, _ ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db);

@@ -47,7 +47,13 @@ let handle_get_msg req_meth receiver time amount =
     match func () with
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
-    | lst -> Packager.get_method_response lst
+    | exception x ->
+        print_endline (Printexc.to_string x);
+        Packager.error_response "fetch failure"
+    | lst ->
+        let temp = Packager.get_method_response lst in
+        let _ = print_endline temp in
+        temp
 
 let handle_register req_meth username time password public_key =
   if req_meth <> Post then
@@ -85,7 +91,7 @@ let fr_approve_msg sender receiver time =
   let msg_receiver =
     Msg.make_msg sender receiver time
       (FriendReqRep (true, sender_key))
-      ""
+      "True"
   in
   add_msg msg_receiver
 

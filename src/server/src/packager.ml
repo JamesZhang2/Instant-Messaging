@@ -43,8 +43,7 @@ let message_to_obj msg =
     match Msg.msg_type msg with 
     | Msg.Message ->  "Message" 
     | Msg.FriendReq -> "FriendReq"
-    | Msg.FriendReqRep (bo, key) -> 
-      if bo then key else "F"
+    | Msg.FriendReqRep (bo, key) -> "FriendReqRep"
   in
   let lst =
     [
