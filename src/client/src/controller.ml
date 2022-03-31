@@ -15,7 +15,7 @@ let key_ref = ref (Crypto.sym_gen ())
 let username_ref = ref ""
 
 (** For debug purposes *)
-let use_encryption = true
+let use_encryption = false
 
 exception IllegalResponse
 
@@ -87,8 +87,10 @@ let send_msg receiver msg =
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
   let ptext =
-    try Crypto.sym_dec !key_ref (Msg.content msg) with
-    | x -> "message"
+    if use_encryption then
+      try Crypto.sym_dec !key_ref (Msg.content msg) with
+      | x -> "message"
+    else Msg.content msg
   in
   (* let _ = print_endline "got there" in *)
   let decrypt =

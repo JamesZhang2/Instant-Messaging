@@ -290,8 +290,8 @@ let get_msg_aux receiver time ~new_only =
   | Rc.DONE, lst ->
       (* let _ = print_endline "got there 4" in *)
       mark_as_retrieved receiver time;
-      Printf.printf "Retrived messages sent to %s after %s\n\n" receiver
-        time;
+      Printf.printf "Retrieved messages sent to %s after %s\n\n"
+        receiver time;
       (* if test then print_msg_list (List.rev lst); *)
       let temp = List.rev lst in
       (* let _ = print_endline "got there 5" in *)
