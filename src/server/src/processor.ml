@@ -119,7 +119,6 @@ let handle_friend_req req_meth sender time receiver msg =
         | true, false ->
             (* if reverse fr exist*)
             let _ = fr_approve receiver sender in
-            let _ = fr_approve_msg sender receiver time in
             let _ = fr_approve_msg receiver sender time in
             (* send friend req msg to both*)
             Packager.post_method_response
@@ -128,14 +127,15 @@ let handle_friend_req req_meth sender time receiver msg =
             let msg = Msg.make_msg sender receiver time FriendReq msg in
             (* notification msg*)
             let _ = new_fr msg in
-            (* TODO: testing purpose only, delete later*)
             let _ = add_msg msg in
             (*new fr in db*)
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")
         | true, true ->
+            let _ = fr_approve_msg sender receiver time in
+            let _ = fr_approve_msg receiver sender time in
             Packager.error_response
-              ("You are already friends with" ^ receiver))
+              ("You are now friends with" ^ receiver))
 
 (** [handle_friend_req_reply req_meth sender time receiver accepted]*)
 let handle_friend_req_reply req_meth sender time receiver accepted =

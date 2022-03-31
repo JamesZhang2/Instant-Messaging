@@ -27,8 +27,8 @@ let parse str =
   | [] -> raise Malformed
   | [ "quit" ] -> Quit
   | [ "help" ] -> Help
-  | [ "SendMsg"; sender; receiver; msg ] ->
-      SendMsg (sender, receiver, msg)
+  | "SendMsg" :: sender :: receiver :: t ->
+      SendMsg (sender, receiver, String.concat " " t)
   | [ "GetMsg"; sender ] -> GetMsg sender
   | [ "Register"; username; password ] -> Register (username, password)
   | [ "Login"; username; password ] -> Login (username, password)
