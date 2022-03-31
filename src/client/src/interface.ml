@@ -19,12 +19,20 @@ let illegal_command str =
 (**[print_message msg] prints one message represented by Controller type
    [msg]*)
 let print_message msg =
+  let msg_type =
+    match Msg.msg_type msg with
+    | Message -> "Message "
+    | FriendReq -> "Friend Request "
+    | FriendReqRep (bo, key) ->
+        "Friend Request Response " ^ string_of_bool bo
+  in
   let sender = "from: " ^ Msg.sender msg in
   let time = "time: " ^ Msg.time msg in
   let message = "\n> " ^ Msg.content msg in
-  sender |> str_format 1 |> print_endline;
-  time |> str_format 1 |> print_endline;
-  message |> str_format 1 |> print_endline
+  msg_type |> str_format 0 |> print_string;
+  sender |> str_format 0 |> print_string;
+  time |> str_format 0 |> print_string;
+  message ^ "\n" |> str_format 1 |> print_string
 
 (** Prints all strings in [lst]*)
 let printlist lst =

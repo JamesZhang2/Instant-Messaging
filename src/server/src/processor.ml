@@ -118,9 +118,9 @@ let handle_friend_req req_meth sender time receiver msg =
             let msg = Msg.make_msg sender receiver time FriendReq msg in
             (* notification msg*)
             let _ = new_fr msg in
-            let _ = fr_approve sender receiver in
+            (* let _ = fr_approve sender receiver in *)
             (* TODO: testing purpose only, delete later*)
-            (* let _ = add_msg msg in *)
+            let _ = add_msg msg in
             (*new fr in db*)
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")

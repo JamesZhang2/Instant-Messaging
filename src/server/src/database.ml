@@ -11,6 +11,7 @@
     - receiver: TEXT NOT NULL
     - content: TEXT NOT NULL
     - time: TEXT NOT NULL
+    - type: TEXT NOT NULL
     - retrieved: BOOLEAN NOT NULL
 
     Friends table columns:
@@ -84,8 +85,8 @@ let create_users_table () =
 
 let create_messages_sql =
   "CREATE TABLE IF NOT EXISTS messages (sender TEXT NOT NULL, receiver \
-   TEXT NOT NULL, content TEXT NOT NULL, time TEXT NOT NULL, retrieved \
-   BOOLEAN NOT NULL);"
+   TEXT NOT NULL, content TEXT NOT NULL, time TEXT NOT NULL, type TEXT \
+   NOT NULL, retrieved BOOLEAN NOT NULL);"
 
 let create_messages_table () =
   exec server_db create_messages_sql
@@ -197,23 +198,29 @@ let chk_pwd username pwd =
 (******************** Add message ********************)
 
 let insert_msg_sql =
-  "INSERT INTO messages (sender, receiver, content, time, retrieved) \
-   VALUES (?, ?, ?, ?, FALSE);"
+  "INSERT INTO messages (sender, receiver, content, time, type, \
+   retrieved) VALUES (?, ?, ?, ?, ?, FALSE);"
 
 let add_msg (msg : Msg.t) =
-  assert (Msg.msg_type msg = Msg.Message);
+  (* assert (Msg.msg_type msg = Msg.Message); *)
+  let ty =
+    match Msg.msg_type msg with
+    | Message -> "Message"
+    | FriendReq -> "FriendReq"
+    | FriendReqRep (bo, key) -> "FriendReqRep"
+  in
   let sender = Msg.sender msg |> user_ok in
   let receiver = Msg.receiver msg |> user_ok in
   let content = Msg.content msg in
   let time = Msg.time msg |> time_ok in
   let stmt = prepare server_db insert_msg_sql in
   bind_values stmt
-    [ TEXT sender; TEXT receiver; TEXT content; TEXT time ]
+    [ TEXT sender; TEXT receiver; TEXT content; TEXT time; TEXT ty ]
   |> assert_ok;
   step stmt
   |> handle_rc
-       (Printf.sprintf "%s sent a message to %s at %s: %s" sender
-          receiver time content);
+       (Printf.sprintf "%s sent a %s to %s at %s: %s" sender ty receiver
+          time content);
   true
 
 (******************** Get message ********************)
@@ -244,12 +251,22 @@ let mark_as_retrieved receiver time =
 (** [cons_one_msg lst row] adds [row] to [lst]. Requires: [row]
     represents a valid message. *)
 let cons_one_msg lst (row : Data.t array) =
-  match (row.(0), row.(1), row.(2), row.(3)) with
+  match (row.(0), row.(1), row.(2), row.(3), row.(4)) with
   | ( Data.TEXT sender,
       Data.TEXT receiver,
       Data.TEXT content,
-      Data.TEXT time ) ->
-      Msg.make_msg sender receiver time Message content :: lst
+      Data.TEXT time,
+      Data.TEXT msg_type ) ->
+      let msg_t =
+        match msg_type with
+        | "FriendReq" -> Msg.FriendReq
+        | "Message" -> Message
+        | "FriendReqRep" ->
+            let bo = String.get content 0 = 'T' in
+            FriendReqRep (bo, "")
+        | _ -> failwith "Error"
+      in
+      Msg.make_msg sender receiver time msg_t content :: lst
   | _ ->
       failwith
         "Server.Database.cons_one_msg: row is in the wrong format"

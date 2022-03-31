@@ -15,7 +15,7 @@ let key_ref = ref (Crypto.sym_gen ())
 let username_ref = ref ""
 
 (** For debug purposes *)
-let use_encryption = false
+let use_encryption = true
 
 exception IllegalResponse
 
@@ -34,7 +34,6 @@ let option_unpack op =
     post request to a tuple. Returns [(true, msg)] if the request is
     successful, [(false, error_msg)] otherwise*)
 let bool_post_parse raw_response =
-  let status = is_successful (Network.status raw_response) in
   let raw_body =
     raw_response |> Network.response_body |> option_unpack
   in
@@ -87,12 +86,12 @@ let send_msg receiver msg =
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
-  (let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
-   let decrypt =
-     Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
-       (Msg.msg_type msg) ptext
-   in
-   let msg_type = Msg.msg_type msg in
+  let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
+  let decrypt =
+    Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
+      (Msg.msg_type msg) ptext
+  in
+  (let msg_type = Msg.msg_type msg in
    match msg_type with
    | Message -> db_op (add_msg receiver) decrypt
    | FriendReqRep (approve, key) ->
@@ -103,7 +102,7 @@ let msg_processor receiver msg =
        let success, key = fetch_key sender in
        let add_key = if not success then None else Some key in
        db_op (add_request receiver decrypt add_key) None);
-  msg
+  decrypt
 
 let update_msg ?(amount = "unread") () =
   if "" = !username_ref then (false, [])
@@ -122,8 +121,8 @@ let update_msg ?(amount = "unread") () =
     | PostMethResponse x -> raise IllegalResponse
     | GetMsgResponse lst ->
         (*processes the fetched messages*)
-        let _ = List.map (msg_processor receiver) lst in
-        (true, lst)
+        let new_lst = List.map (msg_processor receiver) lst in
+        (true, new_lst)
 
 let register username password =
   let crypto = Util.Crypto.sym_gen () in
@@ -153,7 +152,7 @@ let login username password =
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
           db_op init_dbs ();
-          print_endline "get there";
+          db_op (create_dbs username) (Crypto.get_pub_str !key_ref);
           let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
@@ -180,6 +179,11 @@ let friend_req receiver msg =
     else
       let sender = !username_ref in
       let _ = print_endline key in
+      let str = Crypto.sym_enc (Crypto.pub_from_str key) msg in
+      let _ = print_endline str in
+      let _ =
+        print_endline (Crypto.sym_dec (Crypto.pub_from_str key) str)
+      in
       let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in
