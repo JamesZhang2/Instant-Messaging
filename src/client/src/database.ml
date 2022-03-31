@@ -424,7 +424,7 @@ let rec form_msg_lsts client = function
 
 let get_all_msgs_since client time =
   if is_client client then
-    if create_msg_table client |> dir_handle then (
+    if create_msg_table client |> dir_handle then
       let res =
         fold
           (prepare
@@ -439,8 +439,8 @@ let get_all_msgs_since client time =
       in
       match res with
       | _, lst ->
-          print_int (List.length lst);
-          form_msg_lsts client lst)
+          (* print_int (List.length lst); *)
+          form_msg_lsts client lst
     else
       failwith
         (put

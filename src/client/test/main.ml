@@ -70,7 +70,7 @@ let request_test_setup () =
     in
     let g = update_request "alice" "bob" true in
     let h = update_request "alice" "david" false in
-    let i = update_request "alice" "eve" false in
+    let i = update_request "alice" "eve" true in
     cmb_rc [ a; b; c; d; e; f; g; h; i ]
   with
   | f, m ->
@@ -343,4 +343,6 @@ let suite =
            parser_tests;
          ]
 
-let _ = run_test_tt_main suite
+let _ =
+  db_test ();
+  run_test_tt_main suite
