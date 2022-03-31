@@ -3,10 +3,6 @@
 
 open Util
 
-type msg_dir =
-  | Sent
-  | Received
-
 exception MalformedTime
 exception IncorrectUser
 exception DBNotExist

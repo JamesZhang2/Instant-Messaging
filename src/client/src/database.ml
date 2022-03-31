@@ -26,10 +26,6 @@ open Sqlite3
 open Util.Msg
 open Util.Time
 
-type msg_dir =
-  | Sent
-  | Received
-
 exception MalformedTime
 exception IncorrectUser
 exception DBNotExist

@@ -1,5 +1,6 @@
 open OUnit2
 open Client
+open Database
 open Controller
 open Interface
 open Network
@@ -18,6 +19,152 @@ let interface_tests = []
 (******************** Network Tests ********************)
 
 let network_tests = []
+
+(******************** Client Database Tests ********************)
+
+let put = Printf.sprintf
+
+(** [cmb_rc lst] combines the response list to one response. *)
+let cmb_rc (lst : (bool * string) list) =
+  let rec inner acc = function
+    | [] -> acc
+    | h :: t -> (
+        match acc with
+        | f1, msg1 -> (
+            match h with
+            | f2, msg2 ->
+                inner
+                  ( f1 && f2,
+                    if msg1 <> "" then msg1 ^ "\n" ^ msg2 else msg2 )
+                  t))
+  in
+  inner (true, "") lst
+
+let request_test_setup () =
+  match
+    let a = init_dbs () in
+    let b = create_dbs "alice" "666" in
+    let c =
+      add_request "alice"
+        (Msg.make_msg "alice" "bob" "2000-01-01 08:00:00" FriendReq
+           "hello to bob")
+        (Some "123") None
+    in
+    let d =
+      add_request "alice"
+        (Msg.make_msg "alice" "charlie" "2000-01-02 08:00:00" FriendReq
+           "hello to charlie")
+        (Some "123") (Some false)
+    in
+    let e =
+      add_request "alice"
+        (Msg.make_msg "alice" "david" "1999-12-31 08:00:00" FriendReq
+           "hello to david")
+        None (Some true)
+    in
+    let f =
+      add_request "alice"
+        (Msg.make_msg "eve" "alice" "1999-12-31 15:00:00" FriendReq
+           "hello from eve")
+        (Some "123") None
+    in
+    let g = update_request "alice" "bob" true in
+    let h = update_request "alice" "david" false in
+    let i = update_request "alice" "eve" false in
+    cmb_rc [ a; b; c; d; e; f; g; h; i ]
+  with
+  | f, m ->
+      if f then print_endline ("TRUE: " ^ m)
+      else print_endline ("FALSE: " ^ m);
+      f
+
+let in_req_test name =
+  if is_in_req "alice" name then (
+    print_endline (put "%s is in Alice's list" name);
+    true)
+  else (
+    print_endline (put "%s is NOT in Alice's list" name);
+    false)
+
+let all_reqs_test () =
+  let lst = get_all_reqs "alice" in
+  List.length lst = 4
+
+let all_frd_test () =
+  let lst = get_all_frds "alice" in
+  List.length lst = 2
+
+let request_tests () =
+  let a = request_test_setup () in
+  let b = in_req_test "bob" in
+  let c = not (in_req_test "zooo") in
+  let d = all_frd_test () && all_reqs_test () in
+  a && b && c && d
+
+let add_msgs_test () =
+  let a =
+    add_msg "alice"
+      (Msg.make_msg "alice" "bob" "2000-01-01 03:00:00" Message
+         "hello at 3")
+  in
+  let b =
+    add_msg "alice"
+      (Msg.make_msg "alice" "eve" "2000-01-01 05:00:00" Message
+         "hello at 5")
+  in
+  let c =
+    add_msg "alice"
+      (Msg.make_msg "bob" "alice" "2000-01-01 06:00:00" Message
+         "hello at 6")
+  in
+  let d =
+    add_msg "alice"
+      (Msg.make_msg "alice" "bob" "2000-01-01 08:00:00" Message
+         "hello at 8")
+  in
+  let e =
+    add_msg "alice"
+      (Msg.make_msg "eve" "alice" "2000-01-01 09:00:00" Message
+         "hello at 9")
+  in
+  let f =
+    add_msg "alice"
+      (Msg.make_msg "alice" "bob" "2000-01-02 11:00:00" Message
+         "hello at 11")
+  in
+  let g =
+    add_msg "alice"
+      (Msg.make_msg "bob" "alice" "2000-01-02 08:00:00" Message
+         "hello on the second day")
+  in
+  match cmb_rc [ a; b; c; d; e; f; g ] with
+  | f, m ->
+      if f then (
+        print_endline ("TRUE: " ^ m);
+        f)
+      else (
+        print_endline ("FALSE: " ^ m);
+        f)
+
+let all_msgs_test () =
+  let lst = get_all_msgs_since "alice" "2000-01-01 08:00:00" in
+  List.length lst = 3
+
+let msgs_by_frd_test () =
+  let lst = get_msgs_by_frd_since "alice" "eve" "2000-01-01 00:00:00" in
+  List.length lst = 2
+
+let msg_tests () =
+  let a = add_msgs_test () in
+  let b = all_msgs_test () in
+  let c = msgs_by_frd_test () in
+  a && b && c
+
+let db_test () =
+  let a = request_tests () in
+  let b = msg_tests () in
+  if a && b then print_endline "DATABASE TEST ON CLIENT SIDE FINISHED. "
+  else print_endline "DATABSAE TEST ON CLIENT SIDE FAILED. "
 
 (******************** Packager Tests ********************)
 
