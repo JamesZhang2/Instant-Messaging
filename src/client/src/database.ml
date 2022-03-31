@@ -83,6 +83,11 @@ let dir_handle (h : bool * header) =
   match h with
   | f, _ -> f
 
+let assert_ok rc =
+  if Rc.is_success rc then ()
+  else print_endline "RC failed to assert ok.";
+  ()
+
 let rec print_list = function
   | [] -> ()
   | h :: t ->
@@ -136,10 +141,13 @@ let add_client name key =
   |> handle_rc (put "Client %s inserted to client table. " name)
 
 let is_client name =
+  let st =
+    prepare (open_db "client")
+      "SELECT username FROM client WHERE username=?"
+  in
+  bind_text st 1 name |> assert_ok;
   let res =
-    fold
-      (prepare (open_db "client")
-         (put "SELECT username FROM client WHERE username='%s'" name))
+    fold st
       ~f:(fun x ar -> Array.map data_to_string ar |> Array.append x)
       ~init:(Array.make 0 "")
   in
@@ -188,11 +196,14 @@ let create_dbs username key =
 (******************** Friend Request Table ********************)
 
 let is_in_req client user =
+  let st =
+    prepare
+      (open_db (clt_req client))
+      (put "SELECT id FROM %s WHERE user=?" (clt_req client))
+  in
+  bind_text st 1 user |> assert_ok;
   let res =
-    fold
-      (prepare
-         (open_db (clt_req client))
-         (put "SELECT id FROM %s WHERE user='%s'" (clt_req client) user))
+    fold st
       ~f:(fun x ar -> Array.map data_to_string ar |> Array.append x)
       ~init:(Array.make 0 "")
   in
@@ -200,12 +211,14 @@ let is_in_req client user =
   | _, ar -> Array.length ar <> 0
 
 let is_frd client user =
+  let st =
+    prepare
+      (open_db (clt_req client))
+      (put "SELECT accepted FROM %s WHERE user=?" (clt_req client))
+  in
+  bind_text st 1 user |> assert_ok;
   let res =
-    fold
-      (prepare
-         (open_db (clt_req client))
-         (put "SELECT accepted FROM %s WHERE user='%s'" (clt_req client)
-            user))
+    fold st
       ~f:(fun x ar -> Array.map data_to_string ar |> Array.append x)
       ~init:(Array.make 0 "")
   in
@@ -342,15 +355,17 @@ let get_all_frds client =
 
 let get_req_by_name client username =
   if is_client client then
-    if create_req_table client |> dir_handle then
+    if create_req_table client |> dir_handle then (
+      let st =
+        prepare
+          (open_db (clt_req client))
+          (put
+             "SELECT user, isSender, message, time FROM %s WHERE user=?"
+             (clt_req client))
+      in
+      bind_text st 1 username |> assert_ok;
       let res =
-        fold
-          (prepare
-             (open_db (clt_req client))
-             (put
-                "SELECT user, isSender, message, time FROM %s WHERE \
-                 user='%s'"
-                (clt_req client) username))
+        fold st
           ~f:(fun x ar ->
             (Array.map data_to_string ar |> Array.to_list) @ x)
           ~init:[]
@@ -363,7 +378,7 @@ let get_req_by_name client username =
               else if i = "0" then
                 Some (make_msg u client t FriendReq m)
               else None
-          | _ -> None)
+          | _ -> None))
     else
       failwith
         (put
@@ -422,15 +437,18 @@ let rec form_msg_lsts client = function
 
 let get_all_msgs_since client time =
   if is_client client then
-    if create_msg_table client |> dir_handle then
+    if create_msg_table client |> dir_handle then (
+      let st =
+        prepare
+          (open_db (clt_msg client))
+          (put
+             "SELECT user, message, time, isSender accepted FROM %s \
+              WHERE time > ? ORDER BY time ASC"
+             (clt_msg client))
+      in
+      bind_text st 1 (time_ok time) |> assert_ok;
       let res =
-        fold
-          (prepare
-             (open_db (clt_msg client))
-             (put
-                "SELECT user, message, time, isSender accepted FROM %s \
-                 WHERE time > '%s' ORDER BY time ASC"
-                (clt_msg client) (time_ok time)))
+        fold st
           ~f:(fun x ar ->
             (Array.map data_to_string ar |> Array.to_list) @ x)
           ~init:[]
@@ -438,7 +456,7 @@ let get_all_msgs_since client time =
       match res with
       | _, lst ->
           (* print_int (List.length lst); *)
-          form_msg_lsts client lst
+          form_msg_lsts client lst)
     else
       failwith
         (put
@@ -450,21 +468,24 @@ let get_all_msgs_since client time =
 let get_msgs_by_frd client frd =
   if is_client client then
     if create_msg_table client |> dir_handle then
-      if is_frd client frd then
+      if is_frd client frd then (
+        let st =
+          prepare
+            (open_db (clt_msg client))
+            (put
+               "SELECT user, message, time, isSender accepted FROM %s \
+                WHERE user=? ORDER BY time ASC"
+               (clt_msg client))
+        in
+        bind_text st 1 frd |> assert_ok;
         let res =
-          fold
-            (prepare
-               (open_db (clt_msg client))
-               (put
-                  "SELECT user, message, time, isSender accepted FROM \
-                   %s WHERE user='%s' ORDER BY time ASC"
-                  (clt_msg client) frd))
+          fold st
             ~f:(fun x ar ->
               (Array.map data_to_string ar |> Array.to_list) @ x)
             ~init:[]
         in
         match res with
-        | _, lst -> form_msg_lsts client lst
+        | _, lst -> form_msg_lsts client lst)
       else []
     else
       failwith
@@ -477,21 +498,25 @@ let get_msgs_by_frd client frd =
 let get_msgs_by_frd_since client frd time =
   if is_client client then
     if create_msg_table client |> dir_handle then
-      if is_frd client frd then
+      if is_frd client frd then (
+        let st =
+          prepare
+            (open_db (clt_msg client))
+            (put
+               "SELECT user, message, time, isSender accepted FROM %s \
+                WHERE user=? AND time>? ORDER BY time ASC"
+               (clt_msg client))
+        in
+        bind_text st 1 frd |> assert_ok;
+        bind_text st 2 (time_ok time) |> assert_ok;
         let res =
-          fold
-            (prepare
-               (open_db (clt_msg client))
-               (put
-                  "SELECT user, message, time, isSender accepted FROM \
-                   %s WHERE user='%s' AND time>'%s' ORDER BY time ASC"
-                  (clt_msg client) frd (time_ok time)))
+          fold st
             ~f:(fun x ar ->
               (Array.map data_to_string ar |> Array.to_list) @ x)
             ~init:[]
         in
         match res with
-        | _, lst -> form_msg_lsts client lst
+        | _, lst -> form_msg_lsts client lst)
       else []
     else
       failwith
