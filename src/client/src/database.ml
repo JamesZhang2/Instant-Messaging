@@ -56,6 +56,13 @@ let bool_op_to_str = function
 (** [bool_to_str f] is ["1"] if [f] is [true], ["0"] if [f] is [false]. *)
 let bool_to_str f = if f then "1" else "0"
 
+let bool_to_t f : Data.t =
+  if f then INT (Int64.of_int 1) else INT (Int64.of_int 0)
+
+let bool_op_to_t = function
+  | None -> Data.NULL
+  | Some f -> bool_to_t f
+
 (** [str_op_to_str op] is [s] if [op] is [Some s], [""] if [op] is
     [None]. *)
 let str_op_to_str = function
@@ -135,10 +142,12 @@ let init_dbs () =
 (** [add_client name key] adds [client] and [key] to main table.
     Requires: name has not been added. *)
 let add_client name key =
-  exec (open_db "client")
-    (put "INSERT INTO client (username, key) VALUES ('%s', '%s');" name
-       key)
-  |> handle_rc (put "Client %s inserted to client table. " name)
+  let st =
+    prepare (open_db "client")
+      "INSERT INTO client (username, key) VALUES (?, ?);"
+  in
+  bind_values st [ TEXT name; TEXT key ] |> assert_ok;
+  step st |> handle_rc (put "Client %s inserted to client table. " name)
 
 let is_client name =
   let st =
@@ -235,20 +244,30 @@ let add_request client req key req_state =
         let user =
           if sender req = client then receiver req else sender req
         in
-        if is_in_req client user |> not then
-          exec
-            (open_db (clt_req client))
-            (put
-               "INSERT INTO %s (user, key, message, time, accepted, \
-                isSender) VALUES ('%s', '%s', '%s', '%s', %s, %s);"
-               (clt_req client) user (str_op_to_str key) (content req)
-               (time req)
-               (bool_op_to_str req_state)
-               (bool_to_str (user = receiver req)))
+        if is_in_req client user |> not then (
+          let st =
+            prepare
+              (open_db (clt_req client))
+              (put
+                 "INSERT INTO %s (user, key, message, time, accepted, \
+                  isSender) VALUES (?, ?, ?, ?, ?, ?);"
+                 (clt_req client))
+          in
+          bind_values st
+            [
+              TEXT user;
+              TEXT (str_op_to_str key);
+              TEXT (content req);
+              TEXT (time req);
+              bool_op_to_t req_state;
+              bool_to_t (user = receiver req);
+            ]
+          |> assert_ok;
+          step st
           |> handle_rc
                (put
                   "A new friend request inserted to client %s' table. "
-                  client)
+                  client))
         else
           ( false,
             put "Client %s's friend request already in record. " client
@@ -265,14 +284,19 @@ let add_request client req key req_state =
 let update_request client username req_state =
   if is_client client then
     if create_req_table client |> dir_handle then
-      if is_in_req client username then
-        exec
-          (open_db (clt_req client))
-          (put "UPDATE %s SET accepted=%s WHERE user='%s';"
-             (clt_req client) (bool_to_str req_state) username)
+      if is_in_req client username then (
+        let st =
+          prepare
+            (open_db (clt_req client))
+            (put "UPDATE %s SET accepted=? WHERE user=?;"
+               (clt_req client))
+        in
+        bind_values st [ bool_to_t req_state; TEXT username ]
+        |> assert_ok;
+        step st
         |> handle_rc
              (put "The friend state of %s (client) and %s updated. "
-                client username)
+                client username))
       else
         ( false,
           put
@@ -399,19 +423,29 @@ let add_msg client msg =
         let user =
           if sender msg = client then receiver msg else sender msg
         in
-        if is_frd client user then
-          exec
-            (open_db (clt_msg client))
-            (put
-               "INSERT INTO %s (user, message, time, isSender) VALUES \
-                ('%s', '%s', '%s', %s);"
-               (clt_msg client) user (content msg) (time msg)
-               (bool_to_str (user = receiver msg)))
+        if is_frd client user then (
+          let st =
+            prepare
+              (open_db (clt_msg client))
+              (put
+                 "INSERT INTO %s (user, message, time, isSender) \
+                  VALUES (?, ?, ?, ?);"
+                 (clt_msg client))
+          in
+          bind_values st
+            [
+              TEXT user;
+              TEXT (content msg);
+              TEXT (time msg);
+              bool_to_t (user = receiver msg);
+            ]
+          |> assert_ok;
+          step st
           |> handle_rc
                (put
                   "A new message from %s to %s inserted to client %s' \
                    table. "
-                  (sender msg) (receiver msg) client)
+                  (sender msg) (receiver msg) client))
         else
           (false, put "Client %s and %s are not friends. " client user)
       else (false, put "Client %s's message is invalid. " client)
