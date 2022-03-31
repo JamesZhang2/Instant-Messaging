@@ -48,11 +48,11 @@ let handle_get_msg req_meth receiver time amount =
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
     | exception x ->
-        print_endline (Printexc.to_string x);
+        (* print_endline (Printexc.to_string x); *)
         Packager.error_response "fetch failure"
     | lst ->
         let temp = Packager.get_method_response lst in
-        let _ = print_endline temp in
+        (* let _ = print_endline temp in *)
         temp
 
 let handle_register req_meth username time password public_key =
@@ -104,7 +104,7 @@ let handle_friend_req req_meth sender time receiver msg =
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
     | exception x ->
-        print_endline (Printexc.to_string x);
+        (* print_endline (Printexc.to_string x); *)
         Packager.error_response "Unknown exception"
         (* raise x *)
         (* Packager.error_response "Unknown Exception from db" *)
@@ -148,14 +148,14 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
          a request from receiver to sender exist*)
     with
     | exception UnknownUser x ->
-        print_endline "exception branch";
+        (* print_endline "exception branch"; *)
         Packager.error_response ("Unknown User " ^ x)
     | true, _ ->
-        print_endline "already friend branch";
+        (* print_endline "already friend branch"; *)
         Packager.post_method_response
           ("You are already friends with" ^ receiver)
     | false, true -> (
-        print_endline "fr branch";
+        (* print_endline "fr branch"; *)
         let successful =
           if accepted then fr_approve receiver sender
           else fr_reject receiver sender
@@ -166,10 +166,6 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
               ("Operation Unsuccessful, friend request from" ^ receiver
              ^ "still pending")
         | true, true ->
-            (* print_endline "approve branch"; (match fr_approve
-               receiver sender with | exception x -> print_endline
-               (Printexc.to_string x) | bo -> ()); print_endline "got
-               there"; *)
             let _ = fr_approve_msg receiver sender time in
             let _ = fr_approve_msg sender receiver time in
             (* print_endline "got there 2"; *)
@@ -186,7 +182,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
               ("You rejected " ^ receiver
              ^ "'s friend request succesfully "))
     | false, false ->
-        print_endline "no fr branch";
+        (* print_endline "no fr branch"; *)
         Packager.error_response "No such friend request"
 
 let handle_fetch_key username =

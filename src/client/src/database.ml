@@ -69,7 +69,7 @@ let str_op_to_str = function
 let handle_rc ok_msg = function
   | Rc.OK
   | Rc.DONE ->
-      print_endline ok_msg;
+      (* print_endline ok_msg; *)
       print_newline ();
       (true, ok_msg)
   | r ->
