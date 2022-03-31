@@ -171,7 +171,6 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
             (* print_endline "got there 2"; *)
             Packager.post_method_response (user_key receiver)
         | true, false ->
-            let _ = fr_reject receiver sender in
             let msg_receiver =
               Msg.make_msg sender receiver time
                 (FriendReqRep (false, ""))
