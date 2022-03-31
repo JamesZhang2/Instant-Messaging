@@ -66,11 +66,17 @@ let handle_register req_meth username time password public_key =
 let handle_login req_meth sender time password =
   if req_meth <> Post then
     Packager.error_response "Login should use POST method"
-  else if user_exists sender then
-    match chk_pwd sender password with
-    | true -> Packager.post_method_response (user_key sender)
-    | false -> Packager.error_response "Incorrect Password"
-  else Packager.error_response "Incorrect Username: "
+  else
+    match user_exists sender with
+    | true -> (
+        match chk_pwd sender password with
+        | true ->
+            let str = Packager.post_method_response (user_key sender) in
+            str
+        | false -> Packager.error_response "Incorrect Password"
+        | exception x -> Packager.error_response "login failure")
+    | false -> Packager.error_response "Incorrect Username: "
+    | exception x -> Packager.error_response "login failure"
 
 (** [fr_approve_msg sender receiver time] sends approval message to
     receiver with sender's key *)
@@ -84,9 +90,7 @@ let fr_approve_msg sender receiver time =
   add_msg msg_receiver
 
 let handle_friend_req req_meth sender time receiver msg =
-  print_endline "get there";
   if req_meth <> Post then
-    let _ = print_endline "Not post" in
     Packager.error_response "FriendReq should use POST method"
   else
     match is_friend sender receiver with
@@ -95,7 +99,8 @@ let handle_friend_req req_meth sender time receiver msg =
         Packager.error_response ("Unknown User " ^ x)
     | exception x ->
         print_endline (Printexc.to_string x);
-        raise x
+        Packager.error_response "Unknown exception"
+        (* raise x *)
         (* Packager.error_response "Unknown Exception from db" *)
     | true ->
         Packager.error_response
@@ -114,21 +119,19 @@ let handle_friend_req req_meth sender time receiver msg =
             Packager.post_method_response
               ("FriendRequest to " ^ receiver ^ " successfully sent")
         | false, _ ->
-            print_endline "branch 4";
             let msg = Msg.make_msg sender receiver time FriendReq msg in
             (* notification msg*)
             let _ = new_fr msg in
-            (* let _ = fr_approve sender receiver in *)
             (* TODO: testing purpose only, delete later*)
             let _ = add_msg msg in
             (*new fr in db*)
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")
         | true, true ->
-            print_endline "branch 5";
             Packager.error_response
               ("You are already friends with" ^ receiver))
 
+(** [handle_friend_req_reply req_meth sender time receiver accepted]*)
 let handle_friend_req_reply req_meth sender time receiver accepted =
   if req_meth <> Post then
     Packager.error_response "FriendReqReply should use POST method"
@@ -157,8 +160,13 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
               ("Operation Unsuccessful, friend request from" ^ receiver
              ^ "still pending")
         | true, true ->
-            let _ = fr_approve receiver sender in
+            (* print_endline "approve branch"; (match fr_approve
+               receiver sender with | exception x -> print_endline
+               (Printexc.to_string x) | bo -> ()); print_endline "got
+               there"; *)
             let _ = fr_approve_msg receiver sender time in
+            let _ = fr_approve_msg sender receiver time in
+            (* print_endline "got there 2"; *)
             Packager.post_method_response (user_key receiver)
         | true, false ->
             let _ = fr_reject receiver sender in

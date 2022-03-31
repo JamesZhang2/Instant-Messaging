@@ -72,10 +72,12 @@ let help_print () =
    sender to receiver" |> str_format 0 |> print_string;
   "[FriendReqReply sender receiver message] : replies a message from \
    receiver to sender" |> str_format 0 |> print_string;
-  "[ReadAll] : Reads all recent messages" |> str_format 0
+  "[ReadMsg] : Reads all recent messages" |> str_format 0
   |> print_string;
   "[Read from <friend>] : reads all recent messages from <friend> "
   |> str_format 0 |> print_string;
+  "[FriendRequests] : reads all recent friend reequests" |> str_format 0
+  |> print_string;
   "[Friends] : Shows the list of friends of current logged in user "
   |> str_format 1 |> print_string
 
@@ -124,15 +126,20 @@ let rec main () =
       let resp = Controller.friend_req_reply receiver accepted in
       bool_print resp;
       main ()
-  | ReadAll ->
+  | ReadMsg ->
       let check, messages = Controller.read_msg () in
       if check then print_messages messages
       else bool_print (false, "Message History Fetch Unsuccessful");
       main ()
-  | ReadFrom friend ->
+  | ReadMsgFrom friend ->
       let check, messages = Controller.read_msg_from friend in
       if check then print_messages messages
       else bool_print (false, "Friend History fetch unsuccessful")
+  | ReadFR ->
+      let check, messages = Controller.read_FR () in
+      if check then print_messages messages
+      else bool_print (false, "Friend Request fetch unsuccessful");
+      main ()
   | ListFriend ->
       let check, friends = Controller.lst_of_friends () in
       if check then

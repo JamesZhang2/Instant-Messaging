@@ -10,8 +10,9 @@ type command =
   | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
-  | ReadAll
-  | ReadFrom of string
+  | ReadMsg
+  | ReadMsgFrom of string
+  | ReadFR
   | ListFriend
   | Help
   | Quit
@@ -37,8 +38,9 @@ let parse str =
       FriendReqRep (sender, receiver, true)
   | [ "FriendReqReply"; sender; receiver; "false" ] ->
       FriendReqRep (sender, receiver, false)
-  | [ "ReadAll" ] -> ReadAll
-  | [ "Read"; "from"; sender ] -> ReadFrom sender
+  | [ "ReadAll" ] -> ReadMsg
+  | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
+  | [ "FriendRequests" ] -> ReadFR
   | [ "Friends" ] -> ListFriend
   | [ "Logout" ] -> Logout
   | _ -> raise Malformed

@@ -51,6 +51,9 @@ val read_msg_from : string -> bool * Msg.t list
     to currently logged in user. Requires: [username] is logged in, and
     friend is a valid friend*)
 
+val read_FR : unit -> bool * Msg.t list
+(** [read_FR ()] returns all local friend requests*)
+
 val lst_of_friends : unit -> bool * string list
 (** [lst_of_friends ()] returns a list of friends of the current logged
     in user. *)

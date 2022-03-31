@@ -178,12 +178,6 @@ let friend_req receiver msg =
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
-      let _ = print_endline key in
-      let str = Crypto.sym_enc (Crypto.pub_from_str key) msg in
-      let _ = print_endline str in
-      let _ =
-        print_endline (Crypto.sym_dec (Crypto.pub_from_str key) str)
-      in
       let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in
@@ -240,6 +234,14 @@ let read_msg_from sender =
     match
       get_msgs_by_frd_since username sender "2022-03-29 17:00:00"
     with
+    | exception IncorrectUser -> (false, incorrect_usermsg)
+    | messages -> (true, messages)
+
+let read_FR () =
+  if "" = !username_ref then (false, incorrect_usermsg)
+  else
+    let username = !username_ref in
+    match get_all_reqs username with
     | exception IncorrectUser -> (false, incorrect_usermsg)
     | messages -> (true, messages)
 

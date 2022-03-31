@@ -10,8 +10,9 @@ type command =
   | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
-  | ReadAll
-  | ReadFrom of string
+  | ReadMsg
+  | ReadMsgFrom of string
+  | ReadFR
   | ListFriend
   | Help
   | Quit

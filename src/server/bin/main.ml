@@ -14,12 +14,14 @@ let get_meth req = req.Request.meth |> Method.to_string
 (** [response_maker (status, body)] makes a Response Lwt using [status]
     and [body]*)
 let response_maker (status, body) =
-  Response.make
-    ~status:(status |> Status.of_string)
-      (* ~headers:(res |> response_headers |> Headers.of_list) *)
-    ~body:(body |> Body.of_string)
-    ()
-  |> Lwt.return
+  let made =
+    Response.make
+      ~status:(status |> Status.of_string)
+        (* ~headers:(res |> response_headers |> Headers.of_list) *)
+      ~body:(body |> Body.of_string)
+      ()
+  in
+  Lwt.return made
 
 let process (req : Request.t) =
   let res =
