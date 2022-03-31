@@ -36,13 +36,7 @@ val chk_pwd : string -> string -> bool
     database. *)
 
 val add_msg : Msg.t -> bool
-(** [add_msg message] attempts to add a direct message to the database.
-
-    Requires:
-
-    - [Msg.msg_type message = Msg.Message]
-    - [Msg.msg_sender message] and [Msg.msg_receiver message] are
-      friends with each other.
+(** [add_msg message] attempts to add a message to the database.
 
     Returns: true if the messages are added successfully, false
     otherwise.
