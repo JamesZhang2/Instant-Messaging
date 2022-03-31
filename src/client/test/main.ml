@@ -22,6 +22,12 @@ let network_tests = []
 
 (******************** Client Database Tests ********************)
 
+(** Note: We are not using ounit to test the database because ounit
+    tests are parallel, whereas we need the database tests to be
+    sequential. For instance, we must first add a user before testing
+    that the user exists in the database. *)
+
+(** [put] is an alias of [Printf.sprintf]. *)
 let put = Printf.sprintf
 
 (** [cmb_rc lst] combines the response list to one response. *)

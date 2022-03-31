@@ -4,8 +4,6 @@
 open Util
 
 exception MalformedTime
-exception IncorrectUser
-exception DBNotExist
 
 val init_dbs : unit -> bool * string
 (** [init_dbs()] initializes the client table. Returns
@@ -24,29 +22,21 @@ val add_request :
 (** [add_request client req key req_state] attempts to add a freind
     request related to [client] with current state [req_state] and [key]
     as public key of this possible . Requires: sender and receiver are
-    not friends, [client] is either the sender or receiver. Raises
-    [IncorrectUser] if either requires clause is false. Returns
+    not friends, [client] is either the sender or receiver. Returns
     [(true, feedback)] if a new friend request is successfully added,
     [(false, err_msg)] if the table has already been created before or
     an issue is encountered. *)
 
 val update_request : string -> string -> bool -> bool * string
 (** [update_request client username req_state] updates the request state
-    to [req_state]. Raises [IncorrectUser] if [client] is not in the
-    database or [client] does not have a request with [username] in
-    table. Returns [(true, feedback)] if the request is successfully
-    updated, [(false, err_msg)] otherwise. *)
+    to [req_state]. Returns [(true, feedback)] if the request is
+    successfully updated, [(false, err_msg)] otherwise. *)
 
 val add_msg : string -> Msg.t -> bool * string
 (** [add_msg client msg] adds a message [msg] to the [client] table.
-    Requires: sender and receiver are friends. Raises [IncorrectUser] if
-    [client] is not in the database. Returns [(true, feedback)] if the
-    message is successfully added, [(false, err_msg)] otherwise. *)
-
-(* val get_username : unit -> string (** [get_username()] is the
-   username of current client. Raises [DBNotExist] if database has not
-   been created. *) *)
-(* I think this may be not necessary *)
+    Requires: sender and receiver are friends. Returns
+    [(true, feedback)] if the message is successfully added,
+    [(false, err_msg)] otherwise. *)
 
 val get_all_reqs : string -> Msg.t list
 (** [get_all_reqs client] is a list of all freind requests in [client]
@@ -57,11 +47,6 @@ val get_all_frds : string -> string list
 (** [get_all_frds client] is a list of all freinds in [client] table.
     Raises [IncorrectUser] if [client] is not a vlaid. Raises
     [DBNotExist] if the table has not been created.*)
-
-(* val get_all_msgs : string -> Msg.t list *)
-(** [get_all_msgs client] is a list of all messages in [client] table.
-    Raises [IncorrectUser] if [client] is not a valid. Raises
-    [DBNotExist] if database has not been created.*)
 
 val get_all_msgs_since : string -> string -> Msg.t list
 (** [get_all_msgs_since client time] is a list of all messages in

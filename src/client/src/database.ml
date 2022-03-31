@@ -27,8 +27,6 @@ open Util.Msg
 open Util.Time
 
 exception MalformedTime
-exception IncorrectUser
-exception DBNotExist
 
 (******************** General Helper Functions ********************)
 
