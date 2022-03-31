@@ -64,25 +64,28 @@ let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login credential")
   else
     let sender = !username_ref in
-    let encrypted_msg =
-      if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
-      else msg
-    in
-    let packed_msg =
-      Packager.pack_send_msg sender receiver encrypted_msg
-    in
-    let raw_response = Network.request "POST" ~body:packed_msg in
-    let success, resp = bool_post_parse raw_response in
-    (* if message sent sucessfully, add message to database. *)
-    if success then
-      let message =
-        Msg.make_msg sender receiver
-          (Time.string_of_now true)
-          Message msg
+    if not (is_frd sender receiver) then
+      (false, "You are not friends with" ^ receiver)
+    else
+      let encrypted_msg =
+        if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
+        else msg
       in
-      db_op (add_msg sender) message
-    else ();
-    (success, resp)
+      let packed_msg =
+        Packager.pack_send_msg sender receiver encrypted_msg
+      in
+      let raw_response = Network.request "POST" ~body:packed_msg in
+      let success, resp = bool_post_parse raw_response in
+      (* if message sent sucessfully, add message to database. *)
+      if success then
+        let message =
+          Msg.make_msg sender receiver
+            (Time.string_of_now true)
+            Message msg
+        in
+        db_op (add_msg sender) message
+      else ();
+      (success, resp)
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
