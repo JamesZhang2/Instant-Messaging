@@ -7,6 +7,7 @@ utop:
 	OCAMLRUNPARAM=b dune utop src
 
 clean:
+	rm -f data/database/*.db
 	dune clean
 
 run:
@@ -14,3 +15,6 @@ run:
 
 test:
 	OCAMLRUNPARAM=b dune exec test/main.exe
+
+switch: 
+	opam switch cs3110-project

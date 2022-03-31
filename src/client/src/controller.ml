@@ -15,7 +15,7 @@ let key_ref = ref (Crypto.sym_gen ())
 let username_ref = ref ""
 
 (** For debug purposes *)
-let use_encryption = false
+let use_encryption = true
 
 exception IllegalResponse
 
@@ -34,17 +34,15 @@ let option_unpack op =
     post request to a tuple. Returns [(true, msg)] if the request is
     successful, [(false, error_msg)] otherwise*)
 let bool_post_parse raw_response =
-  let status = is_successful (Network.status raw_response) in
   let raw_body =
     raw_response |> Network.response_body |> option_unpack
   in
-  if not status then (false, "Network Error")
-  else
-    let body = Parser.parse raw_body in
-    match Parser.get_type body with
-    | ErrorResponse x -> (false, x)
-    | GetMsgResponse x -> (false, "don't use bool_post_parse")
-    | PostMethResponse x -> (true, x)
+  (* if not status then (false, "Network Error") else *)
+  let body = Parser.parse raw_body in
+  match Parser.get_type body with
+  | ErrorResponse x -> (false, x)
+  | GetMsgResponse x -> (false, "don't use bool_post_parse")
+  | PostMethResponse x -> (true, x)
 (* let message = Parser.get_plain body in (Parser.get_type body,
    message) *)
 
@@ -58,16 +56,17 @@ let fetch_key user =
 
 (** [db_op meth input] does the database operation [meth] until a
     success is returned. *)
-let rec db_op meth input =
+let db_op meth input =
   let success, resp = meth input in
-  if success then () else db_op meth input
+  if success then () else print_endline resp
 
 let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login credential")
   else
     let sender = !username_ref in
     let encrypted_msg =
-      if use_encryption then Util.Crypto.(sym_enc !key_ref msg) else msg
+      if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
+      else msg
     in
     let packed_msg =
       Packager.pack_send_msg sender receiver encrypted_msg
@@ -87,12 +86,12 @@ let send_msg receiver msg =
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
-  (let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
-   let decrypt =
-     Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
-       (Msg.msg_type msg) ptext
-   in
-   let msg_type = Msg.msg_type msg in
+  let ptext = Crypto.sym_dec !key_ref (Msg.content msg) in
+  let decrypt =
+    Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
+      (Msg.msg_type msg) ptext
+  in
+  (let msg_type = Msg.msg_type msg in
    match msg_type with
    | Message -> db_op (add_msg receiver) decrypt
    | FriendReqRep (approve, key) ->
@@ -103,7 +102,7 @@ let msg_processor receiver msg =
        let success, key = fetch_key sender in
        let add_key = if not success then None else Some key in
        db_op (add_request receiver decrypt add_key) None);
-  msg
+  decrypt
 
 let update_msg ?(amount = "unread") () =
   if "" = !username_ref then (false, [])
@@ -122,8 +121,8 @@ let update_msg ?(amount = "unread") () =
     | PostMethResponse x -> raise IllegalResponse
     | GetMsgResponse lst ->
         (*processes the fetched messages*)
-        let _ = List.map (msg_processor receiver) lst in
-        (true, lst)
+        let new_lst = List.map (msg_processor receiver) lst in
+        (true, new_lst)
 
 let register username password =
   let crypto = Util.Crypto.sym_gen () in
@@ -134,6 +133,7 @@ let register username password =
   if successful then (
     let _ = key_ref := crypto in
     username_ref := username;
+    db_op init_dbs ();
     db_op (create_dbs username) (Crypto.get_pub_str crypto))
   else ();
   (successful, resp)
@@ -146,18 +146,23 @@ let login username password =
   | None -> (true, [])
   | Some raw_body' -> (
       match raw_body' |> Parser.parse |> Parser.get_type with
-      | ErrorResponse x -> (false, [])
+      | ErrorResponse x -> (false, [ Msg.make_msg "" "" "" Message x ])
       | GetMsgResponse x -> raise IllegalResponse
       | PostMethResponse x ->
           key_ref := Crypto.pub_from_str x;
           username_ref := username;
           db_op init_dbs ();
-          let messages =
+          db_op (create_dbs username) (Crypto.get_pub_str !key_ref);
+          let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
           in
-          messages)
+          let login_notification =
+            print_endline "get there";
+            Msg.make_msg "" "" "" Message "Login Successful"
+          in
+          (success, login_notification :: messages))
 
 let logout () =
   username_ref := "";
@@ -165,11 +170,20 @@ let logout () =
 
 let friend_req receiver msg =
   if "" = !username_ref then (false, "User Not Logged in")
+    (* else if isFriend !username_ref receiver then (true, "Already
+       Friends") *)
+    (*TODO: put back in later*)
   else
     let fetch_success, key = fetch_key receiver in
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
+      let _ = print_endline key in
+      let str = Crypto.sym_enc (Crypto.pub_from_str key) msg in
+      let _ = print_endline str in
+      let _ =
+        print_endline (Crypto.sym_dec (Crypto.pub_from_str key) str)
+      in
       let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in

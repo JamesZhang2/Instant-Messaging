@@ -84,13 +84,19 @@ let fr_approve_msg sender receiver time =
   add_msg msg_receiver
 
 let handle_friend_req req_meth sender time receiver msg =
+  print_endline "get there";
   if req_meth <> Post then
+    let _ = print_endline "Not post" in
     Packager.error_response "FriendReq should use POST method"
   else
     match is_friend sender receiver with
     (* check already friends exists*)
     | exception UnknownUser x ->
         Packager.error_response ("Unknown User " ^ x)
+    | exception x ->
+        print_endline (Printexc.to_string x);
+        raise x
+        (* Packager.error_response "Unknown Exception from db" *)
     | true ->
         Packager.error_response
           ("You are already friends with" ^ receiver)
@@ -108,13 +114,18 @@ let handle_friend_req req_meth sender time receiver msg =
             Packager.post_method_response
               ("FriendRequest to " ^ receiver ^ " successfully sent")
         | false, _ ->
+            print_endline "branch 4";
             let msg = Msg.make_msg sender receiver time FriendReq msg in
             (* notification msg*)
             let _ = new_fr msg in
+            (* let _ = fr_approve sender receiver in *)
+            (* TODO: testing purpose only, delete later*)
+            let _ = add_msg msg in
             (*new fr in db*)
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")
         | true, true ->
+            print_endline "branch 5";
             Packager.error_response
               ("You are already friends with" ^ receiver))
 
@@ -128,11 +139,14 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
          a request from receiver to sender exist*)
     with
     | exception UnknownUser x ->
+        print_endline "exception branch";
         Packager.error_response ("Unknown User " ^ x)
     | true, _ ->
+        print_endline "already friend branch";
         Packager.post_method_response
           ("You are already friends with" ^ receiver)
     | false, true -> (
+        print_endline "fr branch";
         let successful =
           if accepted then fr_approve receiver sender
           else fr_reject receiver sender
@@ -157,7 +171,9 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
             Packager.post_method_response
               ("You rejected " ^ receiver
              ^ "'s friend request succesfully "))
-    | false, false -> Packager.error_response "No such friend request"
+    | false, false ->
+        print_endline "no fr branch";
+        Packager.error_response "No such friend request"
 
 let handle_fetch_key username =
   match user_key username with

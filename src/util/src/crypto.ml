@@ -53,5 +53,5 @@ let pke_dec key = function
 (* let test str = let key = pke_gen () in let ctxt = pke_enc (get_pub
    key) str in pke_dec key ctxt *)
 
-let get_pub_str key = failwith "Unimplemented"
-let pub_from_str str = failwith "Unimplemented"
+let get_pub_str (key : k) : string = "1234123412341234"
+let pub_from_str (str : string) = str
