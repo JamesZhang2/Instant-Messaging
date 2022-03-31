@@ -186,7 +186,11 @@ let friend_req receiver msg =
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
-      let encrypt = Crypto.sym_enc (Crypto.pub_from_str key) msg in
+      let encrypt =
+        if use_encryption then
+          Crypto.sym_enc (Crypto.pub_from_str key) msg
+        else msg
+      in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in
       let success, resp = bool_post_parse raw_response in
