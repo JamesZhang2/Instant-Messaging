@@ -57,8 +57,9 @@ let fetch_key user =
 (** [db_op meth input] does the database operation [meth] until a
     success is returned. *)
 let db_op meth input =
-  let success, resp = meth input in
-  if success then () else print_endline resp
+  let _ = meth input in
+  ()
+(* if success then () else print_endline ("Error" ^ resp) *)
 
 let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login credential")
@@ -104,7 +105,7 @@ let msg_processor receiver msg =
    match msg_type with
    | Message -> db_op (add_msg receiver) decrypt
    | FriendReqRep (approve, key) ->
-       let from = Msg.content msg in
+       let from = Msg.sender msg in
        db_op (update_request receiver from) approve
    | FriendReq ->
        let sender = Msg.sender msg in
@@ -240,7 +241,7 @@ let read_msg () =
     let username = !username_ref in
     match get_all_msgs_since username "2022-03-29 17:00:00" with
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
-    | messages -> (true, messages)
+    | messages -> (true, List.rev messages)
 
 let read_msg_from sender =
   if "" = !username_ref then (false, incorrect_usermsg)
@@ -250,7 +251,7 @@ let read_msg_from sender =
       get_msgs_by_frd_since username sender "2022-03-29 17:00:00"
     with
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
-    | messages -> (true, messages)
+    | messages -> (true, List.rev messages)
 
 let read_FR () =
   if "" = !username_ref then (false, incorrect_usermsg)
@@ -258,7 +259,11 @@ let read_FR () =
     let username = !username_ref in
     match get_all_reqs username with
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
-    | messages -> (true, messages)
+    | messages ->
+        ( true,
+          List.filter
+            (fun x -> not (is_frd (Msg.sender x) (Msg.receiver x)))
+            messages )
 
 let lst_of_friends () =
   if "" = !username_ref then (false, [ "User Not Logged In" ])

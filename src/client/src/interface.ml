@@ -26,12 +26,14 @@ let print_message msg =
     | FriendReqRep (bo, key) ->
         "Friend Request Response " ^ string_of_bool bo
   in
-  let sender = "from: " ^ Msg.sender msg in
+  let sender = "from " ^ Msg.sender msg ^ " to " ^ Msg.receiver msg in
   let time = "time: " ^ Msg.time msg in
   let message = "\n> " ^ Msg.content msg in
-  msg_type |> str_format 0 |> print_string;
-  sender |> str_format 0 |> print_string;
-  time |> str_format 0 |> print_string;
+  if Msg.sender msg <> "" then
+    let _ = msg_type |> str_format 0 |> print_string in
+    let _ = sender |> str_format 0 |> print_string in
+    time |> str_format 0 |> print_string
+  else ();
   message ^ "\n" |> str_format 1 |> print_string
 
 (** Prints all strings in [lst]*)
@@ -45,7 +47,7 @@ let printlist lst =
 (** [print_messages msg_list] prints the list of messages [msg_list]*)
 let rec print_messages msg_list =
   match msg_list with
-  | [] -> ()
+  | [] -> "" |> str_format 1 |> print_string
   | h :: t ->
       print_message h;
       print_messages t
@@ -151,7 +153,8 @@ let rec main () =
   | ReadMsgFrom friend ->
       let check, messages = Controller.read_msg_from friend in
       if check then print_messages messages
-      else bool_print (false, "Friend History fetch unsuccessful")
+      else bool_print (false, "Friend History fetch unsuccessful");
+      main ()
   | ReadFR ->
       let check, messages = Controller.read_FR () in
       if check then print_messages messages
