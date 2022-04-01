@@ -113,7 +113,7 @@ let handle_friend_req req_meth sender time receiver msg =
         (* Packager.error_response "Unknown Exception from db" *)
     | true ->
         Packager.error_response
-          ("You are already friends with" ^ receiver)
+          ("You are already friends with " ^ receiver)
     | false -> (
         match (fr_exist receiver sender, fr_exist sender receiver) with
         (* Check if friend request already exist*)
@@ -123,7 +123,7 @@ let handle_friend_req req_meth sender time receiver msg =
             (* if reverse fr exist*)
             let _ = fr_approve receiver sender in
             let _ = fr_approve_msg sender receiver time in
-            (* send friend request approval to receiver*)
+            (* send friend req msg to both*)
             Packager.post_method_response
               ("FriendRequest to " ^ receiver ^ " successfully sent")
         | false, _ ->
@@ -156,7 +156,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     | true, _ ->
         (* print_endline "already friend branch"; *)
         Packager.post_method_response
-          ("You are already friends with" ^ receiver)
+          ("You are already friends with " ^ receiver)
     | false, true -> (
         (* print_endline "fr branch"; *)
         let successful =
