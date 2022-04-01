@@ -200,7 +200,6 @@ let insert_msg_sql =
    retrieved) VALUES (?, ?, ?, ?, ?, FALSE);"
 
 let add_msg (msg : Msg.t) =
-  (* assert (Msg.msg_type msg = Msg.Message); *)
   let ty =
     match Msg.msg_type msg with
     | Message -> "Message"

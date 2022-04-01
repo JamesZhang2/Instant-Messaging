@@ -38,6 +38,10 @@ val chk_pwd : string -> string -> bool
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a message to the database.
 
+    Requires: If [Msg.msg_type message] is [FriendReqReply], then its
+    content must be either ["True"] or ["False"] based on whether the
+    friend request is approved or rejected.
+
     Returns: true if the messages are added successfully, false
     otherwise.
 

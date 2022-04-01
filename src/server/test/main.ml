@@ -162,6 +162,16 @@ let fr_foo_alice : Msg.t =
 let fr_alice_bar : Msg.t =
   Msg.make_msg "Alice" "Bar" "2022-03-30 20:08:04" FriendReq "Hi"
 
+let bob_approves_alice : Msg.t =
+  Msg.make_msg "Bob" "Alice" "2022-03-30 20:08:05"
+    (FriendReqRep (true, "key"))
+    "True"
+
+let alice_rejects_catherine : Msg.t =
+  Msg.make_msg "Alice" "Catherine" "2022-03-30 20:08:06"
+    (FriendReqRep (false, ""))
+    "False"
+
 let test_friend_requests () =
   (* Status check before any friend requests *)
   assert_false (fr_exist "Alice" "Bob");
@@ -170,7 +180,9 @@ let test_friend_requests () =
 
   (* New friend requests *)
   assert (new_fr fr_alice_bob);
+  assert (add_msg fr_alice_bob);
   assert (new_fr fr_catherine_alice);
+  assert (add_msg fr_catherine_alice);
   assert_raises (UnknownUser "Foo") (fun _ -> new_fr fr_foo_alice);
   assert_raises (UnknownUser "Bar") (fun _ -> new_fr fr_alice_bar);
 
@@ -178,28 +190,36 @@ let test_friend_requests () =
   assert (fr_exist "Alice" "Bob");
   assert_false (fr_exist "Bob" "Alice");
   assert_false (is_friend "Alice" "Bob");
+  assert_equal (get_new_msg "Bob" |> List.length) 1;
   assert (fr_exist "Catherine" "Alice");
   assert_false (fr_exist "Alice" "Catherine");
   assert_false (is_friend "Catherine" "Alice");
+  assert_equal (get_new_msg "Alice" |> List.length) 1;
   assert_equal (friends_of "Alice") [];
   assert_equal (friends_of "Bob") [];
   assert_equal (friends_of "Catherine") [];
 
   (* Approve *)
   assert (fr_approve "Alice" "Bob");
+  (* Alice is approved by Bob *)
+  assert (add_msg bob_approves_alice);
   assert (is_friend "Alice" "Bob");
   assert (is_friend "Bob" "Alice");
   assert_false (fr_exist "Alice" "Bob");
   assert_false (fr_exist "Bob" "Alice");
+  assert_equal (get_new_msg "Alice" |> List.length) 1;
   assert_equal (friends_of "Alice") [ "Bob" ];
   assert_equal (friends_of "Bob") [ "Alice" ];
 
   (* Reject *)
   assert (fr_reject "Catherine" "Alice");
+  (* Catherine is rejected by Alice *)
+  assert (add_msg alice_rejects_catherine);
   assert_false (is_friend "Catherine" "Alice");
   assert_false (is_friend "Alice" "Catherine");
   assert_false (fr_exist "Catherine" "Alice");
   assert_false (fr_exist "Alice" "Catherine");
+  assert_equal (get_new_msg "Catherine" |> List.length) 1;
   assert_equal (friends_of "Alice") [ "Bob" ];
   assert_equal (friends_of "Catherine") []
 
