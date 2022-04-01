@@ -172,7 +172,8 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
             (* let _ = fr_approve_msg receiver sender time in *)
             let _ = fr_approve_msg sender receiver time in
             (* print_endline "got there 2"; *)
-            Packager.post_method_response (user_key receiver)
+            Packager.post_method_response
+              ("You are now friends with " ^ receiver)
         | true, false ->
             let msg_receiver =
               Msg.make_msg sender receiver time
