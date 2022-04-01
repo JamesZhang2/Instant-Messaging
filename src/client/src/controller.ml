@@ -182,6 +182,8 @@ let logout () =
 
 let friend_req receiver msg =
   if "" = !username_ref then (false, "User Not Logged in")
+  else if !username_ref = receiver then
+    (false, "Cannot send friend request to yourself")
     (* else if isFriend !username_ref receiver then (true, "Already
        Friends") *)
     (*TODO: put back in later*)

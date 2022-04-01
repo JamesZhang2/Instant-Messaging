@@ -9,11 +9,11 @@ let string_of_now ~local =
   let now = convert (Unix.time ()) in
   let year = 1900 + now.tm_year in
   let month = pad_2_digits (now.tm_mon + 1) (* [tm_mon] = [0..11] *) in
-  let day = now.tm_mday in
+  let day = pad_2_digits now.tm_mday in
   let hr = pad_2_digits now.tm_hour in
   let min = pad_2_digits now.tm_min in
   let sec = pad_2_digits now.tm_sec in
-  Printf.sprintf "%i-%s-%i %s:%s:%s" year month day hr min sec
+  Printf.sprintf "%i-%s-%s %s:%s:%s" year month day hr min sec
 
 let time_regex =
   let year = "\\([0-9][0-9][0-9][0-9]\\)" in
