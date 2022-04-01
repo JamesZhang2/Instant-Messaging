@@ -162,9 +162,6 @@ let fr_foo_alice : Msg.t =
 let fr_alice_bar : Msg.t =
   Msg.make_msg "Alice" "Bar" "2022-03-30 20:08:04" FriendReq "Hi"
 
-let fr_bad_time : Msg.t =
-  Msg.make_msg "Bob" "Catherine" "2022-03-32 20:08:04" FriendReq "Hi"
-
 let test_friend_requests () =
   (* Status check before any friend requests *)
   assert_false (fr_exist "Alice" "Bob");
@@ -176,7 +173,6 @@ let test_friend_requests () =
   assert (new_fr fr_catherine_alice);
   assert_raises (UnknownUser "Foo") (fun _ -> new_fr fr_foo_alice);
   assert_raises (UnknownUser "Bar") (fun _ -> new_fr fr_alice_bar);
-  assert_raises MalformedTime (fun _ -> new_fr fr_bad_time);
 
   (* Status check for pending requests *)
   assert (fr_exist "Alice" "Bob");

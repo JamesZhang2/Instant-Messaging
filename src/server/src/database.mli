@@ -95,9 +95,8 @@ val new_fr : Msg.t -> bool
     Returns: [true] if the line is successfully added, and [false]
     otherwise.
 
-    Raises: [MalformedTime] if the given time is malformed;
-    [UnknownUser username] if either the sender or the receiver is not
-    found in the database. *)
+    Raises: [UnknownUser username] if either the sender or the receiver
+    is not found in the database. *)
 
 val fr_exist : string -> string -> bool
 (** [fr_exist sender receiver] determines whether a pending friend

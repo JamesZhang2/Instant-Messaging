@@ -1,6 +1,5 @@
 open OUnit2
 open Util
-open Database
 open Time
 
 (******************** Time Tests ********************)
@@ -69,6 +68,4 @@ let suite =
   "test suite for Util"
   >::: List.flatten [ time_tests; database_tests; crypto_tests ]
 
-let _ =
-  run_test_tt_main suite;
-  db_main ()
+let _ = run_test_tt_main suite

@@ -18,8 +18,6 @@
 
     - requester: TEXT NOT NULL
     - receiver: TEXT NOT NULL
-    - time: TEXT NULLABLE (null if approving)
-    - message: TEXT NULLABLE (null if approving)
 
     AF: userA is said to "like" userB if a row (userA, userB, time,
     message) exists. If both userA and userB like each other, they are
@@ -94,7 +92,7 @@ let create_messages_table () =
 
 let create_friends_sql =
   "CREATE TABLE IF NOT EXISTS friends (requester TEXT NOT NULL, \
-   receiver TEXT NOT NULL, time TEXT, message TEXT);"
+   receiver TEXT NOT NULL);"
 
 let create_friends_table () =
   exec server_db create_friends_sql
@@ -244,9 +242,13 @@ let mark_as_retrieved receiver time =
   bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
   step stmt
   |> handle_rc
-       (Printf.sprintf
-          "Messages sent to %s after %s are marked as retrieved"
-          receiver time)
+       (if time = Time.earliest_time then
+        Printf.sprintf "All messages sent to %s are marked as retrieved"
+          receiver
+       else
+         Printf.sprintf
+           "Messages sent to %s after %s are marked as retrieved"
+           receiver time)
 
 (** [cons_one_msg lst row] adds [row] to [lst]. Requires: [row]
     represents a valid message. *)
@@ -281,20 +283,18 @@ let get_msg_aux receiver time ~new_only =
   let time = time_ok time in
   let sql = if new_only then select_new_msg_sql else select_msg_sql in
   let stmt = prepare server_db sql in
-  (* let _ = print_endline "got there 1" in *)
   bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
-  (* let _ = print_endline "got there 2" in *)
   let res = Sqlite3.fold stmt ~f:cons_one_msg ~init:[] in
-  (* let _ = print_endline "got there 3" in *)
   match res with
   | Rc.DONE, lst ->
-      (* let _ = print_endline "got there 4" in *)
       mark_as_retrieved receiver time;
-      Printf.printf "Retrieved messages sent to %s after %s\n\n"
-        receiver time;
+      if time = Time.earliest_time then
+        Printf.printf "Retrieved all messages sent to %s\n\n" receiver
+      else
+        Printf.printf "Retrieved messages sent to %s after %s\n\n"
+          receiver time;
       (* if test then print_msg_list (List.rev lst); *)
       let temp = List.rev lst in
-      (* let _ = print_endline "got there 5" in *)
       temp
   | r, _ ->
       prerr_endline (Rc.to_string r);
@@ -314,23 +314,18 @@ let get_new_msg receiver = get_new_msg_since receiver Time.earliest_time
 (******************** Friend Requests ********************)
 
 let insert_req_sql =
-  "INSERT INTO friends (requester, receiver, time, message) VALUES (?, \
-   ?, ?, ?);"
+  "INSERT INTO friends (requester, receiver) VALUES (?, ?);"
 
 let new_fr (req : Msg.t) =
   assert (Msg.msg_type req = Msg.FriendReq);
   let sender = Msg.sender req |> user_ok in
   let receiver = Msg.receiver req |> user_ok in
-  let message = Msg.content req in
-  let time = Msg.time req |> time_ok in
   let stmt = prepare server_db insert_req_sql in
-  bind_values stmt
-    [ TEXT sender; TEXT receiver; TEXT time; TEXT message ]
-  |> assert_ok;
+  bind_values stmt [ TEXT sender; TEXT receiver ] |> assert_ok;
   step stmt
   |> handle_rc
-       (Printf.sprintf "New friend request from %s to %s at %s: %s"
-          sender receiver time message);
+       (Printf.sprintf "New friend request from %s to %s" sender
+          receiver);
   true
 
 let like_exists_sql =
@@ -358,8 +353,7 @@ let is_friend sender receiver =
   likes sender receiver && likes receiver sender
 
 let approve_req_sql =
-  "INSERT INTO friends (requester, receiver, time, message) VALUES (?, \
-   ?, NULL, NULL);"
+  "INSERT INTO friends (requester, receiver) VALUES (?, ?);"
 
 let fr_approve sender receiver =
   let sender = user_ok sender in
