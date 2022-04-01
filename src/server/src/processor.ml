@@ -24,12 +24,12 @@ let header body =
   [ ("content-length", body |> String.length |> string_of_int) ]
 
 let handle_send_msg req_meth sender time receiver msg =
-  let _ = print_endline msg in
+  (* let _ = print_endline msg in *)
   if req_meth <> Post then
-    let _ = print_endline "if branch" in
+    (* let _ = print_endline "if branch" in *)
     Packager.error_response "SendMessage should use POST method"
   else
-    let _ = print_endline "else branch" in
+    (* let _ = print_endline "else branch" in *)
     let msg = Msg.make_msg sender receiver time Util.Msg.Message msg in
     match add_msg msg with
     | exception UnknownUser x ->
@@ -90,7 +90,7 @@ let handle_login req_meth sender time password =
 (** [fr_approve_msg sender receiver time] sends approval message to
     receiver with sender's key *)
 let fr_approve_msg sender receiver time =
-  let sender_key = user_key sender in
+  let sender_key = "" in
   let msg_receiver =
     Msg.make_msg sender receiver time
       (FriendReqRep (true, sender_key))
