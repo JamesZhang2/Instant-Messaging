@@ -215,6 +215,8 @@ let friend_req receiver msg =
 
 let friend_req_reply receiver accepted =
   if "" = !username_ref then (false, "User not logged in")
+  else if is_frd !username_ref receiver then
+    (false, "You are already friends with " ^ receiver)
   else
     let sender = !username_ref in
     let message =
