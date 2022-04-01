@@ -23,8 +23,9 @@ let print_message msg =
     match Msg.msg_type msg with
     | Message -> "Message "
     | FriendReq -> "Friend Request "
-    | FriendReqRep (bo, key) ->
-        "Friend Request Response " ^ string_of_bool bo
+    | FriendReqRep (approved, key) ->
+        if approved then "Friend Request Approved "
+        else "Friend Request Rejected"
   in
   let sender = "from: " ^ Msg.sender msg in
   let time = "time: " ^ Msg.time msg in
@@ -43,12 +44,10 @@ let printlist lst =
   List.map func lst
 
 (** [print_messages msg_list] prints the list of messages [msg_list]*)
-let rec print_messages msg_list =
+let print_messages msg_list =
   match msg_list with
-  | [] -> ()
-  | h :: t ->
-      print_message h;
-      print_messages t
+  | [] -> "Already up to date." |> str_format 1 |> print_string
+  | lst -> List.map print_message lst |> ignore
 
 (** [bool_print (check, msg)] check if the first element is true then
     print the message, if false, assume an error and print an error
@@ -75,8 +74,8 @@ let print_help () =
       |> str_format 0 |> print_string;
       "[GetMsg] : gets all your new messages" |> str_format 0
       |> print_string;
-      "[Register username password] : registers a new user"
-      |> str_format 0 |> print_string;
+      "[Register username password] : registers a new user and \
+       switches to that user" |> str_format 0 |> print_string;
       "[Login username password] : switches to another user"
       |> str_format 0 |> print_string;
       "[FriendReq receiver message] : sends a friend request to \
@@ -91,8 +90,9 @@ let print_help () =
       |> str_format 0 |> print_string;
       "[FriendRequests] : reads all recent friend reequests"
       |> str_format 0 |> print_string;
-      "[Friends] : Shows the list of friends of current logged in user "
-      |> str_format 0 |> print_string;
+      "[Friends] : Shows a list of your friends" |> str_format 0
+      |> print_string;
+      "[Logout] : Logs out" |> str_format 0 |> print_string;
       "[Help] : displays instructions" |> str_format 0 |> print_string;
       "[Quit] : quits the IM program" |> str_format 1 |> print_string
 
