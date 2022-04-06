@@ -87,9 +87,9 @@ let handle_login req_meth sender time password =
     | false -> Packager.error_response "Incorrect Username: "
     | exception x -> Packager.error_response "login failure"
 
-(** [fr_approve_msg sender receiver time] sends approval message to
+(** [fr_accept_msg sender receiver time] sends approval message to
     receiver with sender's key *)
-let fr_approve_msg sender receiver time =
+let fr_accept_msg sender receiver time =
   let sender_key = "" in
   let msg_receiver =
     Msg.make_msg sender receiver time
@@ -121,8 +121,8 @@ let handle_friend_req req_meth sender time receiver msg =
             Packager.error_response ("Unknown User " ^ x)
         | true, false ->
             (* if reverse fr exist*)
-            let _ = fr_approve receiver sender in
-            let _ = fr_approve_msg sender receiver time in
+            let _ = fr_accept receiver sender in
+            let _ = fr_accept_msg sender receiver time in
             (* send friend req msg to receiver*)
             Packager.post_method_response
               ("FriendRequest to " ^ receiver ^ " successfully sent")
@@ -135,8 +135,8 @@ let handle_friend_req req_meth sender time receiver msg =
             Packager.post_method_response
               ("Your friend request to " ^ receiver ^ " is sent")
         | true, true ->
-            let _ = fr_approve_msg sender receiver time in
-            let _ = fr_approve_msg receiver sender time in
+            let _ = fr_accept_msg sender receiver time in
+            let _ = fr_accept_msg receiver sender time in
             Packager.error_response
               ("You are now friends with" ^ receiver))
 
@@ -160,7 +160,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
     | false, true -> (
         (* print_endline "fr branch"; *)
         let successful =
-          if accepted then fr_approve receiver sender
+          if accepted then fr_accept receiver sender
           else fr_reject receiver sender
         in
         match (successful, accepted) with
@@ -169,8 +169,8 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
               ("Operation Unsuccessful, friend request from" ^ receiver
              ^ "still pending")
         | true, true ->
-            (* let _ = fr_approve_msg receiver sender time in *)
-            let _ = fr_approve_msg sender receiver time in
+            (* let _ = fr_accept_msg receiver sender time in *)
+            let _ = fr_accept_msg sender receiver time in
             (* print_endline "got there 2"; *)
             Packager.post_method_response
               ("You are now friends with " ^ receiver)

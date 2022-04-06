@@ -40,7 +40,7 @@ val add_msg : Msg.t -> bool
 
     Requires: If [Msg.msg_type message] is [FriendReqReply], then its
     content must be either ["True"] or ["False"] based on whether the
-    friend request is approved or rejected.
+    friend request is accepted or rejected.
 
     Returns: true if the messages are added successfully, false
     otherwise.
@@ -122,9 +122,9 @@ val is_friend : string -> string -> bool
     Raises: [UnknownUser username] if either the sender or the receiver
     is not found in the database. *)
 
-val fr_approve : string -> string -> bool
-(** [fr_approve sender receiver] approves the friend request from
-    [sender] to [receiver].
+val fr_accept : string -> string -> bool
+(** [fr_accept sender receiver] accepts the friend request from [sender]
+    to [receiver].
 
     Returns: [true] if the operation is sucessful, and [false]
     otherwise.

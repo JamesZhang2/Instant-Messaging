@@ -51,7 +51,7 @@ let parse ~(maybe_user : string option) str =
           Register (username, password)
       | [ "Login"; username; password ] -> Login (username, password)
       | [ "FriendReq"; receiver; msg ] -> FriendReq (user, receiver, msg)
-      | [ "Approve"; receiver ] -> FriendReqRep (user, receiver, true)
+      | [ "Accept"; receiver ] -> FriendReqRep (user, receiver, true)
       | [ "Reject"; receiver ] -> FriendReqRep (user, receiver, false)
       | [ "ReadMsg" ] -> ReadMsg
       | [ "Read"; "from"; sender ] -> ReadMsgFrom sender

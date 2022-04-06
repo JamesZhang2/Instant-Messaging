@@ -23,8 +23,8 @@ let print_message msg =
     match Msg.msg_type msg with
     | Message -> "Message "
     | FriendReq -> "Friend Request "
-    | FriendReqRep (approved, key) ->
-        if approved then "Friend Request Approved "
+    | FriendReqRep (accepted, key) ->
+        if accepted then "Friend Request Accepted "
         else "Friend Request Rejected"
   in
   let sender = "from " ^ Msg.sender msg ^ " to " ^ Msg.receiver msg in
@@ -82,7 +82,7 @@ let print_help () =
       |> str_format 0 |> print_string;
       "[FriendReq receiver message] : sends a friend request to \
        another user" |> str_format 0 |> print_string;
-      "[Approve user] : approves a friend request from user"
+      "[Accept user] : accepts a friend request from user"
       |> str_format 0 |> print_string;
       "[Reject user] : rejects a friend request from user"
       |> str_format 0 |> print_string;

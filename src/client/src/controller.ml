@@ -104,9 +104,9 @@ let msg_processor receiver msg =
   (let msg_type = Msg.msg_type msg in
    match msg_type with
    | Message -> db_op (add_msg receiver) decrypt
-   | FriendReqRep (approve, key) ->
+   | FriendReqRep (accepted, key) ->
        let from = Msg.sender msg in
-       db_op (update_request receiver from) approve
+       db_op (update_request receiver from) accepted
    | FriendReq ->
        let sender = Msg.sender msg in
        let success, key = fetch_key sender in

@@ -351,20 +351,20 @@ let is_friend sender receiver =
   let receiver = user_ok receiver in
   likes sender receiver && likes receiver sender
 
-let approve_req_sql =
+let accept_req_sql =
   "INSERT INTO friends (requester, receiver) VALUES (?, ?);"
 
-let fr_approve sender receiver =
+let fr_accept sender receiver =
   let sender = user_ok sender in
   let receiver = user_ok receiver in
   if not (fr_exist sender receiver) then raise Not_found;
-  let stmt = prepare server_db approve_req_sql in
+  let stmt = prepare server_db accept_req_sql in
   bind_values stmt [ TEXT receiver; TEXT sender ] |> assert_ok;
   (* Note that the receiver and sender are reversed: We want to add a
      line that says receiver likes the sender. *)
   step stmt
   |> handle_rc
-       (Printf.sprintf "The friend request from %s to %s is approved"
+       (Printf.sprintf "The friend request from %s to %s is accepted"
           sender receiver);
   true
 

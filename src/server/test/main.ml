@@ -162,7 +162,7 @@ let fr_foo_alice : Msg.t =
 let fr_alice_bar : Msg.t =
   Msg.make_msg "Alice" "Bar" "2022-03-30 20:08:04" FriendReq "Hi"
 
-let bob_approves_alice : Msg.t =
+let bob_accepts_alice : Msg.t =
   Msg.make_msg "Bob" "Alice" "2022-03-30 20:08:05"
     (FriendReqRep (true, "key"))
     "True"
@@ -199,10 +199,10 @@ let test_friend_requests () =
   assert_equal (friends_of "Bob") [];
   assert_equal (friends_of "Catherine") [];
 
-  (* Approve *)
-  assert (fr_approve "Alice" "Bob");
-  (* Alice is approved by Bob *)
-  assert (add_msg bob_approves_alice);
+  (* Accept *)
+  assert (fr_accept "Alice" "Bob");
+  (* Alice is accepted by Bob *)
+  assert (add_msg bob_accepts_alice);
   assert (is_friend "Alice" "Bob");
   assert (is_friend "Bob" "Alice");
   assert_false (fr_exist "Alice" "Bob");

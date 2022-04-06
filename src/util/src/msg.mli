@@ -4,11 +4,12 @@
 (** [msg_type] is the type of a message. It can either be a [FriendReq]
     or a direct [Message], or a [FriendReqRep (true, key)], or a
     [FriendReqRep (false, "")]. For [FriendReqRep], the sender
-    approves/rejects the friend request from receiver. *)
+    accepts/rejects the friend request from receiver. *)
 type msg_type =
   | FriendReq
   | FriendReqRep of (bool * string)
-      (** approve, and if approve, key string, otherwise, empty string*)
+      (** whether the request is accepted. If accepted, key string;
+          otherwise, empty string. *)
   | Message
 
 type t

@@ -13,7 +13,7 @@ val handle : string -> (string * string) list -> string Lwt.t -> t Lwt.t
     - FriendReqRep, then if user reply is true, then the other user's
       public key is returned, otherwise a regular rejection is sent
     - FriendReq: If pending request in reverse order exists, then an
-      approved friend req is retrievable on get_msg, otherwise sends a
+      accepted friend req is retrievable on get_msg, otherwise sends a
       new friend request
     - Login: body is the key for the user, if incorrect user or
       password, error is returned
