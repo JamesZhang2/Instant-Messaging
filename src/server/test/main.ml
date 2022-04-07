@@ -29,33 +29,27 @@ let test_add_n_diff n =
   for i = 1 to n do
     let added =
       add_user (string_of_int i) "pwd" "key" "2022-03-27 11:54:50"
-      |> fst
     in
     assert added
   done
 
 let test_add_n_same n =
-  let added =
-    add_user "Alice" "apple" "key A" "2022-03-27 11:54:50" |> fst
-  in
+  let added = add_user "Alice" "apple" "key A" "2022-03-27 11:54:50" in
   assert added;
 
   for i = 1 to n do
-    let added =
-      add_user "Alice" "pear" "42" "2022-03-27 11:54:50" |> fst
-    in
+    let added = add_user "Alice" "pear" "42" "2022-03-27 11:54:50" in
     assert (not added)
   done
 
 let add_more_users () =
   let added =
-    add_user "Bob" "banana" "key B" "2022-03-27 14:55:20" |> fst
+    add_user "Bob" "banana" "key B" "2022-03-27 14:55:20"
     && add_user "Catherine" "cherry" "key C" "2022-03-27 14:58:33"
-       |> fst
     && add_user injection_str strange_chars strange_chars
          "2022-03-29 19:12:28"
-       |> fst
   in
+
   assert added
 
 let test_user_exists () =

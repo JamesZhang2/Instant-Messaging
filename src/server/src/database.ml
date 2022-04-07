@@ -164,10 +164,10 @@ let add_user username pwd key time =
   if user_exists username then (
     print_endline (add_exists_str username);
     print_newline ();
-    (false, add_exists_str username))
+    false)
   else (
     insert_user username pwd key time |> handle_rc (add_ok_str username);
-    (true, add_ok_str username))
+    true)
 
 (******************** User key ********************)
 

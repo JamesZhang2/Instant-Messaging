@@ -9,13 +9,13 @@ exception UnknownUser of string
 val create_tables : unit -> unit
 (** [create_tables ()] creates the tables needed for the database. *)
 
-val add_user : string -> string -> string -> string -> bool * string
+val add_user : string -> string -> string -> string -> bool
 (** [add_user username pwd key time] attempts to add user [username]
     with password [pwd], public key [key], and registration time [time]
     to the user database.
 
-    Returns: [(true, feedback)] if a new user is successfully added,
-    [(false, err_msg)] otherwise.
+    Returns: [true] if a new user is successfully added, [false]
+    otherwise.
 
     Raises: [MalformedTime] if the given time is malformed. *)
 
