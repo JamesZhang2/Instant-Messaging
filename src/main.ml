@@ -13,4 +13,8 @@ let onload _ =
   alter_text "Hi";
   Js._false
 
-let () = Html.window##.onload := Html.handler onload
+let exporter () = Js.export "main" (onload ())
+
+let () =
+  exporter ();
+  Html.window##.onload := Html.handler onload
