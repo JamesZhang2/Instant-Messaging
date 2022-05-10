@@ -33,54 +33,56 @@
     </div>
   </div>
 
-  <div id="sidebar">
-    <div id="sidebar-bottom-tab">
-      <button class="tab-link">Messages</button>
-      <button class="tab-link">Friends</button>
-      <button class="tab-link">Pending Requests</button>
-    </div>
+  <div id="main-window">
+    <div id="sidebar" class="sidebar">
+      <div id="sidebar-bottom-tab" class="sidebar-bottom">
+        <button class="tab-link">Messages</button>
+        <button class="tab-link">Friends</button>
+        <button class="tab-link">Pending Requests</button>
+      </div>
 
-    <div id="sidebar-msg" class="sidebar-main">
-      <h1>Msg list, unknown for now</h1>
-    </div>
+      <div id="sidebar-msg" class="sidebar-main">
+        <h1>Msg list, unknown for now</h1>
+      </div>
 
-    <div id="sidebar-friends" class="sidebar-main" style="display:none">
-      <button id="add-friend">Add Friend</button>
-      <div id="friend-list">
-        <h1>Friend list, unknown for now</h1>
+      <div id="sidebar-friends" class="sidebar-main" style="display:none">
+        <button id="add-friend">Add Friend</button>
+        <div id="friend-list">
+          <h1>Friend list, unknown for now</h1>
+        </div>
+      </div>
+
+      <div id="sidebar-fr" class="sidebar-main" style="display:none">
+        <button id="add-friend">Add Friend</button>
+        <div id="fr-list">
+          <h1>FR list, unknown for now</h1>
+        </div>
       </div>
     </div>
 
-    <div id="sidebar-fr" class="sidebar-main" style="display:none">
-      <button id="add-friend">Add Friend</button>
-      <div id="fr-list">
-        <h1>FR list, unknown for now</h1>
+    <div id="central-window-msg" class="central-window">
+      <div id="chat-header">
+        <h1 id="friend-name">Friend Name</h1>
+      </div>
+
+      <div id="chat-window">
+        Messages, unknown for now
+      </div>
+
+      <div id="text-pane">
+        <input type="text" id="textbox">
+        <button id="send-button">Send</button>
       </div>
     </div>
-  </div>
 
-  <div id="central-window-msg" class="central-window">
-    <div id="chat-header">
-      <h1 id="friend-name">Friend Name</h1>
-    </div>
-
-    <div id="chat-window">
-      Messages, unknown for now
-    </div>
-
-    <div id="text-pane">
-      <input type="text" id="textbox">
-      <button id="send-button">Send</button>
-    </div>
-  </div>
-
-  <div id="central-window-fr" class="central-window">
-    <div id="fr-msg-area">
-      Friend request message
-    </div>
-    <div id="fr-acc-rej">
-      <button id="fr-acc">Accept</button>
-      <button id="fr-rej">Reject</button>
+    <div id="central-window-fr" class="central-window" style="display:none">
+      <div id="fr-msg-area">
+        Friend request message
+      </div>
+      <div id="fr-acc-rej">
+        <button id="fr-acc">Accept</button>
+        <button id="fr-rej">Reject</button>
+      </div>
     </div>
   </div>
 </body>
