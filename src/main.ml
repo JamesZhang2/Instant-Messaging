@@ -30,40 +30,40 @@ type tab =
   | TFriends
   | TFriendReq
 
+let show_tab tab = tab##.style##.display := js "block"
+let hide_tab tab = tab##.style##.display := js "none"
+
 let switch_tab_aux (tab : tab) : unit =
   let msg_tab = Html.getElementById "sidebar-msg" in
   let friends_tab = Html.getElementById "sidebar-friends" in
   let fr_tab = Html.getElementById "sidebar-fr" in
   match tab with
   | TMsg ->
-      msg_tab##.style##.display := js "block";
-      friends_tab##.style##.display := js "none";
-      fr_tab##.style##.display := js "none"
+      show_tab msg_tab;
+      hide_tab friends_tab;
+      hide_tab fr_tab
   | TFriends ->
-      msg_tab##.style##.display := js "none";
-      friends_tab##.style##.display := js "block";
-      fr_tab##.style##.display := js "none"
+      hide_tab msg_tab;
+      show_tab friends_tab;
+      hide_tab fr_tab
   | TFriendReq ->
-      msg_tab##.style##.display := js "none";
-      friends_tab##.style##.display := js "none";
-      fr_tab##.style##.display := js "block"
+      hide_tab msg_tab;
+      hide_tab friends_tab;
+      show_tab fr_tab
+
+let tab_btn_event btn tab =
+  btn##.onclick :=
+    Html.handler (fun ev ->
+        switch_tab_aux tab;
+        Js._true)
 
 let switch_tab () =
   let msg_btn = Html.getElementById "tab-msg-btn" in
   let friends_btn = Html.getElementById "tab-friends-btn" in
   let fr_btn = Html.getElementById "tab-fr-btn" in
-  msg_btn##.onclick :=
-    Html.handler (fun ev ->
-        switch_tab_aux TMsg;
-        Js._true);
-  friends_btn##.onclick :=
-    Html.handler (fun ev ->
-        switch_tab_aux TFriends;
-        Js._true);
-  fr_btn##.onclick :=
-    Html.handler (fun ev ->
-        switch_tab_aux TFriendReq;
-        Js._true)
+  tab_btn_event msg_btn TMsg;
+  tab_btn_event friends_btn TFriends;
+  tab_btn_event fr_btn TFriendReq
 
 let onload _ =
   login ();
