@@ -3,30 +3,55 @@
 
 
 <head>
-  <title>Page Title</title>
+  <title>Instant Messaging App</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div id="left-column">
-    <div id="left-bottom-tab">
+  <div id="login-window">
+    <div id="login-heading">
+      <h2>Login or Register</h2>
+    </div>
+
+    <div id="login-main">
+      <table id="login-main-tbl">
+        <tr>
+          <td>Username</td>
+          <td><input type="text" id="username-box" placeholder="Enter username"></td>
+        </tr>
+        <tr>
+          <td>Password</td>
+          <td><input type="password" id="password-box" placeholder="Enter password"></td>
+        </tr>
+      </table>
+    </div>
+
+    <div id="log-reg-btns">
+      <button id="login-button">Login</button>
+      <button id="register-button">Register</button>
+    </div>
+  </div>
+
+  <div id="sidebar">
+    <div id="sidebar-bottom-tab">
       <button class="tab-link">Messages</button>
       <button class="tab-link">Friends</button>
       <button class="tab-link">Pending Requests</button>
     </div>
 
-    <div id="msg-left-main">
+    <div id="sidebar-msg">
       <h1>Msg unknown for now</h1>
     </div>
 
-    <div id="friends-left-main" style="display:none">
+    <div id="sidebar-friends-main" style="display:none">
       <button id="add-friend">Add Friend</button>
       <div id="friend-list">
         <h1>Friends unknown for now</h1>
       </div>
     </div>
 
-    <div id="fr-left-main" style="display:none">
+    <div id="sidebar-fr-main" style="display:none">
       <button id="add-friend">Add Friend</button>
       <div id="fr-list">
         <h1>FR unknown for now</h1>
@@ -52,7 +77,6 @@
       <button id="fr-rej">Reject</button>
     </div>
   </div>
-
 </body>
 
 </html>

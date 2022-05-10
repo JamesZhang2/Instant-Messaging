@@ -1,0 +1,26 @@
+#login-window {
+  display: grid;
+  grid-template-rows: 60px 70px 40px;
+  border-style: solid;
+  border-color: gray;
+  width: 300px;
+  margin: auto;
+  text-align: center;
+}
+
+#login-heading {
+  grid-row: 1;
+}
+
+#login-main {
+  grid-row: 2;
+}
+
+#login-main-tbl {
+  table-layout: auto;
+  margin: auto;
+}
+
+#log-reg-btns {
+  grid-row: 3;
+}
