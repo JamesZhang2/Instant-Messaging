@@ -1,7 +1,0 @@
-{
-  "type": "SendMessage",
-  "sender": "Alice",
-  "time": "2022-03-01 08:00:00",
-  "receiver": "Bob",
-  "message": "Hi"
-}

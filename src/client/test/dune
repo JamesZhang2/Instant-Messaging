@@ -1,3 +1,0 @@
-(executable
- (name main)
- (libraries Client ounit2 str Util))

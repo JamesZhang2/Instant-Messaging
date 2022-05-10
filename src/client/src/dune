@@ -1,4 +1,0 @@
-(library
- (name client)
- (public_name Client)
- (libraries yojson piaf Util ANSITerminal sqlite3))
