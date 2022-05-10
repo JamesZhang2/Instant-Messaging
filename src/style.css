@@ -8,7 +8,7 @@
   text-align: center;
 }
 
-#login-heading {
+#login-header {
   grid-row: 1;
 }
 
@@ -21,6 +21,25 @@
   margin: auto;
 }
 
-#log-reg-btns {
+#log-reg-pane {
   grid-row: 3;
+  display: grid;
+  grid-template-columns: 120px 120px;
+  margin: auto;
+  padding-bottom: 30px;
+}
+
+#login-btn {
+  grid-column: 1;
+}
+
+#register-btn {
+  grid-column: 2;
+}
+
+.log-reg-btn {
+  width: 80px;
+  height: 30px;
+  margin: auto;
+  text-align: center;
 }

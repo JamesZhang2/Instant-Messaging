@@ -10,7 +10,7 @@
 <body>
 
   <div id="login-window">
-    <div id="login-heading">
+    <div id="login-header">
       <h2>Login or Register</h2>
     </div>
 
@@ -27,9 +27,9 @@
       </table>
     </div>
 
-    <div id="log-reg-btns">
-      <button id="login-button">Login</button>
-      <button id="register-button">Register</button>
+    <div id="log-reg-pane">
+      <button id="login-btn" class="log-reg-btn">Login</button>
+      <button id="register-btn" class="log-reg-btn">Register</button>
     </div>
   </div>
 
@@ -40,35 +40,41 @@
       <button class="tab-link">Pending Requests</button>
     </div>
 
-    <div id="sidebar-msg">
-      <h1>Msg unknown for now</h1>
+    <div id="sidebar-msg" class="sidebar-main">
+      <h1>Msg list, unknown for now</h1>
     </div>
 
-    <div id="sidebar-friends-main" style="display:none">
+    <div id="sidebar-friends" class="sidebar-main" style="display:none">
       <button id="add-friend">Add Friend</button>
       <div id="friend-list">
-        <h1>Friends unknown for now</h1>
+        <h1>Friend list, unknown for now</h1>
       </div>
     </div>
 
-    <div id="sidebar-fr-main" style="display:none">
+    <div id="sidebar-fr" class="sidebar-main" style="display:none">
       <button id="add-friend">Add Friend</button>
       <div id="fr-list">
-        <h1>FR unknown for now</h1>
+        <h1>FR list, unknown for now</h1>
       </div>
     </div>
   </div>
 
-  <div id="central-window">
+  <div id="central-window-msg" class="central-window">
+    <div id="chat-header">
+      <h1 id="friend-name">Friend Name</h1>
+    </div>
+
     <div id="chat-window">
-      <h1 id="friend-name">Name</h1>
+      Messages, unknown for now
     </div>
 
     <div id="text-pane">
       <input type="text" id="textbox">
       <button id="send-button">Send</button>
     </div>
+  </div>
 
+  <div id="central-window-fr" class="central-window">
     <div id="fr-msg-area">
       Friend request message
     </div>
