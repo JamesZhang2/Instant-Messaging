@@ -9,5 +9,5 @@ utop:
 clean:
 	dune clean
 
-run:
-	OCAMLRUNPARAM=b dune exec bin/main.exe
+run: 
+	open -a "Google Chrome" _build/default/src/index.html
