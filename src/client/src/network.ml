@@ -38,7 +38,7 @@ let request ?(header = [ ("", "") ]) ?(body = "") (meth : string) : t =
          ^ "post/")) in get_response res *)
   | "GET" ->
       let body =
-        Cohttp_lwt_unix.Client.get (Uri.of_string (url ^ "post/"))
+        Cohttp_lwt_unix.Client.get (Uri.of_string (url ^ "get/"))
       in
       Lwt_main.run body
   | _ -> raise IncorrectMeth
