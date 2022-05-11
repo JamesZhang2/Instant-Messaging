@@ -7,8 +7,12 @@ module Html = Dom_html
 let js = Js.string
 let document = Html.window##.document
 let log (txt : string) : unit = Firebug.console##log (js txt)
-let show_elt elt = elt##.style##.display := js "block"
-let hide_elt elt = elt##.style##.display := js "none"
+
+(**[set_display elt value] sets the display property of [elt] to
+   [value]. Requires: [value] is a valid property value of display, such
+   as none, block, grid, flex, etc. *)
+let set_display elt (value : string) = elt##.style##.display := js value
+
 let login_window = Html.getElementById "login-window"
 let main_window = Html.getElementById "main-window"
 
@@ -26,9 +30,8 @@ let login () =
     Html.handler (fun ev ->
         alter_text "current_user"
           ("You are currently logged in as " ^ get_username ());
-        (* hide_elt login_window; show_elt main_window; *)
-        (* TODO: showing the main window doesn't work: destroys the
-           styles*)
+        set_display login_window "none";
+        set_display main_window "grid";
         Js._false)
 
 type tab =
@@ -42,17 +45,17 @@ let switch_tab_aux (tab : tab) : unit =
   let fr_tab = Html.getElementById "sidebar-fr" in
   match tab with
   | TMsg ->
-      show_elt msg_tab;
-      hide_elt friends_tab;
-      hide_elt fr_tab
+      set_display msg_tab "block";
+      set_display friends_tab "none";
+      set_display fr_tab "none"
   | TFriends ->
-      hide_elt msg_tab;
-      show_elt friends_tab;
-      hide_elt fr_tab
+      set_display msg_tab "none";
+      set_display friends_tab "block";
+      set_display fr_tab "none"
   | TFriendReq ->
-      hide_elt msg_tab;
-      hide_elt friends_tab;
-      show_elt fr_tab
+      set_display msg_tab "none";
+      set_display friends_tab "none";
+      set_display fr_tab "block"
 
 let tab_btn_event btn tab =
   btn##.onclick :=
