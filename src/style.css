@@ -90,6 +90,23 @@
 
 .central-window {
   grid-column: 2;
+  position: relative;
   border-style: solid;
   border-color: blue;
+}
+
+#logout-box {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 60px;
+  height: 30px;
+}
+
+#logout-btn {
+  background-color: #ff3333;
+}
+
+#logout-btn:hover {
+  background-color: #ff6666;
 }

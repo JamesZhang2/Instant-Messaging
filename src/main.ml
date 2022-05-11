@@ -34,6 +34,14 @@ let login () =
         set_display main_window "grid";
         Js._false)
 
+let logout () =
+  let logout_btn = Html.getElementById "logout-btn" in
+  logout_btn##.onclick :=
+    Html.handler (fun ev ->
+        set_display login_window "block";
+        set_display main_window "none";
+        Js._false)
+
 type tab =
   | TMsg
   | TFriends
@@ -74,6 +82,7 @@ let switch_tab () =
 let onload _ =
   login ();
   switch_tab ();
+  logout ();
   Js._false
 
 let () = Html.window##.onload := Html.handler onload
