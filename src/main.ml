@@ -16,6 +16,9 @@ let set_display elt (value : string) = elt##.style##.display := js value
 let login_window = Html.getElementById "login-window"
 let main_window = Html.getElementById "main-window"
 
+(* TODO: Should we define some elements here that are used
+   frequently? *)
+
 let alter_text elt_id txt =
   let head = Html.getElementById elt_id in
   head##.innerHTML := js txt
@@ -38,8 +41,12 @@ let logout () =
   let logout_btn = Html.getElementById "logout-btn" in
   logout_btn##.onclick :=
     Html.handler (fun ev ->
-        set_display login_window "block";
+        set_display login_window "grid";
         set_display main_window "none";
+        let username_box = Html.getElementById "username-box" in
+        (Js.Unsafe.coerce username_box)##.value := js "";
+        let password_box = Html.getElementById "password-box" in
+        (Js.Unsafe.coerce password_box)##.value := js "";
         Js._false)
 
 type tab =
