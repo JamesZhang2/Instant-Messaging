@@ -1,3 +1,23 @@
-(executable
- (name main)
- (libraries Client yojson piaf))
+(executables
+ (names main)
+ (libraries
+  cohttp
+  cohttp-lwt
+  cohttp-lwt-jsoo
+  lwt
+  yojson
+  Util
+  ANSITerminal
+  js_of_ocaml-lwt)
+ (modes byte)
+ (preprocess
+  (pps js_of_ocaml-ppx)))
+
+(rule
+ (targets main.js)
+ (action
+  (run %{bin:js_of_ocaml} --source-map %{dep:main.bc} -o %{targets} --pretty)))
+
+(alias
+ (name default)
+ (deps main.js index.html))

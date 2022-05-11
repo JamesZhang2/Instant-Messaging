@@ -1,4 +1,4 @@
 (library
  (name client)
  (public_name Client)
- (libraries cohttp cohttp-lwt-unix lwt yojson piaf Util ANSITerminal))
+ (libraries cohttp cohttp-lwt-unix lwt yojson Util ANSITerminal))
