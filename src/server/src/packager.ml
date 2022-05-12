@@ -6,10 +6,11 @@ type obj =
 
 let ( ^.^ ) a b = a ^ ", \n" ^ b
 
-(** [parse_item] item parses a string item in json. *)
+(** [parse_item] item parses a string item into json. *)
 let parse_item item =
   match item with
-  | name, message -> "\t\"" ^ name ^ "\" : \"" ^ message ^ "\""
+  | name, message ->
+      "\t\"" ^ name ^ "\" : \"" ^ String.escaped message ^ "\""
 
 let rec parse_item_list lst =
   match lst with
@@ -32,6 +33,7 @@ let rec convert_object objs =
       let str_list = List.map json_convert json_obj_lst in
       let json = String.concat ", \n" str_list in
       header ^ json ^ "\n]"
+
 (** Converts a list of [object] to json string*)
 and json_convert lst =
   let str_lst = List.map convert_object lst in
@@ -40,8 +42,8 @@ and json_convert lst =
 
 let message_to_obj msg =
   let msg_t =
-    match Msg.msg_type msg with 
-    | Msg.Message ->  "Message" 
+    match Msg.msg_type msg with
+    | Msg.Message -> "Message"
     | Msg.FriendReq -> "FriendReq"
     | Msg.FriendReqRep (bo, key) -> "FriendReqRep"
   in
