@@ -624,3 +624,10 @@ let msg_test () =
     (fun x ->
       print_endline (sender x ^ " TO " ^ receiver x ^ " AT " ^ time x))
     lst
+
+let add_groupchat = failwith "Unimplemented"
+let create_groupchat = failwith "Unimplemented"
+let add_member_gc = failwith "Unimplemented"
+let is_in_gc = failwith "Unimplemented"
+let add_msg_to_gc = failwith "Unimplemented"
+let get_msg_gc_since = failwith "Unimplemented"

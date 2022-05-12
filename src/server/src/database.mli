@@ -149,3 +149,53 @@ val friends_of : string -> string list
     [user].
 
     Raises: [UnknownUser user] if user is not found in the database. *)
+
+(***********************Groupchat***********************)
+
+val create_groupchat : string -> string -> string -> bool
+(** [create_groupchat id password username] creates a new groupchat with
+    [id] and [password] being password, initiated by [username].
+    [username] should be the only person in this groupchat [id] by
+    default*)
+
+val gc_exist : string -> bool
+(** [gc_exist id] checks whether the groupchat [id] exists. Returns
+    [true] if it does, [false] otherwise*)
+
+val check_gc_password : string -> string -> bool
+(** [check_gc_password id password] checks whether [password] is the
+    correct entrance password to the groupchat [gc].
+
+    Requires: [id] is an existing valid groupchat. *)
+
+val add_member_gc : string -> string -> bool
+(** [add_member_gc id new_member] adds a new member [new_member] to the
+    groupchat [id]. Returns [true] if successfully added, [false]
+    otherwise *)
+
+val is_in_gc : string -> string -> bool
+(** [is_in_gc id username] checks whether [username] is in the groupchat
+    [id]. Returns [true] if [username] is in [id], [false] otherwise*)
+
+val add_msg_to_gc : Msg.t -> bool
+(** [send_msg_to_gc msg] adds the message [msg] to a groupchat. Returns
+    [true] if message is successfully added, [false] otherwise.
+
+    Requires: [sender] is an existing user in groupchat [id]*)
+
+val get_msg_gc_since : string -> string -> string -> Msg.t list
+(** [get_msg_gc_since id time] is a list of all messages in groupchat
+    [id] since [time]. Raises [IncorrectUser] if [username] is not valid
+    or [username] is not in groupchat [id]. Raises [DBNotExist] if
+    database has not been created.*)
+
+val gc_of_user : string -> string list
+(** [gc_of_user username] is the list of groupchats that [username] is
+    in. The list returned is a list of groupchat ids.
+
+    Requires: [username] is a valid existing user *)
+
+val members_of_gc : string -> string list
+(** [member_of_gc id] is the list of member usernames in groupchat [id].
+
+    Requires: [id] is the id of an existing groupchat*)

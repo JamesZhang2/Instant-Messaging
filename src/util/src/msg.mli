@@ -11,6 +11,9 @@ type msg_type =
       (** whether the request is accepted. If accepted, key string;
           otherwise, empty string. *)
   | Message
+  | GCMessage
+  | GCRequest
+  | GCReqRep of bool
 
 type t
 (** Abstract type for a message. *)

@@ -412,3 +412,13 @@ let like_list user =
 let friends_of user =
   let user = user_ok user in
   List.filter (fun u -> likes u user) (like_list user)
+
+let create_groupchat = failwith "Unimplemented"
+let gc_exist = failwith "Unimplemented"
+let check_gc_password = failwith "Unimplemented"
+let add_member_gc = failwith "Unimplemented"
+let is_in_gc = failwith "Unimplemented"
+let add_msg_to_gc = failwith "Unimplemented"
+let get_msg_gc_since = failwith "Unimplemented"
+let gc_of_user = failwith "Unimplemented"
+let members_of_gc = failwith "Unimplemented"

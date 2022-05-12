@@ -86,3 +86,47 @@ val is_in_req : string -> string -> bool
 val is_client : string -> bool
 (** [is_client username] determines whether the device has records on
     this [username]*)
+
+(**************)
+
+val add_groupchat : string -> string -> string list -> bool
+(** [add_groupchat id username member_list] adds a groupchat to
+    database, with [id] being the groupchat id, [username] being the
+    person joining, and [member_list] being the current members in the
+    groupchat. Returns [true] if successfully added, [false] otherwise*)
+
+val create_groupchat : string -> string -> bool
+(** [create_groupchat id username] creates a new groupchat with [id],
+    initiated by [username]. [username] should be the only person in
+    this groupchat [id]*)
+
+val add_member_gc : string -> string -> bool
+(** [add_member_gc id new_member] adds a new member [new_member] to the
+    groupchat [id]. Returns [true] if successfully added, [false]
+    otherwise *)
+
+val is_in_gc : string -> string -> bool
+(** [is_in_gc id username] checks whether [username] is in the groupchat
+    [id]. Returns [true] if [username] is in [id], [false] otherwise*)
+
+val add_msg_to_gc : Msg.t -> bool
+(** [send_msg_to_gc id username msg] adds the message [msg] to the
+    groupchat [id], sent by [username]. Returns [true] if message is
+    successfully added, [false] otherwise.*)
+
+val get_msg_gc_since : string -> string -> string -> Msg.t list
+(** [get_msg_gc_since username id time] is a list of all messages in
+    groupchat [id] since [time]. Raises [IncorrectUser] if [username] is
+    not valid or [username] is not in groupchat [id]. Raises
+    [DBNotExist] if database has not been created.*)
+
+val gc_of_user : string -> string list
+(** [gc_of_user username] is the list of groupchats that [username] is
+    in. The list returned is a list of groupchat ids.
+
+    Requires: [username] is a valid existing user *)
+
+val members_of_gc : string -> string list
+(** [member_of_gc id] is the list of member usernames in groupchat [id].
+
+    Requires: [id] is the id of an existing groupchat*)
