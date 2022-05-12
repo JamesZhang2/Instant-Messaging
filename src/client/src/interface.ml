@@ -38,12 +38,9 @@ let print_message msg =
   message ^ "\n" |> str_format 1 |> print_string
 
 (** Prints all strings in [lst]*)
-let printlist lst =
-  let func x =
-    print_endline x;
-    x
-  in
-  List.map func lst
+let print_list lst =
+  let func x = print_endline x in
+  List.map func lst |> ignore
 
 (** [print_messages msg_list] prints the list of messages [msg_list]*)
 let print_messages msg_list =
@@ -74,11 +71,11 @@ let print_help () =
       |> str_format 0 |> print_string;
       "[SendMsg receiver message] : sends a message to a friend"
       |> str_format 0 |> print_string;
-      "[GetMsg] : gets all your new messages" |> str_format 0
+      "[GetNewMsg] : gets all your new messages" |> str_format 0
       |> print_string;
-      "[Register username password] : registers a new user and \
-       switches to that user" |> str_format 0 |> print_string;
-      "[Login username password] : switches to another user"
+      "[GetAllMsg] : gets all your recent messages" |> str_format 0
+      |> print_string;
+      "[Read from <friend>] : reads all recent messages from <friend> "
       |> str_format 0 |> print_string;
       "[FriendReq receiver message] : sends a friend request to \
        another user" |> str_format 0 |> print_string;
@@ -86,15 +83,15 @@ let print_help () =
       |> str_format 0 |> print_string;
       "[Reject user] : rejects a friend request from user"
       |> str_format 0 |> print_string;
-      "[ReadMsg] : Reads all recent messages" |> str_format 0
-      |> print_string;
-      "[Read from <friend>] : reads all recent messages from <friend> "
-      |> str_format 0 |> print_string;
       "[FriendRequests] : reads all recent friend reequests"
       |> str_format 0 |> print_string;
       "[Friends] : Shows a list of your friends" |> str_format 0
       |> print_string;
-      "[Logout] : Logs out" |> str_format 0 |> print_string;
+      "[Register username password] : registers a new user and \
+       switches to that user" |> str_format 0 |> print_string;
+      "[Login username password] : switches to another user"
+      |> str_format 0 |> print_string;
+      "[Logout] : logs out" |> str_format 0 |> print_string;
       "[Help] : displays instructions" |> str_format 0 |> print_string;
       "[Quit] : quits the IM program" |> str_format 1 |> print_string
 
@@ -104,7 +101,7 @@ let rec main () =
   let read = read_line () in
   match Command.parse maybe_user read with
   | exception Command.Malformed ->
-      illegal_command "Command Illegal: ";
+      illegal_command "Command Illegal.";
       main ()
   | Help ->
       print_help ();
@@ -113,9 +110,19 @@ let rec main () =
       let resp = Controller.send_msg receiver msg in
       bool_print resp;
       main ()
-  | GetMsg sender ->
+  | GetNewMsg sender ->
       let check, msg = Controller.update_msg () in
       if check then print_messages msg else bool_print (false, "");
+      main ()
+  | GetAllMsg ->
+      let check, messages = Controller.read_msg () in
+      if check then print_messages messages
+      else bool_print (false, "Message History Fetch Unsuccessful");
+      main ()
+  | ReadMsgFrom friend ->
+      let check, messages = Controller.read_msg_from friend in
+      if check then print_messages messages
+      else bool_print (false, "Friend History fetch unsuccessful");
       main ()
   | Register (username, password) ->
       let resp = Controller.register username password in
@@ -145,16 +152,6 @@ let rec main () =
       let resp = Controller.friend_req_reply receiver accepted in
       bool_print resp;
       main ()
-  | ReadMsg ->
-      let check, messages = Controller.read_msg () in
-      if check then print_messages messages
-      else bool_print (false, "Message History Fetch Unsuccessful");
-      main ()
-  | ReadMsgFrom friend ->
-      let check, messages = Controller.read_msg_from friend in
-      if check then print_messages messages
-      else bool_print (false, "Friend History fetch unsuccessful");
-      main ()
   | ReadFR ->
       let check, messages = Controller.read_FR () in
       if check then print_messages messages
@@ -162,9 +159,9 @@ let rec main () =
       main ()
   | ListFriend ->
       let check, friends = Controller.lst_of_friends () in
-      if check then
-        let _ = printlist friends in
-        ()
+      if check then (
+        print_list friends;
+        print_string "> ")
       else bool_print (false, "Unable to fetch list of friends");
       main ()
   | Quit -> exit 0
