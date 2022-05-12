@@ -1,4 +1,4 @@
 (library
  (name client)
  (public_name Client)
- (libraries yojson piaf Util ANSITerminal sqlite3))
+ (libraries cohttp cohttp-lwt-unix lwt yojson Util ANSITerminal))
