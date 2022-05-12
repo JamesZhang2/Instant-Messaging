@@ -16,6 +16,3 @@ run:
 test:
 	rm -f data/database/*.db
 	OCAMLRUNPARAM=b dune exec test/main.exe
-
-switch: 
-	opam switch cs3110-project

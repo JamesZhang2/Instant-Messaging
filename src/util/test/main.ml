@@ -38,10 +38,6 @@ let time_tests =
       true;
   ]
 
-(******************** Database Tests ********************)
-
-let database_tests = []
-
 (******************** Crypto Tests ********************)
 
 let rsa_test msg =
@@ -65,7 +61,6 @@ let crypto_tests =
   ]
 
 let suite =
-  "test suite for Util"
-  >::: List.flatten [ time_tests; database_tests; crypto_tests ]
+  "test suite for Util" >::: List.flatten [ time_tests; crypto_tests ]
 
 let _ = run_test_tt_main suite
