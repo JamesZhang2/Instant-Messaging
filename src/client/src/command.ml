@@ -4,14 +4,14 @@ type parameters = string list
 
 type command =
   | SendMsg of string * string * string
-  | GetMsg of string
+  | GetNewMsg of string
+  | GetAllMsg
+  | ReadMsgFrom of string
   | Register of string * string
   | Login of string * string
   | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
-  | ReadMsg
-  | ReadMsgFrom of string
   | ReadFR
   | ListFriend
   | Help
@@ -46,15 +46,15 @@ let parse ~(maybe_user : string option) str =
           Help
       | "SendMsg" :: receiver :: t ->
           SendMsg (user, receiver, String.concat " " t)
-      | [ "GetMsg" ] -> GetMsg user
+      | [ "GetNewMsg" ] -> GetNewMsg user
+      | [ "GetAllMsg" ] -> GetAllMsg
+      | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
       | [ "Register"; username; password ] ->
           Register (username, password)
       | [ "Login"; username; password ] -> Login (username, password)
       | [ "FriendReq"; receiver; msg ] -> FriendReq (user, receiver, msg)
       | [ "Accept"; receiver ] -> FriendReqRep (user, receiver, true)
       | [ "Reject"; receiver ] -> FriendReqRep (user, receiver, false)
-      | [ "ReadMsg" ] -> ReadMsg
-      | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
       | [ "FriendRequests" ] -> ReadFR
       | [ "Friends" ] -> ListFriend
       | [ "Logout" ] -> Logout

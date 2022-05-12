@@ -4,14 +4,14 @@ type parameters = string list
 
 type command =
   | SendMsg of string * string * string
-  | GetMsg of string
+  | GetNewMsg of string
+  | GetAllMsg
+  | ReadMsgFrom of string
   | Register of string * string
   | Login of string * string
   | Logout
   | FriendReq of string * string * string
   | FriendReqRep of string * string * bool
-  | ReadMsg
-  | ReadMsgFrom of string
   | ReadFR
   | ListFriend
   | Help
