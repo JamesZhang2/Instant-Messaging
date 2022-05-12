@@ -19,6 +19,16 @@
     - requester: TEXT NOT NULL
     - receiver: TEXT NOT NULL
 
+    Groupchat table columns:
+
+    - id: TEXT NOT NULL
+    - password: TEXT NOT NULL
+
+    Membership table columns:
+
+    - id: TEXT NOT NULL
+    - username: TEXT NOT NULL
+
     AF: userA is said to "like" userB if a row (userA, userB, time,
     message) exists. If both userA and userB like each other, they are
     friends. If userA likes userB but userB doesn't like userA, then
