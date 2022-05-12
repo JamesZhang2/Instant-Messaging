@@ -1,6 +1,7 @@
 (** [pack prop value] is the json string with property [prop] and value
     [value]. *)
-let pack prop value = Printf.sprintf "\"%s\": \"%s\"" prop value
+let pack prop value =
+  Printf.sprintf "\"%s\": \"%s\"" prop (String.escaped value)
 
 (** [pack_type t] is the json string that encodes the type of the
     package. *)
