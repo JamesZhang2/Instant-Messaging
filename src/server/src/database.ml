@@ -20,23 +20,36 @@
     - requester: TEXT NOT NULL
     - receiver: TEXT NOT NULL
 
-    Groupchat table columns:
+    Groupchats table columns:
 
-    - id: TEXT NOT NULL
+    - gcid: TEXT NOT NULL
     - password: TEXT NOT NULL
 
-    Membership table columns:
+    Members table columns:
 
-    - id: TEXT NOT NULL
+    - gcid: TEXT NOT NULL
     - username: TEXT NOT NULL
 
-    AF: userA is said to "like" userB if a row (userA, userB, time,
-    message) exists in the friends table. If both userA and userB like
-    each other, they are friends. If userA likes userB but userB doesn't
-    like userA, then there is a pending friend request from userA to
-    userB.
+    AF:
 
-    RI: No two users have the same username. *)
+    - userA is said to "like" userB if a row (userA, userB, time,
+      message) exists in the friends table. If both userA and userB like
+      each other, they are friends. If userA likes userB but userB
+      doesn't like userA, then there is a pending friend request from
+      userA to userB.
+    - If userA sends a message to a groupchat, then we store multiple
+      messages in the messages table, one for each member of the
+      groupchat, including userA himself. The message sent from userA to
+      userA is marked as retrieved, and each message has gcid set to the
+      id of the groupchat.
+    - userA is in groupchat gcB if and only if a row (gcB, userA) exists
+      in the members table.
+
+    RI:
+
+    - No two users have the same username
+    - No two groupchats have the same id
+    - gcid is NULL if the message is a direct message *)
 
 open Sqlite3
 open Util
@@ -53,6 +66,8 @@ let db_file =
   ^ if test then "test.db" else "server.db"
 
 let server_db = db_open db_file
+
+(******************** Helper Functions ********************)
 
 (** [handle_rc ok_msg rc] prints [ok_msg] if the return code [rc] is
     [OK] or [DONE]. Otherwise, it prints helpful error messages. *)
@@ -86,36 +101,53 @@ let time_ok time =
 
 (******************** Create Tables ********************)
 
+(** [create_table sql name] creates a table with the given [sql] if it
+    doesn't already exist. *)
+let create_table (sql : string) (name : string) =
+  exec server_db sql
+  |> handle_rc
+       (String.capitalize_ascii name
+       ^ " table found or successfully created")
+
 let create_users_sql =
   "CREATE TABLE IF NOT EXISTS users (username TEXT NOT NULL, password \
    TEXT NOT NULL, public_key TEXT NOT NULL, time_registered TEXT NOT \
    NULL);"
 
-let create_users_table () =
-  exec server_db create_users_sql
-  |> handle_rc "Users table found or successfully created"
+let create_users_table () = create_table create_users_sql "users"
 
 let create_messages_sql =
   "CREATE TABLE IF NOT EXISTS messages (sender TEXT NOT NULL, receiver \
    TEXT NOT NULL, content TEXT NOT NULL, time TEXT NOT NULL, type TEXT \
-   NOT NULL, retrieved BOOLEAN NOT NULL);"
+   NOT NULL, retrieved BOOLEAN NOT NULL, gcid TEXT);"
 
 let create_messages_table () =
-  exec server_db create_messages_sql
-  |> handle_rc "Messages table found or successfully created"
+  create_table create_messages_sql "messages"
 
 let create_friends_sql =
   "CREATE TABLE IF NOT EXISTS friends (requester TEXT NOT NULL, \
    receiver TEXT NOT NULL);"
 
-let create_friends_table () =
-  exec server_db create_friends_sql
-  |> handle_rc "Friends table found or successfully created"
+let create_friends_table () = create_table create_friends_sql "friends"
+
+let create_gcs_sql =
+  "CREATE TABLE IF NOT EXISTS groupchats (gcid TEXT NOT NULL, password \
+   TEXT NOT NULL);"
+
+let create_gcs_table () = create_table create_gcs_sql "groupchats"
+
+let create_members_sql =
+  "CREATE TABLE IF NOT EXISTS members (gcid TEXT NOT NULL, username \
+   TEXT NOT NULL);"
+
+let create_members_table () = create_table create_members_sql "members"
 
 let create_tables () =
   create_users_table ();
   create_messages_table ();
-  create_friends_table ()
+  create_friends_table ();
+  create_gcs_table ();
+  create_members_table ()
 
 (******************** Print All (Debug) ********************)
 
@@ -211,28 +243,66 @@ let chk_pwd username pwd =
 
 let insert_msg_sql =
   "INSERT INTO messages (sender, receiver, content, time, type, \
-   retrieved) VALUES (?, ?, ?, ?, ?, FALSE);"
+   retrieved, gcid) VALUES (?, ?, ?, ?, ?, FALSE, ?);"
 
-let add_msg (msg : Msg.t) =
-  let ty =
+(** [add_msg_aux msg gcid] adds a message to the messages table.
+
+    Requires:
+
+    - If the message is a direct message, friend request, or friend
+      request reply, then [gcid] is [None].
+    - If the message is a group message, then [gcid] is [Some id].
+    - The sender and receiver fields of [msg] must be existing users in
+      the database.
+    - [GCRequest] and [GCReqRep] should not be added to the database. *)
+let add_msg_aux (msg : Msg.t) (gcid : string option) =
+  let typ =
     match Msg.msg_type msg with
     | Message -> "Message"
     | FriendReq -> "FriendReq"
     | FriendReqRep (bo, key) -> "FriendReqRep"
+    | GCMessage -> "GCMessage"
+    | GCRequest -> failwith "add_msg_aux: GCRequest shouldn't be added"
+    | GCReqRep _ -> failwith "add_msg_aux: GCReqRep shouldn't be added"
   in
   let sender = Msg.sender msg |> user_ok in
   let receiver = Msg.receiver msg |> user_ok in
   let content = Msg.content msg in
   let time = Msg.time msg |> time_ok in
+  let maybe_gc =
+    match gcid with
+    | None -> ""
+    | Some id -> " in groupchat " ^ id
+  in
   let stmt = prepare server_db insert_msg_sql in
   bind_values stmt
-    [ TEXT sender; TEXT receiver; TEXT content; TEXT time; TEXT ty ]
+    [
+      TEXT sender;
+      TEXT receiver;
+      TEXT content;
+      TEXT time;
+      TEXT typ;
+      (match gcid with
+      | Some id -> TEXT id
+      | None -> NULL);
+    ]
   |> assert_ok;
   step stmt
   |> handle_rc
-       (Printf.sprintf "%s sent a %s to %s at %s: %s" sender ty receiver
-          time content);
+       (Printf.sprintf "%s sent a %s to %s%s at %s: %s" sender typ
+          receiver maybe_gc time content);
   true
+
+let add_msg (msg : Msg.t) =
+  match Msg.msg_type msg with
+  | Message
+  | FriendReq
+  | FriendReqRep _ ->
+      add_msg_aux msg
+  | GCMessage
+  | GCRequest
+  | GCReqRep _ ->
+      failwith "Precondition violated"
 
 (******************** Get message ********************)
 
@@ -266,23 +336,30 @@ let mark_as_retrieved receiver time =
 (** [cons_one_msg lst row] adds [row] to [lst]. Requires: [row]
     represents a valid message. *)
 let cons_one_msg lst (row : Data.t array) =
-  match (row.(0), row.(1), row.(2), row.(3), row.(4)) with
-  | ( Data.TEXT sender,
-      Data.TEXT receiver,
-      Data.TEXT content,
-      Data.TEXT time,
-      Data.TEXT msg_type ) ->
-      let msg_t =
+  match (row.(0), row.(1), row.(2), row.(3), row.(4), row.(6)) with
+  | ( TEXT sender,
+      TEXT receiver,
+      TEXT content,
+      TEXT time,
+      TEXT msg_type,
+      NULL ) ->
+      let msg_typ =
         match msg_type with
         | "FriendReq" -> Msg.FriendReq
         | "Message" -> Message
         | "FriendReqRep" ->
-            (* let _ = print_endline content in *)
-            let bo = String.get content 0 = 'T' in
-            FriendReqRep (bo, "T")
+            if String.get content 0 = 'T' then FriendReqRep (true, "key")
+            else FriendReqRep (false, "")
         | _ -> failwith "Error"
       in
-      Msg.make_msg sender receiver time msg_t content :: lst
+      Msg.make_msg sender receiver time msg_typ content :: lst
+  | ( TEXT sender,
+      TEXT receiver,
+      TEXT content,
+      TEXT time,
+      TEXT "GCMessage",
+      TEXT gcid ) ->
+      Msg.make_msg sender gcid time GCMessage content :: lst
   | _ ->
       failwith
         "Server.Database.cons_one_msg: row is in the wrong format"
@@ -307,8 +384,7 @@ let get_msg_aux receiver time ~new_only =
         Printf.printf "Retrieved messages sent to %s after %s\n\n"
           receiver time;
       (* if test then print_msg_list (List.rev lst); *)
-      let temp = List.rev lst in
-      temp
+      List.rev lst
   | r, _ ->
       prerr_endline (Rc.to_string r);
       prerr_endline (errmsg server_db);
@@ -429,11 +505,28 @@ let friends_of user =
 
 (******************** Groupchat ********************)
 
-let create_groupchat = failwith "Unimplemented"
-let gc_exist = failwith "Unimplemented"
-let check_gc_password = failwith "Unimplemented"
-let add_member_gc = failwith "Unimplemented"
-let is_in_gc = failwith "Unimplemented"
-let add_msg_to_gc = failwith "Unimplemented"
-let gc_of_user = failwith "Unimplemented"
-let members_of_gc = failwith "Unimplemented"
+let insert_gc_sql =
+  "INSERT INTO groupchats (gcid, password) VALUES (?, ?);"
+
+let insert_user_gc_sql =
+  "INSERT INTO members (gcid, username) VALUES (?, ?);"
+
+let create_groupchat id password username = failwith "Unimplemented"
+let gc_exists id = failwith "Unimplemented"
+
+(** [gc_ok id] raises [UnknownGCID] if [id] is not found in the
+    database. Otherwise, it is the identity function. *)
+let gc_ok id = if gc_exists id then id else raise (UnknownGCID id)
+
+let check_gc_password id password = failwith "Unimplemented"
+let add_member_gc id new_member = failwith "Unimplemented"
+let is_in_gc id username = failwith "Unimplemented"
+
+(** [access_ok id username] raises [NoAccess] if [username] is not a
+    member of [id]. Otherwise, it returns [()]. *)
+let access_ok id username =
+  if is_in_gc id username then () else raise (NoAccess (username, id))
+
+let add_msg_to_gc msg = failwith "Unimplemented"
+let gc_of_user username = failwith "Unimplemented"
+let members_of_gc id = failwith "Unimplemented"

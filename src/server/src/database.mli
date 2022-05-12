@@ -51,9 +51,10 @@ val chk_pwd : string -> string -> bool
 val add_msg : Msg.t -> bool
 (** [add_msg message] attempts to add a message to the database.
 
-    Requires: If [Msg.msg_type message] is [FriendReqReply], then its
-    content must be either ["True"] or ["False"] based on whether the
-    friend request is accepted or rejected.
+    Requires: [Msg.msg_type message] is [Message], [FriendReq], or
+    [FriendReqReply]. If [Msg.msg_type message] is [FriendReqReply],
+    then its content must be either ["True"] or ["False"] based on
+    whether the friend request is accepted or rejected.
 
     Returns: true if the messages are added successfully, false
     otherwise.
@@ -186,8 +187,8 @@ val create_groupchat : string -> string -> string -> bool
     Raises: [UnknownUser username] if the given user is not found in the
     database. *)
 
-val gc_exist : string -> bool
-(** [gc_exist id] checks whether the groupchat [id] exists. Returns
+val gc_exists : string -> bool
+(** [gc_exists id] checks whether the groupchat [id] exists. Returns
     [true] if it does, [false] otherwise. *)
 
 val check_gc_password : string -> string -> bool
