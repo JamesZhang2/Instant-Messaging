@@ -21,11 +21,15 @@ let illegal_command str =
 let print_message msg =
   let msg_type =
     match Msg.msg_type msg with
-    | Message -> "Message "
-    | FriendReq -> "Friend Request "
+    | Message -> "Message"
+    | FriendReq -> "Friend Request"
     | FriendReqRep (accepted, key) ->
-        if accepted then "Friend Request Accepted "
-        else "Friend Request Rejected"
+        "Friend Request " ^ if accepted then "Accepted" else "Rejected"
+    | GCMessage -> "Groupchat Message"
+    | GCRequest -> "Groupchat Request"
+    | GCReqRep accepted ->
+        "Groupchat Request "
+        ^ if accepted then "Accepted" else "Rejected"
   in
   let sender = "from " ^ Msg.sender msg ^ " to " ^ Msg.receiver msg in
   let time = "time: " ^ Msg.time msg in

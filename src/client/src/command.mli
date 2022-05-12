@@ -18,5 +18,6 @@ type command =
   | Quit
 
 val parse : maybe_user:string option -> string -> command
-(** [parse str] Parses a string command into command type. Raises:
-    [Malformed] if the command does not match with any of the types*)
+(** [parse maybe_user str] Parses a string command into command type.
+    Raises: [Malformed] if the command does not match with any of the
+    types*)

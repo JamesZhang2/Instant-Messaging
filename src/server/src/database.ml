@@ -13,6 +13,7 @@
     - time: TEXT NOT NULL
     - type: TEXT NOT NULL
     - retrieved: BOOLEAN NOT NULL
+    - gcid: TEXT NULLABLE
 
     Friends table columns:
 
@@ -42,6 +43,8 @@ open Util
 
 exception MalformedTime
 exception UnknownUser of string
+exception UnknownGCID of string
+exception NoAccess of string * string
 
 let test = false
 
@@ -432,6 +435,5 @@ let check_gc_password = failwith "Unimplemented"
 let add_member_gc = failwith "Unimplemented"
 let is_in_gc = failwith "Unimplemented"
 let add_msg_to_gc = failwith "Unimplemented"
-let get_msg_gc_since = failwith "Unimplemented"
 let gc_of_user = failwith "Unimplemented"
 let members_of_gc = failwith "Unimplemented"
