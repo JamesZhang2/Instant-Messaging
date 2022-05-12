@@ -30,9 +30,10 @@
     - username: TEXT NOT NULL
 
     AF: userA is said to "like" userB if a row (userA, userB, time,
-    message) exists. If both userA and userB like each other, they are
-    friends. If userA likes userB but userB doesn't like userA, then
-    there is a pending friend request from userA to userB.
+    message) exists in the friends table. If both userA and userB like
+    each other, they are friends. If userA likes userB but userB doesn't
+    like userA, then there is a pending friend request from userA to
+    userB.
 
     RI: No two users have the same username. *)
 
@@ -422,6 +423,8 @@ let like_list user =
 let friends_of user =
   let user = user_ok user in
   List.filter (fun u -> likes u user) (like_list user)
+
+(******************** Groupchat ********************)
 
 let create_groupchat = failwith "Unimplemented"
 let gc_exist = failwith "Unimplemented"

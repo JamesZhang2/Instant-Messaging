@@ -2,6 +2,9 @@ type msg_type =
   | FriendReq
   | FriendReqRep of (bool * string)
   | Message
+  | GCMessage
+  | GCRequest
+  | GCReqRep of bool
 
 type t = {
   sender : string;
@@ -33,6 +36,11 @@ let string_of_msg msg =
         if accepted then
           "Friend Request Reply: Accepted with key " ^ key
         else "Friend Request Reply: Rejected"
+    | GCMessage -> "Groupchat Message"
+    | GCRequest -> "Groupchat Request"
+    | GCReqRep accepted ->
+        "Friend Request Reply: "
+        ^ if accepted then "Accepted" else "Rejected"
   in
   Printf.sprintf
     "{sender: %s, receiver: %s, time: %s, msg_type: %s, content: %s}"
