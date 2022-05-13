@@ -182,7 +182,8 @@ val create_groupchat : string -> string -> string -> bool
 (** [create_groupchat id password username] creates a new groupchat with
     [id] and [password] being password, initiated by [username].
     [username] should be the only person in this groupchat [id] by
-    default.
+    default. Returns [true] if the groupchat is successfully created,
+    [false] otherwise.
 
     Raises: [UnknownUser username] if the given user is not found in the
     database. *)
@@ -201,7 +202,7 @@ val check_gc_password : string -> string -> bool
 val add_member_gc : string -> string -> bool
 (** [add_member_gc id new_member] adds a new member [new_member] to the
     groupchat [id]. Returns [true] if successfully added, [false]
-    otherwise.contents.
+    otherwise.
 
     Raises: [UnknownUser username] if the given user is not found in the
     database; [UnknownGCID gcid] if the given groupchat id is not found
@@ -209,7 +210,7 @@ val add_member_gc : string -> string -> bool
 
 val is_in_gc : string -> string -> bool
 (** [is_in_gc id username] checks whether [username] is in the groupchat
-    [id]. Returns [true] if [username] is in [id], [false] otherwise
+    [id]. Returns [true] if [username] is in [id], [false] otherwise.
 
     Raises: [UnknownUser username] if the given user is not found in the
     database; [UnknownGCID gcid] if the given groupchat id is not found

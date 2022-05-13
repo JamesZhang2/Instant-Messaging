@@ -22,12 +22,12 @@
 
     Groupchats table columns:
 
-    - gcid: TEXT NOT NULL
+    - id: TEXT NOT NULL
     - password: TEXT NOT NULL
 
     Members table columns:
 
-    - gcid: TEXT NOT NULL
+    - id: TEXT NOT NULL
     - username: TEXT NOT NULL
 
     AF:
@@ -49,7 +49,8 @@
 
     - No two users have the same username
     - No two groupchats have the same id
-    - gcid is NULL if the message is a direct message *)
+    - In the messages table, gcid is NULL if the message is a direct
+      message *)
 
 open Sqlite3
 open Util
@@ -131,14 +132,14 @@ let create_friends_sql =
 let create_friends_table () = create_table create_friends_sql "friends"
 
 let create_gcs_sql =
-  "CREATE TABLE IF NOT EXISTS groupchats (gcid TEXT NOT NULL, password \
+  "CREATE TABLE IF NOT EXISTS groupchats (id TEXT NOT NULL, password \
    TEXT NOT NULL);"
 
 let create_gcs_table () = create_table create_gcs_sql "groupchats"
 
 let create_members_sql =
-  "CREATE TABLE IF NOT EXISTS members (gcid TEXT NOT NULL, username \
-   TEXT NOT NULL);"
+  "CREATE TABLE IF NOT EXISTS members (id TEXT NOT NULL, username TEXT \
+   NOT NULL);"
 
 let create_members_table () = create_table create_members_sql "members"
 
@@ -256,7 +257,7 @@ let insert_msg_sql =
       the database.
     - [GCRequest] and [GCReqRep] should not be added to the database. *)
 let add_msg_aux (msg : Msg.t) (gcid : string option) =
-  let typ =
+  let msg_type_str =
     match Msg.msg_type msg with
     | Message -> "Message"
     | FriendReq -> "FriendReq"
@@ -281,7 +282,7 @@ let add_msg_aux (msg : Msg.t) (gcid : string option) =
       TEXT receiver;
       TEXT content;
       TEXT time;
-      TEXT typ;
+      TEXT msg_type_str;
       (match gcid with
       | Some id -> TEXT id
       | None -> NULL);
@@ -289,8 +290,8 @@ let add_msg_aux (msg : Msg.t) (gcid : string option) =
   |> assert_ok;
   step stmt
   |> handle_rc
-       (Printf.sprintf "%s sent a %s to %s%s at %s: %s" sender typ
-          receiver maybe_gc time content);
+       (Printf.sprintf "%s sent a %s to %s%s at %s: %s" sender
+          msg_type_str receiver maybe_gc time content);
   true
 
 let add_msg (msg : Msg.t) =
@@ -341,10 +342,10 @@ let cons_one_msg lst (row : Data.t array) =
       TEXT receiver,
       TEXT content,
       TEXT time,
-      TEXT msg_type,
+      TEXT msg_type_str,
       NULL ) ->
-      let msg_typ =
-        match msg_type with
+      let msg_type =
+        match msg_type_str with
         | "FriendReq" -> Msg.FriendReq
         | "Message" -> Message
         | "FriendReqRep" ->
@@ -352,7 +353,7 @@ let cons_one_msg lst (row : Data.t array) =
             else FriendReqRep (false, "")
         | _ -> failwith "Error"
       in
-      Msg.make_msg sender receiver time msg_typ content :: lst
+      Msg.make_msg sender receiver time msg_type content :: lst
   | ( TEXT sender,
       TEXT receiver,
       TEXT content,
@@ -505,22 +506,71 @@ let friends_of user =
 
 (******************** Groupchat ********************)
 
-let insert_gc_sql =
-  "INSERT INTO groupchats (gcid, password) VALUES (?, ?);"
+let gc_exists_sql =
+  "SELECT EXISTS (SELECT 1 from groupchats WHERE id = ?);"
 
-let insert_user_gc_sql =
-  "INSERT INTO members (gcid, username) VALUES (?, ?);"
-
-let create_groupchat id password username = failwith "Unimplemented"
-let gc_exists id = failwith "Unimplemented"
+let gc_exists id =
+  let stmt = prepare server_db gc_exists_sql in
+  bind_values stmt [ TEXT id ] |> assert_ok;
+  step stmt |> assert_row;
+  column_bool stmt 0
 
 (** [gc_ok id] raises [UnknownGCID] if [id] is not found in the
     database. Otherwise, it is the identity function. *)
 let gc_ok id = if gc_exists id then id else raise (UnknownGCID id)
 
-let check_gc_password id password = failwith "Unimplemented"
-let add_member_gc id new_member = failwith "Unimplemented"
-let is_in_gc id username = failwith "Unimplemented"
+let is_in_gc_sql =
+  "SELECT EXISTS (SELECT 1 from members WHERE id = ? AND username = ?"
+
+let is_in_gc id username =
+  let id = gc_ok id in
+  let username = user_ok username in
+  let stmt = prepare server_db is_in_gc_sql in
+  bind_values stmt [ TEXT id; TEXT username ] |> assert_ok;
+  step stmt |> assert_row;
+  column_bool stmt 0
+
+let insert_member_sql =
+  "INSERT INTO members (id, username) VALUES (?, ?);"
+
+let add_member_gc id new_member =
+  let id = gc_ok id in
+  let new_member = user_ok new_member in
+  if is_in_gc id new_member then false
+  else
+    let stmt = prepare server_db insert_member_sql in
+    bind_values stmt [ TEXT id; TEXT new_member ] |> assert_ok;
+    step stmt
+    |> handle_rc
+         (Printf.sprintf "Added user %s to the groupchat %s" new_member
+            id);
+    true
+
+let insert_gc_sql =
+  "INSERT INTO groupchats (id, password) VALUES (?, ?);"
+
+let create_groupchat id password username =
+  let username = user_ok username in
+  if gc_exists id then false
+  else
+    let stmt = prepare server_db insert_gc_sql in
+    bind_values stmt [ TEXT id; TEXT password ] |> assert_ok;
+    step stmt
+    |> handle_rc
+         (Printf.sprintf "Created groupchat %s with password %s" id
+            password);
+    add_member_gc id username
+
+let check_gc_pwd_sql =
+  "SELECT EXISTS (SELECT 1 from groupchats WHERE id = ? AND password = \
+   ?"
+
+let check_gc_password id password =
+  let id = gc_ok id in
+  let stmt = prepare server_db check_gc_pwd_sql in
+  bind_values stmt [ TEXT id; TEXT password ] |> assert_ok;
+  step stmt |> assert_row;
+  column_bool stmt 0
 
 (** [access_ok id username] raises [NoAccess] if [username] is not a
     member of [id]. Otherwise, it returns [()]. *)
@@ -528,5 +578,11 @@ let access_ok id username =
   if is_in_gc id username then () else raise (NoAccess (username, id))
 
 let add_msg_to_gc msg = failwith "Unimplemented"
-let gc_of_user username = failwith "Unimplemented"
-let members_of_gc id = failwith "Unimplemented"
+
+let gc_of_user username =
+  let username = user_ok username in
+  failwith "Unimplemented"
+
+let members_of_gc id =
+  let id = gc_ok id in
+  failwith "Unimplemented"
