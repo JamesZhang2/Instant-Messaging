@@ -60,7 +60,7 @@ exception UnknownUser of string
 exception UnknownGCID of string
 exception NoAccess of string * string
 
-let test = false
+let test = true
 
 let db_file =
   "data" ^ Filename.dir_sep ^ "database" ^ Filename.dir_sep
@@ -70,6 +70,13 @@ let server_db = db_open db_file
 
 (******************** Helper Functions ********************)
 
+(** [prerr_and_fail rc fail_msg] prints the error message of the
+    database and fails with [fail_msg]. *)
+let prerr_and_fail (rc : Rc.t) (fail_msg : string) =
+  prerr_endline (Rc.to_string rc);
+  prerr_endline (errmsg server_db);
+  failwith fail_msg
+
 (** [handle_rc ok_msg rc] prints [ok_msg] if the return code [rc] is
     [OK] or [DONE]. Otherwise, it prints helpful error messages. *)
 let handle_rc ok_msg = function
@@ -77,20 +84,15 @@ let handle_rc ok_msg = function
   | Rc.DONE ->
       print_endline ok_msg;
       print_newline ()
-  | r ->
-      prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg server_db);
-      failwith "Server.Database: Return code is not OK"
+  | rc -> prerr_and_fail rc "Server.Database: Return code is not OK"
 
 (** [assert_rc rc expected err_msg] asserts that [rc] is [expected]. *)
 let assert_rc rc expected =
-  if rc <> expected then (
-    prerr_endline (Rc.to_string rc);
-    prerr_endline (errmsg server_db);
+  if rc <> expected then
     let err_msg =
       "Server.Database: Return code is not " ^ Rc.to_string expected
     in
-    failwith err_msg)
+    prerr_and_fail rc err_msg
 
 let assert_ok rc = assert_rc rc Rc.OK
 let assert_row rc = assert_rc rc Rc.ROW
@@ -299,7 +301,7 @@ let add_msg (msg : Msg.t) =
   | Message
   | FriendReq
   | FriendReqRep _ ->
-      add_msg_aux msg
+      add_msg_aux msg None
   | GCMessage
   | GCRequest
   | GCReqRep _ ->
@@ -386,10 +388,9 @@ let get_msg_aux receiver time ~new_only =
           receiver time;
       (* if test then print_msg_list (List.rev lst); *)
       List.rev lst
-  | r, _ ->
-      prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg server_db);
-      failwith "Server.Database.get_msg_aux: Return code is not DONE"
+  | rc, _ ->
+      prerr_and_fail rc
+        "Server.Database.get_msg_aux: Return code is not DONE"
 
 let get_msg_since receiver time =
   get_msg_aux receiver time ~new_only:false
@@ -478,27 +479,26 @@ let fr_reject sender receiver =
 let select_liked_sql =
   "SELECT receiver FROM friends WHERE requester = ?"
 
-(** [cons_one_user lst row] adds [row] to [lst]. Requires: [row] is the
-    username of a user. *)
-let cons_one_user lst (row : Data.t array) =
+(** [cons_one_text lst row] adds [row] to [lst]. Requires: [row] has
+    only one column, which is text. *)
+let cons_one_text lst (row : Data.t array) =
   match row.(0) with
   | Data.TEXT username -> username :: lst
   | _ ->
       failwith
-        "Server.Database.cons_one_user: row is in the wrong format"
+        "Server.Database.cons_one_text: row is in the wrong format"
 
 (** [like_list user] is a list of all users that [user] likes. Requires:
     [user] is found in the table of users. *)
 let like_list user =
   let stmt = prepare server_db select_liked_sql in
   bind_text stmt 1 user |> assert_ok;
-  let res = Sqlite3.fold stmt ~f:cons_one_user ~init:[] in
+  let res = Sqlite3.fold stmt ~f:cons_one_text ~init:[] in
   match res with
   | Rc.DONE, lst -> lst
-  | r, _ ->
-      prerr_endline (Rc.to_string r);
-      prerr_endline (errmsg server_db);
-      failwith "Server.Database.like_list: Return code is not DONE"
+  | rc, _ ->
+      prerr_and_fail rc
+        "Server.Database.like_list: Return code is not DONE"
 
 let friends_of user =
   let user = user_ok user in
@@ -520,7 +520,7 @@ let gc_exists id =
 let gc_ok id = if gc_exists id then id else raise (UnknownGCID id)
 
 let is_in_gc_sql =
-  "SELECT EXISTS (SELECT 1 from members WHERE id = ? AND username = ?"
+  "SELECT EXISTS (SELECT 1 from members WHERE id = ? AND username = ?);"
 
 let is_in_gc id username =
   let id = gc_ok id in
@@ -557,13 +557,13 @@ let create_groupchat id password username =
     bind_values stmt [ TEXT id; TEXT password ] |> assert_ok;
     step stmt
     |> handle_rc
-         (Printf.sprintf "Created groupchat %s with password %s" id
-            password);
+         (Printf.sprintf "%s created groupchat %s with password %s"
+            username id password);
     add_member_gc id username
 
 let check_gc_pwd_sql =
   "SELECT EXISTS (SELECT 1 from groupchats WHERE id = ? AND password = \
-   ?"
+   ?);"
 
 let check_gc_password id password =
   let id = gc_ok id in
@@ -579,10 +579,35 @@ let access_ok id username =
 
 let add_msg_to_gc msg = failwith "Unimplemented"
 
+let select_gcs_sql =
+  "SELECT id FROM members WHERE username = ? ORDER BY id ASC;"
+
 let gc_of_user username =
   let username = user_ok username in
-  failwith "Unimplemented"
+  let stmt = prepare server_db select_gcs_sql in
+  bind_values stmt [ TEXT username ] |> assert_ok;
+  let res = Sqlite3.fold stmt ~f:cons_one_text ~init:[] in
+  match res with
+  | Rc.DONE, lst ->
+      Printf.printf "Retrieved groupchats that user %s is in\n\n"
+        username;
+      List.rev lst
+  | rc, _ ->
+      prerr_and_fail rc
+        "Server.Database.gc_of_user: Return code is not DONE"
+
+let select_members_sql =
+  "SELECT username FROM members WHERE id = ? ORDER BY username ASC;"
 
 let members_of_gc id =
   let id = gc_ok id in
-  failwith "Unimplemented"
+  let stmt = prepare server_db select_members_sql in
+  bind_values stmt [ TEXT id ] |> assert_ok;
+  let res = Sqlite3.fold stmt ~f:cons_one_text ~init:[] in
+  match res with
+  | Rc.DONE, lst ->
+      Printf.printf "Retrieved members in groupchat %s\n\n" id;
+      List.rev lst
+  | rc, _ ->
+      prerr_and_fail rc
+        "Server.Database.members_of_gc: Return code is not DONE"

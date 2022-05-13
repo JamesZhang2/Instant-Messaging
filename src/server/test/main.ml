@@ -20,6 +20,11 @@ open Util
 (** [assert_false x] asserts that [x] is [false]. *)
 let assert_false x = assert (not x)
 
+(** [assert_same_elts lst1 lst2] asserts that [lst1] and [lst2] have the
+    same elements, regardless of order. *)
+let assert_same_elts lst1 lst2 =
+  assert_equal (List.sort compare lst1) (List.sort compare lst2)
+
 let injection_str = "Robert\'); DROP TABLE users; --"
 (* SQL injection attack *)
 
@@ -217,6 +222,26 @@ let test_friend_requests () =
   assert_equal (friends_of "Alice") [ "Bob" ];
   assert_equal (friends_of "Catherine") []
 
+let test_groupchat () =
+  (* Create a groupchat *)
+  assert_false (gc_exists "CS3110");
+  assert (create_groupchat "CS3110" "OCaml" "Alice");
+  assert (gc_exists "CS3110");
+  assert (is_in_gc "CS3110" "Alice");
+  assert_false (is_in_gc "CS3110" "Bob");
+  assert (check_gc_password "CS3110" "OCaml");
+  assert_false (check_gc_password "CS3110" "Java");
+  assert_equal (members_of_gc "CS3110") [ "Alice" ];
+  assert_false (add_member_gc "CS3110" "Alice");
+  assert_equal (gc_of_user "Alice") [ "CS3110" ];
+
+  (* Add a new member to a groupchat *)
+  assert_equal (gc_of_user "Bob") [];
+  assert (add_member_gc "CS3110" "Bob");
+  assert_same_elts (members_of_gc "CS3110") [ "Alice"; "Bob" ];
+  assert_equal (gc_of_user "Bob") [ "CS3110" ];
+  assert_false (create_groupchat "CS3110" "Fun" "Bob")
+
 let run_database_tests () =
   test_add_n_diff 100;
   test_add_n_same 100;
@@ -227,6 +252,7 @@ let run_database_tests () =
   test_add_msg ();
   test_get_msg ();
   test_friend_requests ();
+  test_groupchat ();
   print_endline "All database tests passed!"
 
 (******************** Server Parser Tests ********************)
