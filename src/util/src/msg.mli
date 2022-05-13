@@ -19,7 +19,7 @@ type t
 (** Abstract type for a message. *)
 
 val make_msg : string -> string -> string -> msg_type -> string -> t
-(**[make_msg sender receiver time msg_type message] creates a message
+(**[make_msg sender receiver time msg_type content] creates a message
    according to the given fields. *)
 
 val sender : t -> string

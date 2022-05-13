@@ -15,8 +15,8 @@ exception UnknownGCID of string
 
 exception NoAccess of string * string
 (** The exception raised when the given user does not have access to the
-    given groupchat. The first string is a user, the second string is a
-    GCID. *)
+    given groupchat. The first string is a GCID, the second string is a
+    user. *)
 
 val create_tables : unit -> unit
 (** [create_tables ()] creates the tables needed for the database. *)
@@ -217,8 +217,9 @@ val is_in_gc : string -> string -> bool
     in the database. *)
 
 val add_msg_to_gc : Msg.t -> bool
-(** [send_msg_to_gc msg] adds the message [msg] to a groupchat. Returns
-    [true] if message is successfully added, [false] otherwise.
+(** [send_msg_to_gc msg] adds the message [msg] to a groupchat. The
+    receiver field of [msg] is the id of the groupchat. Returns [true]
+    if message is successfully added, [false] otherwise.
 
     Requires: [Msg.msg_type msg] is [GCMessage].
 

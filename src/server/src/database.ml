@@ -39,9 +39,9 @@
       userA to userB.
     - If userA sends a message to a groupchat, then we store multiple
       messages in the messages table, one for each member of the
-      groupchat, including userA himself. The message sent from userA to
-      userA is marked as retrieved, and each message has gcid set to the
-      id of the groupchat.
+      groupchat, including userA themselves. The message sent from userA
+      to userA is marked as retrieved, and each message has gcid set to
+      the id of the groupchat.
     - userA is in groupchat gcB if and only if a row (gcB, userA) exists
       in the members table.
 
@@ -317,14 +317,14 @@ let select_new_msg_sql =
   "SELECT * FROM messages WHERE receiver = ? AND time > ? AND \
    retrieved = FALSE ORDER BY time ASC;"
 
-let mark_as_retrieved_sql =
+let mark_retrieved_sql =
   "UPDATE messages SET retrieved = TRUE WHERE receiver = ? AND time > ?"
 
-(** [mark_as_retrieved receiver time] marks all messages sent to
-    [receiver] after [time] as retrieved. Requires: [receiver] is found
-    in the user table and [time] is in the correct format. *)
-let mark_as_retrieved receiver time =
-  let stmt = prepare server_db mark_as_retrieved_sql in
+(** [mark_retrieved receiver time] marks all messages sent to [receiver]
+    after [time] as retrieved. Requires: [receiver] is found in the user
+    table and [time] is in the correct format. *)
+let mark_retrieved receiver time =
+  let stmt = prepare server_db mark_retrieved_sql in
   bind_values stmt [ TEXT receiver; TEXT time ] |> assert_ok;
   step stmt
   |> handle_rc
@@ -380,7 +380,7 @@ let get_msg_aux receiver time ~new_only =
   let res = Sqlite3.fold stmt ~f:cons_one_msg ~init:[] in
   match res with
   | Rc.DONE, lst ->
-      mark_as_retrieved receiver time;
+      mark_retrieved receiver time;
       if time = Time.earliest_time then
         Printf.printf "Retrieved all messages sent to %s\n\n" receiver
       else
@@ -575,9 +575,7 @@ let check_gc_password id password =
 (** [access_ok id username] raises [NoAccess] if [username] is not a
     member of [id]. Otherwise, it returns [()]. *)
 let access_ok id username =
-  if is_in_gc id username then () else raise (NoAccess (username, id))
-
-let add_msg_to_gc msg = failwith "Unimplemented"
+  if is_in_gc id username then () else raise (NoAccess (id, username))
 
 let select_gcs_sql =
   "SELECT id FROM members WHERE username = ? ORDER BY id ASC;"
@@ -611,3 +609,39 @@ let members_of_gc id =
   | rc, _ ->
       prerr_and_fail rc
         "Server.Database.members_of_gc: Return code is not DONE"
+
+let mark_self_retrieved_sql =
+  "UPDATE messages SET retrieved = TRUE WHERE sender = ? and receiver \
+   = ?"
+
+(** [mark_self_retrieved sender] marks all messages from [sender] to
+    [sender] (via a groupchat) as retrieved. Requires: [sender] is found
+    in the user table. *)
+let mark_self_retrieved sender =
+  let stmt = prepare server_db mark_self_retrieved_sql in
+  bind_values stmt [ TEXT sender; TEXT sender ] |> assert_ok;
+  step stmt
+  |> handle_rc
+       (Printf.sprintf
+          "All messages that %s sent to themselves via a groupchat are \
+           marked as retrieved"
+          sender)
+
+let add_msg_to_gc msg =
+  assert (Msg.msg_type msg = GCMessage);
+  let sender = Msg.sender msg |> user_ok in
+  let gcid = Msg.receiver msg |> gc_ok in
+  access_ok gcid sender;
+  let content = Msg.content msg in
+  let time = Msg.time msg |> time_ok in
+  let mems = members_of_gc gcid in
+  let msg_list =
+    List.map
+      (fun member -> Msg.make_msg sender member time GCMessage content)
+      mems
+  in
+  let status_list =
+    List.map (fun msg -> add_msg_aux msg (Some gcid)) msg_list
+  in
+  mark_self_retrieved sender;
+  List.fold_left ( && ) true status_list

@@ -171,6 +171,24 @@ let alice_rejects_catherine : Msg.t =
     (FriendReqRep (false, ""))
     "False"
 
+let foo_group_msg : Msg.t =
+  Msg.make_msg "Foo" "CS3110" "2022-05-12 23:34:45" GCMessage "Foo"
+
+let alice_2800_msg : Msg.t =
+  Msg.make_msg "Alice" "CS2800" "2022-05-12 23:34:45" GCMessage "Bar"
+
+let alice_group_msg_1 : Msg.t =
+  Msg.make_msg "Alice" "CS3110" "2022-05-12 23:18:43" GCMessage
+    "Hi CS3110, I'm Alice!"
+
+let bob_group_msg : Msg.t =
+  Msg.make_msg "Bob" "CS3110" "2022-05-12 23:19:02" GCMessage
+    "Hello OCaml programmers, I'm Bob!"
+
+let alice_group_msg_2 : Msg.t =
+  Msg.make_msg "Alice" "CS3110" "2022-05-12 23:19:35" GCMessage
+    (injection_str ^ strange_chars)
+
 let test_friend_requests () =
   (* Status check before any friend requests *)
   assert_false (fr_exist "Alice" "Bob");
@@ -235,12 +253,46 @@ let test_groupchat () =
   assert_false (add_member_gc "CS3110" "Alice");
   assert_equal (gc_of_user "Alice") [ "CS3110" ];
 
+  (* Groupchat exceptions *)
+  assert_raises (UnknownUser "Foo") (fun _ ->
+      create_groupchat "Foo's Groupchat" "password" "Foo");
+  assert_raises (UnknownGCID "CS2800") (fun _ ->
+      check_gc_password "CS2800" "Discrete");
+  assert_raises (UnknownUser "Foo") (fun _ ->
+      add_member_gc "CS3110" "Foo");
+  assert_raises (UnknownGCID "CS2800") (fun _ ->
+      add_member_gc "CS2800" "Alice");
+  assert_raises (UnknownUser "Foo") (fun _ -> is_in_gc "CS3110" "Foo");
+  assert_raises (UnknownGCID "CS2800") (fun _ ->
+      is_in_gc "CS2800" "Alice");
+  assert_raises (UnknownUser "Foo") (fun _ ->
+      add_msg_to_gc foo_group_msg);
+  assert_raises (UnknownGCID "CS2800") (fun _ ->
+      add_msg_to_gc alice_2800_msg);
+  assert_raises
+    (NoAccess ("CS3110", "Bob"))
+    (fun _ -> add_msg_to_gc bob_group_msg);
+  assert_raises (UnknownUser "Foo") (fun _ -> gc_of_user "Foo");
+  assert_raises (UnknownGCID "CS2800") (fun _ -> members_of_gc "CS2800");
+
+  (* Send messages in a solo groupchat *)
+  assert (add_msg_to_gc alice_group_msg_1);
+  assert_equal (get_new_msg "Alice") [];
+
   (* Add a new member to a groupchat *)
   assert_equal (gc_of_user "Bob") [];
   assert (add_member_gc "CS3110" "Bob");
   assert_same_elts (members_of_gc "CS3110") [ "Alice"; "Bob" ];
   assert_equal (gc_of_user "Bob") [ "CS3110" ];
-  assert_false (create_groupchat "CS3110" "Fun" "Bob")
+  assert_false (create_groupchat "CS3110" "Fun" "Bob");
+
+  (* Send messages in a groupchat of two people *)
+  assert (add_msg_to_gc alice_group_msg_2);
+  assert_equal (get_new_msg "Alice") [];
+  assert_equal (get_new_msg "Bob" |> List.length) 1;
+  assert (add_msg_to_gc bob_group_msg);
+  assert_equal (get_new_msg "Bob") [];
+  assert_equal (get_new_msg "Alice" |> List.length) 1
 
 let run_database_tests () =
   test_add_n_diff 100;
