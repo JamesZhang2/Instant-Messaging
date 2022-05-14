@@ -38,3 +38,7 @@ val pack_friend_req_reply : string -> string -> bool -> string
 val pack_join_gc : string -> string -> string -> string
 (** [pack_join_gc username gc password] is the json string that encodes
     a request to join [gc] from user [username] using [password]*)
+
+val pack_send_gc_msg : string -> string -> string -> string
+(** [pack_send_gc_msg sender gc msg] is the json string that encodes
+    sending [msg] from [sender] to [gc]. *)

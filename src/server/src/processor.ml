@@ -23,19 +23,38 @@ let print_headers headers =
 let header body =
   [ ("content-length", body |> String.length |> string_of_int) ]
 
-let handle_send_msg req_meth sender time receiver msg =
-  (* let _ = print_endline msg in *)
+(** [send_msg_mast req_meth sender time receiver msg msg_type db_meth]*)
+let send_msg_master req_meth sender time receiver msg msg_type db_meth =
   if req_meth <> Post then
-    (* let _ = print_endline "if branch" in *)
-    Packager.error_response "SendMessage should use POST method"
+    Packager.error_response "SendMessage should use Post method"
   else
-    (* let _ = print_endline "else branch" in *)
-    let msg = Msg.make_msg sender receiver time Util.Msg.Message msg in
-    if add_msg msg then
+    let msg = Msg.make_msg sender receiver time msg_type msg in
+    if db_meth msg then
       Packager.post_method_response "Message successfully sent"
     else
       Packager.error_response
         "Message can't be sent, please try again later"
+
+let handle_send_msg req_meth sender time receiver msg =
+  send_msg_master req_meth sender time receiver msg Util.Msg.Message
+    add_msg
+(* let _ = print_endline msg in if req_meth <> Post then (* let _ =
+   print_endline "if branch" in *) Packager.error_response "SendMessage
+   should use POST method" else (* let _ = print_endline "else branch"
+   in *) let msg = Msg.make_msg sender receiver time Util.Msg.Message
+   msg in if add_msg msg then Packager.post_method_response "Message
+   successfully sent" else Packager.error_response "Message can't be
+   sent, please try again later" *)
+
+let handle_send_gc_msg req_meth sender time gc msg =
+  send_msg_master req_meth sender time gc msg Util.Msg.GCMessage
+    add_msg_to_gc
+(* if req_meth <> Post then Packager.error_response "SendGCMessage
+   should use POST method" else let msg = Msg.make_msg sender gc time
+   Util.Msg.GCMessage msg in if add_msg_to_gc msg then
+   Packager.post_method_response "Message successfully sent" else
+   Packager.error_response "Message can't be sent, please try again
+   later" *)
 
 let handle_get_msg req_meth receiver time amount =
   if req_meth <> Post then
@@ -161,6 +180,18 @@ let handle_fetch_key username =
   let key = user_key username in
   Packager.post_method_response key
 
+let handle_gc_req req_meth sender time gc password =
+  if req_meth <> Post then
+    Packager.error_response "Need to use Post method"
+  else if not (gc_exists gc) then
+    Packager.error_response "Groupchat Does Not Exist"
+  else if not (check_gc_password gc password) then
+    Packager.error_response "Incorrect Password"
+  else
+    let b = add_member_gc gc sender in
+    if b then Packager.post_method_response "Successfully Added"
+    else "Failed to join GC"
+
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
 let parse req_meth body =
@@ -180,6 +211,9 @@ let parse req_meth body =
     | FriendReqReply (receiver, accepted) ->
         handle_friend_req_reply req_meth sender time receiver accepted
     | FetchKey username -> handle_fetch_key username
+    | SendGCMsg (gc, msg) ->
+        handle_send_gc_msg req_meth sender time gc msg
+    | GCReq (gc, pass) -> handle_gc_req req_meth sender time gc pass
   in
   let res_body =
     match get_res_body () with

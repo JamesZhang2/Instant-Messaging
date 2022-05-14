@@ -115,9 +115,9 @@ val is_gc : string -> bool
     [true] if so, [false] otherwise*)
 
 val add_msg_to_gc : Msg.t -> bool
-(** [send_msg_to_gc id username msg] adds the message [msg] to the
-    groupchat [id], sent by [username]. Returns [true] if message is
-    successfully added, [false] otherwise.*)
+(** [send_msg_to_gc msg] adds the message [msg] to the groupchat
+    [Msg.receiver id], sent by [Msg.sender username]. Returns [true] if
+    message is successfully added, [false] otherwise.*)
 
 val get_msg_gc_since : string -> string -> string -> Msg.t list
 (** [get_msg_gc_since username id time] is a list of all messages in
