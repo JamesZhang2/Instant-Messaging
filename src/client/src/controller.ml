@@ -111,7 +111,12 @@ let msg_processor receiver msg =
        let sender = Msg.sender msg in
        let success, key = fetch_key sender in
        let add_key = if not success then None else Some key in
-       db_op (add_request receiver decrypt add_key) None);
+       db_op (add_request receiver decrypt add_key) None
+   | GCMessage -> db_op add_msg_to_gc msg
+   | GCRequest ->
+       failwith "GCRequest Shouldn't ever be received by a client"
+   | GCReqRep b ->
+       if b then db_op (add_member_gc (Msg.sender msg)) receiver else ());
   decrypt
 
 let update_msg ?(amount = "unread") () =

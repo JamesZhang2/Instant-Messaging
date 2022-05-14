@@ -8,12 +8,13 @@
 type msg_type =
   | FriendReq
   | FriendReqRep of (bool * string)
-    (* Whether the request is accepted. If accepted, key string;
-       otherwise, empty string. *)
+  (* Whether the request is accepted. If accepted, key string;
+     otherwise, empty string. *)
   | Message (* Direct message *)
   | GCMessage (* Groupchat message *)
-  | GCRequest (* Groupchat request *)
-  | GCReqRep of bool (* Whether the groupchat request is accepted. *)
+  | GCRequest (* Groupchat join request *)
+  | GCReqRep of bool
+(* Whether the groupchat request is accepted. *)
 
 type t
 (** Abstract type for a message. *)

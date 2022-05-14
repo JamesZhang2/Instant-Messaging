@@ -46,6 +46,9 @@ let message_to_obj msg =
     | Msg.Message -> "Message"
     | Msg.FriendReq -> "FriendReq"
     | Msg.FriendReqRep (bo, key) -> "FriendReqRep"
+    | Msg.GCMessage -> "GCMessage"
+    | Msg.GCRequest -> "GCReq"
+    | Msg.GCReqRep b -> "GCReqRep"
   in
   let lst =
     [
