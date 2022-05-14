@@ -13,6 +13,7 @@ type pkt_type =
   | FetchKey of string
   | SendGCMsg of string * string
   | GCReq of string * string
+(*gc, password*)
 
 type t = {
   pkt_type : pkt_type;

@@ -88,6 +88,28 @@ let send_msg receiver msg =
       else ();
       (success, resp)
 
+let send_gc_msg gc msg =
+  if !username_ref = "" then (false, "Incorrect user login credential")
+  else
+    let sender = !username_ref in
+    if not (is_in_gc gc sender) then
+      (false, "You are not in this groupchat")
+    else
+      let encrypted_msg =
+        if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
+        else msg
+      in
+      let packed_msg = Packager.pack_send_msg sender gc encrypted_msg in
+      let raw_response = Network.request "POST" ~body:packed_msg in
+      let success, resp = bool_post_parse raw_response in
+      if success then
+        let message =
+          Msg.make_msg sender gc (Time.string_of_now true) GCMessage msg
+        in
+        db_op add_msg_to_gc message
+      else ();
+      (success, resp)
+
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
   let ptext =
@@ -310,8 +332,11 @@ let lst_of_friends () =
     let lst = get_all_frds !username_ref in
     (true, lst)
 
-let lst_of_gc () = failwith "Unimplemented"
-let send_gc_msg gc msg = failwith "Unimplemented"
+let lst_of_gc () =
+  if "" = !username_ref then (false, [ "User not logged in" ])
+  else
+    let lst = gc_of_user !username_ref in
+    (true, lst)
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref
