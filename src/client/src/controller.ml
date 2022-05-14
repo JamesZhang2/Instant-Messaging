@@ -338,7 +338,9 @@ let lst_of_gc () =
     let lst = gc_of_user !username_ref in
     (true, lst)
 
-let members_of_gc gcid = failwith "Unimplemented"
+let members_of_gc gcid =
+  if not (is_gc gcid) then (false, [ " Groupchat does not exist" ])
+  else (true, members_of_gc gcid)
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref
