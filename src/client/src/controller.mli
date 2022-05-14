@@ -61,3 +61,22 @@ val lst_of_friends : unit -> bool * string list
 val current_user : unit -> string option
 (** [current_user ()] is [Some user] if [user] is the user currently
     logged in, or [None] if no user is currently logged in. *)
+
+val join_gc : string -> string -> bool * string
+(** [join_gc gc password] attempts to join the groupchat [gc] with
+    [password] with the current username. Returns [(true, "")] if
+    successfully joined, [(false, feedback)] otherwise*)
+
+val read_gc_msg : string -> bool * Msg.t list
+(** [read_gc_msg gc] returns all local messages in groupchat [gc] to
+    currently logged in user. Requires: [username] is logged in, and is
+    in groupchag [gc]*)
+
+val send_gc_msg : string -> string -> bool * string
+(** [send_gc_msg gc msg] sends [msg] from [currently login user] to
+    [gc]. Returns: [(true, feedback)] if the message is successfully
+    sent, [(false, feedback)] otherwise. *)
+
+val lst_of_gc : unit -> bool * string list
+(** [lst_of_gc ()] returns a list of groupchats the current logged in
+    user is in*)

@@ -238,6 +238,21 @@ let friend_req_reply receiver accepted =
         (successful, resp)
     else (successful, resp)
 
+let join_gc gc password =
+  if "" = !username_ref then (false, "User not logged in")
+  else if is_in_gc gc !username_ref then
+    (false, "Already in groupchat " ^ gc)
+  else
+    let sender = !username_ref in
+    let message = Packager.pack_join_gc sender gc password in
+    let raw_response = Network.request "POST" ~body:message in
+    let successful, resp = bool_post_parse raw_response in
+    if successful then
+      let _ = db_op (add_member_gc gc) sender in
+      let _ = update_msg () in
+      (successful, "You have successfully joined the groupchat")
+    else (successful, resp)
+
 let incorrect_usermsg =
   [
     Msg.make_msg "server" !username_ref "2022-03-29 17:00:00" Message
@@ -262,6 +277,21 @@ let read_msg_from sender =
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
+let read_gc_msg gc =
+  if "" = !username_ref then (false, incorrect_usermsg)
+  else if not (is_in_gc gc !username_ref) then
+    ( false,
+      [
+        Msg.make_msg gc !username_ref
+          (Time.string_of_now true)
+          GCMessage "Not in groupchat";
+      ] )
+  else
+    let username = !username_ref in
+    match get_msg_gc_since username gc "2022-03-29 17:00:00" with
+    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
+    | messages -> (true, List.rev messages)
+
 let read_FR () =
   if "" = !username_ref then (false, incorrect_usermsg)
   else
@@ -279,6 +309,9 @@ let lst_of_friends () =
   else
     let lst = get_all_frds !username_ref in
     (true, lst)
+
+let lst_of_gc () = failwith "Unimplemented"
+let send_gc_msg gc msg = failwith "Unimplemented"
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref

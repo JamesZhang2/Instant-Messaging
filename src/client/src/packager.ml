@@ -58,3 +58,8 @@ let pack_fetch_key username =
     (pack_sender "unimportant")
     (pack_time ())
     (pack "username" username)
+
+let pack_join_gc username gc password =
+  Printf.sprintf "{%s, %s, %s, %s} " (pack_type "GCRequest")
+    (pack_sender username) (pack_receiver gc)
+    (pack "message" password)

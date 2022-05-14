@@ -34,3 +34,7 @@ val pack_friend_req_reply : string -> string -> bool -> string
 (** [pack_friend_req_reply sender receiver accepted] is the json string
     that encodes accepting or rejecting a friend request from [receiver]
     to [sender]. *)
+
+val pack_join_gc : string -> string -> string -> string
+(** [pack_join_gc username gc password] is the json string that encodes
+    a request to join [gc] from user [username] using [password]*)

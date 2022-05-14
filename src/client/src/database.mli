@@ -109,6 +109,10 @@ val is_in_gc : string -> string -> bool
 (** [is_in_gc id username] checks whether [username] is in the groupchat
     [id]. Returns [true] if [username] is in [id], [false] otherwise*)
 
+val is_gc : string -> bool
+(** [is_gc gc] checks whether [gc] is an existing groupchat. Returns
+    [true] if so, [false] otherwise*)
+
 val add_msg_to_gc : Msg.t -> bool
 (** [send_msg_to_gc id username msg] adds the message [msg] to the
     groupchat [id], sent by [username]. Returns [true] if message is
