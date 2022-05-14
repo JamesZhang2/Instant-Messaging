@@ -1,23 +1,30 @@
+(** A module for parsing commands from the user interface. *)
+
 exception Malformed
+(** The exception raised when a command is malformed. *)
 
-type parameters = string list
-
+(** The variant type for commands. *)
 type command =
-  | SendMsg of string * string * string
-  | GetNewMsg of string
+  | SendMsg of string * string  (** receiver, message *)
+  | GetNewMsg
   | GetAllMsg
-  | ReadMsgFrom of string
-  | Register of string * string
-  | Login of string * string
+  | ReadMsgFrom of string  (** sender *)
+  | Register of string * string  (** username, password *)
+  | Login of string * string  (** username, password *)
   | Logout
-  | FriendReq of string * string * string
-  | FriendReqRep of string * string * bool
+  | FriendReq of string * string  (** receiver, message *)
+  | FriendReqRep of string * bool  (** receiver, accepted *)
   | ReadFR
-  | ListFriend
+  | ListFriends
+  | JoinGC of string * string  (** gcid, password *)
+  | ReadGC of string  (** gcid *)
+  | SendGC of string * string  (** gcid, message *)
+  | ListGC
+  | GCMembers of string  (** gcid *)
   | Help
   | Quit
 
-val parse : maybe_user:string option -> string -> command
-(** [parse maybe_user str] Parses a string command into command type.
-    Raises: [Malformed] if the command does not match with any of the
-    types*)
+val parse : bool -> string -> command
+(** [parse logged_in str] parses a string command into command type,
+    based on whether a user is logged in or not. Raises: [Malformed] if
+    the command does not match with any of the types*)

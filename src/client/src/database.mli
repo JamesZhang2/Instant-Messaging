@@ -4,6 +4,7 @@
 open Util
 
 exception MalformedTime
+(** The exception raised when time is not correctly formatted. *)
 
 val init_dbs : unit -> bool * string
 (** [init_dbs()] initializes the client table. Returns

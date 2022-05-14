@@ -292,7 +292,7 @@ let read_gc_msg gc =
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
-let read_FR () =
+let read_fr () =
   if "" = !username_ref then (false, incorrect_usermsg)
   else
     let username = !username_ref in
@@ -312,6 +312,7 @@ let lst_of_friends () =
 
 let lst_of_gc () = failwith "Unimplemented"
 let send_gc_msg gc msg = failwith "Unimplemented"
+let members_of_gc gcid = failwith "Unimplemented"
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref

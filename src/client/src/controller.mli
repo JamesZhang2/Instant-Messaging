@@ -1,6 +1,7 @@
-open Util
 (** The controller is called by the client's interface to complete
     operations. *)
+
+open Util
 
 exception IllegalResponse
 
@@ -51,8 +52,8 @@ val read_msg_from : string -> bool * Msg.t list
     to currently logged in user. Requires: [username] is logged in, and
     friend is a valid friend*)
 
-val read_FR : unit -> bool * Msg.t list
-(** [read_FR ()] returns all local friend requests*)
+val read_fr : unit -> bool * Msg.t list
+(** [read_fr ()] returns all local friend requests*)
 
 val lst_of_friends : unit -> bool * string list
 (** [lst_of_friends ()] returns a list of friends of the current logged
@@ -64,7 +65,7 @@ val current_user : unit -> string option
 
 val join_gc : string -> string -> bool * string
 (** [join_gc gc password] attempts to join the groupchat [gc] with
-    [password] with the current username. Returns [(true, "")] if
+    [password] with the current username. Returns [(true, feedback)] if
     successfully joined, [(false, feedback)] otherwise*)
 
 val read_gc_msg : string -> bool * Msg.t list
@@ -73,10 +74,16 @@ val read_gc_msg : string -> bool * Msg.t list
     in groupchag [gc]*)
 
 val send_gc_msg : string -> string -> bool * string
-(** [send_gc_msg gc msg] sends [msg] from [currently login user] to
-    [gc]. Returns: [(true, feedback)] if the message is successfully
+(** [send_gc_msg gc msg] sends [msg] from the currently logged in user
+    to [gc]. Returns: [(true, feedback)] if the message is successfully
     sent, [(false, feedback)] otherwise. *)
 
 val lst_of_gc : unit -> bool * string list
 (** [lst_of_gc ()] returns a list of groupchats the current logged in
-    user is in*)
+    user is in. Returns: [(true, lst)] if the query is successful,
+    [(false, feedback)] otherwise. *)
+
+val members_of_gc : string -> bool * string list
+(** [members_of_gc gcid] returns a list of members of groupchat [gcid].
+    Returns: [(true, lst)] if the query is successful,
+    [(false, feedback)] otherwise. *)
