@@ -63,3 +63,8 @@ let pack_join_gc username gc password =
   Printf.sprintf "{%s, %s, %s, %s} " (pack_type "GCRequest")
     (pack_sender username) (pack_receiver gc)
     (pack "message" password)
+
+let pack_send_gc_msg sender gc msg =
+  Printf.sprintf "{%s,%s,%s,%s,%s}" (pack_type "GCMessage")
+    (pack_sender sender) (pack_time ()) (pack_receiver gc)
+    (pack "message" msg)
