@@ -113,12 +113,13 @@ let add_fr_accept_msg sender receiver time =
     friend request from [sender] to [receiver] and returns the
     appropriate json string for the client*)
 let handle_friend_req req_meth sender time receiver msg =
+  let success_message =
+    Packager.post_method_response
+      ("Your friend request to " ^ receiver ^ " is sent")
+  in
   if req_meth <> Post then
     Packager.error_response "FriendReq should use POST method"
-  else if
-    (* Check if sender and receiver are already friends *)
-    is_friend sender receiver
-  then
+  else if is_friend sender receiver then
     Packager.error_response ("You are already friends with " ^ receiver)
   else
     (* Check if friend request already exists *)
@@ -132,17 +133,14 @@ let handle_friend_req req_meth sender time receiver msg =
         Packager.post_method_response
           ("Your friend request to " ^ receiver
          ^ " is sent and accepted")
-    | false, true ->
-        Packager.post_method_response
-          ("Your friend request to " ^ receiver ^ " is sent")
+    | false, true -> success_message
     | false, _ ->
         let msg = Msg.make_msg sender receiver time FriendReq msg in
         (* notification msg *)
         let _ = new_fr msg in
         let _ = add_msg msg in
         (* new fr in db *)
-        Packager.post_method_response
-          ("Your friend request to " ^ receiver ^ " is sent")
+        success_message
     | true, true ->
         Packager.error_response
           ("You are already friends with" ^ receiver)

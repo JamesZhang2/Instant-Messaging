@@ -61,6 +61,11 @@ let db_op meth input =
   ()
 (* if success then () else print_endline ("Error" ^ resp) *)
 
+(** [encrypt key msg] encrypts the message using the given symmetric
+    [key]*)
+let encrypt key msg =
+  if use_encryption then Util.Crypto.(sym_enc key msg) else msg
+
 (** [send_msg_master receiver msg packer msg_type db_meth rel_checker]*)
 let send_msg_master receiver msg packer msg_type db_meth rel_checker =
   if !username_ref = "" then (false, "Incorrect user login coredential")
@@ -69,10 +74,7 @@ let send_msg_master receiver msg packer msg_type db_meth rel_checker =
     if not (rel_checker sender receiver) then
       (false, "You are not authorized to send message to " ^ receiver)
     else
-      let encrypted_msg =
-        if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
-        else msg
-      in
+      let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
       let packed_msg = packer sender receiver encrypted_msg in
       let raw_response = Network.request "POST" ~body:packed_msg in
       let success, resp = bool_post_parse raw_response in
@@ -140,8 +142,7 @@ let msg_processor receiver msg =
        let add_key = if not success then None else Some key in
        db_op (add_request receiver decrypt add_key) None
    | GCMessage -> db_op add_msg_to_gc msg
-   | GCRequest ->
-       failwith "GCRequest Shouldn't ever be received by a client"
+   | GCRequest -> failwith "GCRequest Shouldn't be received by a client"
    | GCReqRep b ->
        if b then db_op (add_member_gc (Msg.sender msg)) receiver else ());
   decrypt
@@ -225,9 +226,9 @@ let friend_req receiver msg =
     else
       let sender = !username_ref in
       let encrypt =
-        if use_encryption then
-          Crypto.sym_enc (Crypto.pub_from_str key) msg
-        else msg
+        encrypt (Crypto.pub_from_str key) msg
+        (* if use_encryption then Crypto.sym_enc (Crypto.pub_from_str
+           key) msg else msg *)
       in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in
