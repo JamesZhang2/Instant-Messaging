@@ -68,3 +68,6 @@ let pack_send_gc_msg sender gc msg =
   Printf.sprintf "{%s,%s,%s,%s,%s}" (pack_type "GCMessage")
     (pack_sender sender) (pack_time ()) (pack_receiver gc)
     (pack "message" msg)
+
+let pack_gc_mem gc =
+  Printf.sprintf "{%s, %s}" (pack_type "FetchMem") (pack_receiver gc)

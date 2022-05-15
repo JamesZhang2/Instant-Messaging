@@ -14,3 +14,6 @@ val get_method_response : Msg.t list -> string
 val error_response : string -> string
 (** [error_response message] takes an error message and converts into
     json.*)
+
+val pack_lst : string list -> string
+(**[pack_lst lst] converts a string list [lst] into a json string*)

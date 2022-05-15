@@ -11,6 +11,7 @@ type pkt_type =
   | FriendReq of string * string
   | FriendReqReply of string * bool
   | FetchKey of string
+  | FetchGCMem of string
   | SendGCMsg of string * string
   | GCReq of string * string
 (*gc, password*)
@@ -83,6 +84,10 @@ let parse_gc_req j =
   let msg = get_str_val j "message" in
   { (parse_common j) with pkt_type = GCReq (receiver, msg) }
 
+let parse_gc_mem j =
+  let receiver = get_str_val j "receiver" in
+  { (parse_common j) with pkt_type = FetchGCMem receiver }
+
 let parse json =
   let j = from_string json in
   let type' = get_str_val j "type" in
@@ -96,6 +101,7 @@ let parse json =
   | "FetchKey" -> parse_fetch_key j
   | "GCRequest" -> parse_gc_req j
   | "GCMessage" -> parse_send_gc_msg j
+  | "FetchMem" -> parse_gc_mem j
   | _ -> raise (SyntaxError "parse")
 
 let pkt_type pkt = pkt.pkt_type

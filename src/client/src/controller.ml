@@ -68,30 +68,30 @@ let encrypt key msg =
 
 (** [send_msg_master receiver msg packer msg_type db_meth rel_checker]*)
 let send_msg_master receiver msg packer msg_type db_meth rel_checker =
+  let sender = !username_ref in
+  if not (rel_checker receiver sender) then
+    (false, "You are not authorized to send message to " ^ receiver)
+  else
+    let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
+    let packed_msg = packer sender receiver encrypted_msg in
+    let raw_response = Network.request "POST" ~body:packed_msg in
+    let success, resp = bool_post_parse raw_response in
+    if success then
+      let message =
+        Msg.make_msg sender receiver
+          (Time.string_of_now true)
+          msg_type msg
+      in
+      db_op db_meth message
+    else ();
+    (success, resp)
+
+let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login coredential")
   else
     let sender = !username_ref in
-    if not (rel_checker sender receiver) then
-      (false, "You are not authorized to send message to " ^ receiver)
-    else
-      let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
-      let packed_msg = packer sender receiver encrypted_msg in
-      let raw_response = Network.request "POST" ~body:packed_msg in
-      let success, resp = bool_post_parse raw_response in
-      if success then
-        let message =
-          Msg.make_msg sender receiver
-            (Time.string_of_now true)
-            msg_type msg
-        in
-        db_op db_meth message
-      else ();
-      (success, resp)
-
-let send_msg receiver msg =
-  let sender = !username_ref in
-  send_msg_master receiver msg Packager.pack_send_msg Message
-    (add_msg sender) is_frd
+    send_msg_master receiver msg Packager.pack_send_msg Message
+      (add_msg sender) is_frd
 (* if !username_ref = "" then (false, "Incorrect user login credential")
    else let sender = !username_ref in if not (is_frd sender receiver)
    then (false, "You are not friends with " ^ receiver) else let
@@ -105,8 +105,12 @@ let send_msg receiver msg =
    message else (); (success, resp) *)
 
 let send_gc_msg gc msg =
-  send_msg_master gc msg Packager.pack_send_gc_msg GCMessage
-    add_msg_to_gc is_in_gc
+  if !username_ref = "" then (false, "Incorrect user login coredential")
+  else if not (is_gc !username_ref gc) then (false, "invalid gc")
+  else
+    send_msg_master gc msg Packager.pack_send_gc_msg GCMessage
+      (add_msg_to_gc !username_ref)
+      (is_in_gc !username_ref)
 (* if !username_ref = "" then (false, "Incorrect user login credential")
    else let sender = !username_ref in if not (is_in_gc gc sender) then
    (false, "You are not in this groupchat") else let encrypted_msg = if
@@ -141,11 +145,38 @@ let msg_processor receiver msg =
        let success, key = fetch_key sender in
        let add_key = if not success then None else Some key in
        db_op (add_request receiver decrypt add_key) None
-   | GCMessage -> db_op add_msg_to_gc msg
+   | GCMessage -> db_op (add_msg_to_gc !username_ref) msg
    | GCRequest -> failwith "GCRequest Shouldn't be received by a client"
    | GCReqRep b ->
        if b then db_op (add_member_gc (Msg.sender msg)) receiver else ());
   decrypt
+
+let members_of_gc gcid =
+  if "" = !username_ref then (false, [ "Must log in first" ])
+  else
+    let json = Packager.pack_fetch_gcmem gcid in
+    let fetch_resp = Network.request "POST" ~body:json in
+    let fetch_success, lststring = bool_post_parse fetch_resp in
+    if not fetch_success then (false, [ " Fetch failed " ])
+    else
+      let total_lst = Parser.to_str_list lststring in
+      (if is_gc !username_ref gcid then
+       let local_lst = members_of_gc !username_ref gcid in
+       let add_to_local =
+         List.filter (fun x -> not (List.mem x local_lst)) total_lst
+       in
+       let _ = add_member_gc !username_ref gcid add_to_local in
+       ()
+      else
+        let _ = add_groupchat !username_ref gcid total_lst in
+        ());
+      (true, total_lst)
+
+(** [update_member_of_gc gcid] updates the local groupchat [gcid] with
+    the list of members on server*)
+let update_member_of_gc gcid =
+  let _ = members_of_gc gcid in
+  ()
 
 let update_msg ?(amount = "unread") () =
   if "" = !username_ref then (false, [])
@@ -198,10 +229,15 @@ let login username password =
           username_ref := username;
           db_op init_dbs ();
           db_op (create_dbs username) (Crypto.get_pub_str !key_ref);
+          (* update messages*)
           let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
             (* hard coded time: TODO change later*)
+          in
+          (*update gc members*)
+          let _ =
+            List.iter update_member_of_gc (gc_of_user username username)
           in
           let login_notification =
             (* print_endline "get there"; *)
@@ -268,15 +304,13 @@ let friend_req_reply receiver accepted =
 
 let join_gc gc password =
   if "" = !username_ref then (false, "User not logged in")
-  else if is_in_gc gc !username_ref then
-    (false, "Already in groupchat " ^ gc)
   else
     let sender = !username_ref in
     let message = Packager.pack_join_gc sender gc password in
     let raw_response = Network.request "POST" ~body:message in
     let successful, resp = bool_post_parse raw_response in
     if successful then
-      let _ = db_op (add_member_gc gc) sender in
+      let _ = update_member_of_gc gc in
       let _ = update_msg () in
       (successful, "You have successfully joined the groupchat")
     else (successful, resp)
@@ -307,7 +341,7 @@ let read_msg_from sender =
 
 let read_gc_msg gc =
   if "" = !username_ref then (false, incorrect_usermsg)
-  else if not (is_in_gc gc !username_ref) then
+  else if not (is_in_gc !username_ref gc !username_ref) then
     ( false,
       [
         Msg.make_msg gc !username_ref
@@ -341,12 +375,8 @@ let lst_of_friends () =
 let lst_of_gc () =
   if "" = !username_ref then (false, [ "User not logged in" ])
   else
-    let lst = gc_of_user !username_ref in
+    let lst = gc_of_user !username_ref !username_ref in
     (true, lst)
-
-let members_of_gc gcid =
-  if not (is_gc gcid) then (false, [ " Groupchat does not exist" ])
-  else (true, members_of_gc gcid)
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref

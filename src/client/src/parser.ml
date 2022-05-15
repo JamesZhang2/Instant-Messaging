@@ -72,3 +72,7 @@ let get_plain t =
   | GetMsgResponse x -> "List of Messages"
   | ErrorResponse x -> x
   | PostMethResponse x -> x
+
+let to_str_list str =
+  str |> Yojson.Basic.from_string |> Yojson.Basic.Util.to_list
+  |> List.map Yojson.Basic.to_string
