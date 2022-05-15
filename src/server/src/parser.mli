@@ -17,6 +17,7 @@ type pkt_type =
   | FriendReqReply of string * bool
   (* Receiver, Accept or Reject *)
   | FetchKey of string
+  | FetchGCMem of string
   | SendGCMsg of string * string (*gc, message*)
   | GCReq of string * string
 

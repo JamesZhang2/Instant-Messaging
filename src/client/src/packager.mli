@@ -42,3 +42,7 @@ val pack_join_gc : string -> string -> string -> string
 val pack_send_gc_msg : string -> string -> string -> string
 (** [pack_send_gc_msg sender gc msg] is the json string that encodes
     sending [msg] from [sender] to [gc]. *)
+
+val pack_fetch_gcmem : string -> string
+(** [pack_fetch_gcmem gc] is the json string that fetches members of the
+    groupchat [gc]*)

@@ -25,3 +25,6 @@ val get_type : t -> response_type
 val get_plain : t -> string
 (** [get_plain parsert] returns the plain message body of the parsed
     representation of response. *)
+
+val to_str_list : string -> string list
+(** [to_str_list json] converts a json string into a list of strings*)

@@ -91,4 +91,8 @@ let get_method_response msg_lst =
   let body = NestList ("message", msg_obj_lst) in
   json_convert [ meth; body ]
 
+let pack_lst lst =
+  let concat = String.concat ", " lst in
+  "[" ^ concat ^ "]"
+
 let error_response msg = json_convert [ error_parse msg ]

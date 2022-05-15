@@ -103,9 +103,9 @@ val create_groupchat : string -> string -> bool
     groupchat [id]. *)
 
 val add_member_gc : string -> string -> string list -> bool
-(** [add_member_gc client id new_member] adds a new member [new_member]
-    to the groupchat [id]. Returns [true] if successfully added, [false]
-    otherwise. Requires: [new_member] is a new member. *)
+(** [add_member_gc client id new_members] adds list of new members
+    [new_members] to the groupchat [id]. Returns [true] if successfully
+    added, [false] otherwise. Requires: [new_member] is a new member. *)
 
 val is_in_gc : string -> string -> string -> bool
 (** [is_in_gc client id username] checks whether [username] is in the

@@ -1,5 +1,6 @@
 open OUnit2
 open Client
+open Command
 open Database
 open Controller
 open Interface
@@ -8,17 +9,106 @@ open Packager
 open Parser
 open Util
 
-(******************** Controller Tests ********************)
+(******************** Command Tests ********************)
 
-let controller_tests = []
+let command_test
+    (name : string)
+    (logged_in : bool)
+    (cmd_str : string)
+    (expected : Command.t) =
+  name >:: fun _ ->
+  assert_equal expected (Command.parse logged_in cmd_str)
 
-(******************** Interface Tests ********************)
+let command_err_test
+    (name : string)
+    (logged_in : bool)
+    (cmd_str : string) =
+  name >:: fun _ ->
+  assert_raises Malformed (fun _ -> Command.parse logged_in cmd_str)
 
-let interface_tests = []
-
-(******************** Network Tests ********************)
-
-let network_tests = []
+let command_tests =
+  [
+    command_test "Quit when logged out" false "Quit" Quit;
+    command_test "Help when logged out" false "Help" Help;
+    command_test "Login when logged out" false "Login Alice apple"
+      (Login ("Alice", "apple"));
+    command_test "Register when logged out" false "Register Alice apple"
+      (Register ("Alice", "apple"));
+    command_err_test "SendMsg when logged out" false "SendMsg Bob Hi";
+    command_err_test "Illegal command when logged out" false "Foo";
+    command_err_test "Extra param for Quit when logged out" false
+      "Quit now";
+    command_err_test "Extra param for Help when logged out" false
+      "Help me";
+    command_err_test "Missing params for Login when logged out" false
+      "Login Alice";
+    command_err_test "Missing params for Register when logged out" false
+      "Register";
+    command_err_test "Extra param for Login when logged out" false
+      "Login Alice Bob apple";
+    command_err_test "Extra param for Register when logged out" false
+      "Register Alice Bob apple";
+    command_err_test "Empty string" false "";
+    command_test "Quit when logged in" true "Quit" Quit;
+    command_test "Help when logged in" true "Help" Help;
+    command_test "Login when logged in" true "Login Alice apple"
+      (Login ("Alice", "apple"));
+    command_test "Register when logged in" true "Register Alice apple"
+      (Register ("Alice", "apple"));
+    command_test "SendMsg when logged in" true "SendMsg Bob Hi"
+      (SendMsg ("Bob", "Hi"));
+    command_test "SendMsg phrase when logged in" true
+      "SendMsg Bob Hello world!"
+      (SendMsg ("Bob", "Hello world!"));
+    command_test "SendMsg empty when logged in" true "SendMsg Bob"
+      (SendMsg ("Bob", ""));
+    command_test "GetNewMsg when logged in" true "GetNewMsg" GetNewMsg;
+    command_test "GetAllMsg when logged in" true "GetAllMsg" GetAllMsg;
+    command_test "Read from friend when logged in" true
+      "Read from Charlie" (ReadMsgFrom "Charlie");
+    command_test "FriendReq when logged in" true "FriendReq Bob Hello"
+      (FriendReq ("Bob", "Hello"));
+    command_test "FriendReq phrase when logged in" true
+      "FriendReq Bob Hi, I'm Alice."
+      (FriendReq ("Bob", "Hi, I'm Alice."));
+    command_test "Accept friend request when logged in" true
+      "Accept Bob"
+      (FriendReqRep ("Bob", true));
+    command_test "Reject friend request when logged in" true
+      "Reject Charlie"
+      (FriendReqRep ("Charlie", false));
+    command_test "FriendRequests when logged in" true "FriendRequests"
+      ReadFR;
+    command_test "Friends when logged in" true "Friends" ListFriends;
+    command_test "JoinGC when logged in" true "JoinGC CS3110 OCaml"
+      (JoinGC ("CS3110", "OCaml"));
+    command_test "ReadGC when logged in" true "ReadGC CS3110"
+      (ReadGC "CS3110");
+    command_test "SendGC when logged in" true "SendGC CS3110 Hi"
+      (SendGC ("CS3110", "Hi"));
+    command_test "SendGC phrase when logged in" true
+      "SendGC CS3110 How's the final project going?"
+      (SendGC ("CS3110", "How's the final project going?"));
+    command_test "Groupchats when logged in" true "Groupchats" ListGC;
+    command_test "Members when logged in" true "Members CS3110"
+      (GCMembers "CS3110");
+    command_err_test "Illegal command when logged in" true "Foo";
+    command_err_test "Extra param for Quit when logged in" true
+      "Quit now";
+    command_err_test "Extra param for Help when logged in" true
+      "Help me";
+    command_err_test "Missing params for Login when logged in" true
+      "Login Alice";
+    command_err_test "Missing params for Register when logged in" true
+      "Register";
+    command_err_test "Extra param for Login when logged in" true
+      "Login Alice Bob apple";
+    command_err_test "Extra param for Register when logged in" true
+      "Register Alice Bob apple";
+    command_err_test "Extra param for GetNewMsg when logged in" true
+      "GetNewMsg Alice";
+    command_err_test "Empty string" true "";
+  ]
 
 (******************** Client Database Tests ********************)
 
@@ -340,14 +430,7 @@ let parser_tests =
 
 let suite =
   "test suite for Server"
-  >::: List.flatten
-         [
-           controller_tests;
-           interface_tests;
-           network_tests;
-           packager_tests;
-           parser_tests;
-         ]
+  >::: List.flatten [ command_tests; packager_tests; parser_tests ]
 
 let _ =
   db_test ();

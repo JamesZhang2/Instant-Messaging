@@ -210,6 +210,15 @@ let handle_gc_req req_meth sender time gc password =
     if b then Packager.post_method_response "Successfully Added"
     else "Failed to join GC"
 
+let handle_fetch_gc_mem req_meth gc =
+  if req_meth <> Post then Packager.error_response "need to use post"
+  else if not (gc_exists gc) then
+    Packager.error_response "Groupchat Does Not Exist"
+  else
+    let lst = members_of_gc gc in
+    let msg = Packager.pack_lst lst in
+    Packager.post_method_response msg
+
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
 let parse req_meth body =
@@ -229,6 +238,7 @@ let parse req_meth body =
     | FriendReqReply (receiver, accepted) ->
         handle_friend_req_reply req_meth sender time receiver accepted
     | FetchKey username -> handle_fetch_key username
+    | FetchGCMem gc -> handle_fetch_gc_mem req_meth gc
     | SendGCMsg (gc, msg) ->
         handle_send_gc_msg req_meth sender time gc msg
     | GCReq (gc, pass) -> handle_gc_req req_meth sender time gc pass

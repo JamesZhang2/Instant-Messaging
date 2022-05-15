@@ -1,10 +1,13 @@
-(** A module for parsing commands from the user interface. *)
+(** A module for parsing commands from the user interface.
+
+    RI: Usernames (including senders and receivers), passwords, and
+    gcids can't have spaces, while messages can have spaces. *)
 
 exception Malformed
 (** The exception raised when a command is malformed. *)
 
 (** The variant type for commands. *)
-type command =
+type t =
   | SendMsg of string * string  (** receiver, message *)
   | GetNewMsg
   | GetAllMsg
@@ -24,7 +27,7 @@ type command =
   | Help
   | Quit
 
-val parse : bool -> string -> command
+val parse : bool -> string -> t
 (** [parse logged_in str] parses a string command into command type,
     based on whether a user is logged in or not. Raises: [Malformed] if
     the command does not match with any of the types*)

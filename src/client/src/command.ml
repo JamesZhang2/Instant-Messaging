@@ -1,8 +1,6 @@
 exception Malformed
 
-type parameters = string list
-
-type command =
+type t =
   | SendMsg of string * string
   | GetNewMsg
   | GetAllMsg
@@ -28,7 +26,7 @@ let parse logged_in str =
   let str_list =
     str |> String.split_on_char ' ' |> List.filter (fun s -> s <> "")
   in
-  if logged_in then
+  if not logged_in then
     match str_list with
     | [ "Quit" ]
     | [ "quit" ] ->
@@ -52,17 +50,18 @@ let parse logged_in str =
     | [ "GetNewMsg" ] -> GetNewMsg
     | [ "GetAllMsg" ] -> GetAllMsg
     | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
-    | [ "Register"; username; password ] -> Register (username, password)
-    | [ "Login"; username; password ] -> Login (username, password)
-    | [ "FriendReq"; receiver; message ] -> FriendReq (receiver, message)
+    | "FriendReq" :: receiver :: t ->
+        FriendReq (receiver, String.concat " " t)
     | [ "Accept"; receiver ] -> FriendReqRep (receiver, true)
     | [ "Reject"; receiver ] -> FriendReqRep (receiver, false)
     | [ "FriendRequests" ] -> ReadFR
     | [ "Friends" ] -> ListFriends
     | [ "JoinGC"; gcid; password ] -> JoinGC (gcid, password)
     | [ "ReadGC"; gcid ] -> ReadGC gcid
-    | [ "SendGC"; gcid; message ] -> SendGC (gcid, message)
+    | "SendGC" :: gcid :: t -> SendGC (gcid, String.concat " " t)
     | [ "Groupchats" ] -> ListGC
     | [ "Members"; gcid ] -> GCMembers gcid
+    | [ "Register"; username; password ] -> Register (username, password)
+    | [ "Login"; username; password ] -> Login (username, password)
     | [ "Logout" ] -> Logout
     | _ -> raise Malformed
