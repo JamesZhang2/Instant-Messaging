@@ -252,8 +252,7 @@ let create_gcmsg_table username =
     (put
        "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
         AUTOINCREMENT, gcId INTEGER NOT NULL, sender TEXT NOT NULL, \
-        receiver TEXT NOT NULL, message TEXT NOT NULL, time TEXT NOT \
-        NULL);"
+        message TEXT NOT NULL, time TEXT NOT NULL);"
        (clt_gcmsg username))
   |> handle_rc
        (put "%s's groupchat message table created or already existed. "
