@@ -54,13 +54,13 @@ let pack_friend_req_reply sender receiver accepted =
     (Printf.sprintf "\"%s\": %B" "accepted" accepted)
 
 let pack_fetch_key username =
-  Printf.sprintf "{%s,%s, %s, %s}" (pack_type "FetchKey")
+  Printf.sprintf "{%s,%s,%s,%s}" (pack_type "FetchKey")
     (pack_sender "unimportant")
     (pack_time ())
     (pack "username" username)
 
 let pack_join_gc username gc password =
-  Printf.sprintf "{%s, %s, %s, %s, %s} " (pack_type "GCRequest")
+  Printf.sprintf "{%s,%s,%s,%s,%s} " (pack_type "GCRequest")
     (pack_sender username) (pack_time ()) (pack_receiver gc)
     (pack "message" password)
 
@@ -69,11 +69,11 @@ let pack_send_gc_msg sender gc msg =
     (pack_sender sender) (pack_time ()) (pack_receiver gc)
     (pack "message" msg)
 
-let pack_fetch_gcmem gc =
-  Printf.sprintf "{%s, %s, %s}" (pack_type "FetchMem") (pack_time ())
-    (pack_receiver gc)
+let pack_fetch_gcmem username gc =
+  Printf.sprintf "{%s,%s,%s,%s}" (pack_sender username)
+    (pack_type "FetchMem") (pack_time ()) (pack_receiver gc)
 
 let pack_create_gc creator id password =
-  Printf.sprintf "{%s, %s, %s, %s, %s}" (pack_type "CreateGC")
+  Printf.sprintf "{%s,%s,%s,%s,%s}" (pack_type "CreateGC")
     (pack_sender creator) (pack_time ()) (pack_receiver id)
     (pack "message" password)

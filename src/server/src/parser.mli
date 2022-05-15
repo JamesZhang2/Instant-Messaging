@@ -9,19 +9,17 @@ type t
 exception SyntaxError of string
 
 type pkt_type =
-  | SendMessage of string * string (* Receiver, Message *)
-  | GetMessage of string (*["time"] or ["unread"] *)
-  | Register of (string * string) (* (password, public key) *)
-  | Login of string (* Password *)
-  | FriendReq of string * string (* Receiver, Message *)
-  | FriendReqReply of string * bool
-  (* Receiver, Accept or Reject *)
-  | FetchKey of string
-  | FetchGCMem of string
-  | SendGCMsg of string * string (*gc, message*)
+  | SendMessage of string * string  (** receiver, message *)
+  | GetMessage of string  (** ["time"] or ["unread"] *)
+  | Register of string * string  (** password, public key *)
+  | Login of string  (** password *)
+  | FriendReq of string * string  (** receiver, message *)
+  | FriendReqReply of string * bool  (** receiver, accept or reject *)
+  | FetchKey of string  (** username *)
+  | FetchGCMem of string  (** gcid *)
+  | SendGCMsg of string * string (* gcid, message *)
   | GCReq of string * string
-  | CreateGC of string * string * string
-(*creator, id, password*)
+  | CreateGC of string * string * string  (** creator, gcid, password *)
 
 val parse : string -> t
 (** [parse json] is the packet of information parsed from [json].

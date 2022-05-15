@@ -6,7 +6,7 @@ exception SyntaxError of string
 type pkt_type =
   | SendMessage of string * string
   | GetMessage of string
-  | Register of (string * string)
+  | Register of string * string
   | Login of string
   | FriendReq of string * string
   | FriendReqReply of string * bool
@@ -15,7 +15,6 @@ type pkt_type =
   | SendGCMsg of string * string
   | GCReq of string * string
   | CreateGC of string * string * string
-(*gc, password*)
 
 type t = {
   pkt_type : pkt_type;
@@ -29,7 +28,8 @@ type t = {
 let get_str_val j property = j |> member property |> to_string
 
 (** [parse_common j] is a packet initialized with the sender and time
-    from j, but pkt_type is set to a dummy value and should be replaced. *)
+    from j, but pkt_type is set to a dummy value and should be replaced.
+    Requires: [j] must contain sender and time. *)
 let parse_common j =
   {
     pkt_type =

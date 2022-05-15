@@ -37,17 +37,17 @@ val pack_friend_req_reply : string -> string -> bool -> string
 
 val pack_join_gc : string -> string -> string -> string
 (** [pack_join_gc username gc password] is the json string that encodes
-    a request to join [gc] from user [username] using [password]*)
+    a request to join [gc] from user [username] using [password]. *)
 
 val pack_send_gc_msg : string -> string -> string -> string
 (** [pack_send_gc_msg sender gc msg] is the json string that encodes
     sending [msg] from [sender] to [gc]. *)
 
-val pack_fetch_gcmem : string -> string
-(** [pack_fetch_gcmem gc] is the json string that fetches members of the
-    groupchat [gc]*)
+val pack_fetch_gcmem : string -> string -> string
+(** [pack_fetch_gcmem username gc] is the json string that fetches
+    members of the groupchat [gc]. *)
 
 val pack_create_gc : string -> string -> string -> string
 (** [pack_create_gc creator gcid password] is the json string that
     requests to create a new groupchat with id [id] and [password]
-    created by [creator]*)
+    created by [creator]. *)

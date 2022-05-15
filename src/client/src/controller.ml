@@ -154,7 +154,7 @@ let msg_processor receiver msg =
 let members_of_gc gcid =
   if "" = !username_ref then (false, [ "Must log in first" ])
   else
-    let json = Packager.pack_fetch_gcmem gcid in
+    let json = Packager.pack_fetch_gcmem !username_ref gcid in
     let fetch_resp = Network.request "POST" ~body:json in
     let fetch_success, lststring = bool_post_parse fetch_resp in
     if not fetch_success then (false, [ " Fetch failed " ])
