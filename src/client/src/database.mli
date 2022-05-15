@@ -22,8 +22,8 @@ val add_request :
   string -> Msg.t -> string option -> bool option -> bool * string
 (** [add_request client req key req_state] attempts to add a freind
     request related to [client] with current state [req_state] and [key]
-    as public key of this possible . Requires: sender and receiver are
-    not friends, [client] is either the sender or receiver. Returns
+    as public key. Requires: sender and receiver are not friends,
+    [client] is either the sender or receiver. Returns
     [(true, feedback)] if a new friend request is successfully added,
     [(false, err_msg)] if the table has already been created before or
     an issue is encountered. *)
@@ -91,47 +91,48 @@ val is_client : string -> bool
 (**************)
 
 val add_groupchat : string -> string -> string list -> bool
-(** [add_groupchat id username member_list] adds a groupchat to
-    database, with [id] being the groupchat id, [username] being the
-    person joining, and [member_list] being the current members in the
-    groupchat. Returns [true] if successfully added, [false] otherwise*)
+(** [add_groupchat client id member_list] adds a groupchat to database,
+    with [id] being the groupchat id, [client] being the person joining,
+    and [member_list] being the current members in the groupchat.
+    Returns [true] if successfully added, [false] otherwise. *)
 
 val create_groupchat : string -> string -> bool
-(** [create_groupchat id username] creates a new groupchat with [id],
-    initiated by [username]. [username] should be the only person in
-    this groupchat [id]*)
+(** [create_groupchat client id] creates a new groupchat with [id],
+    initiated by [username]. [client] should be the only person in this
+    groupchat [id]. *)
 
-val add_member_gc : string -> string -> bool
-(** [add_member_gc id new_member] adds a new member [new_member] to the
-    groupchat [id]. Returns [true] if successfully added, [false]
-    otherwise *)
+val add_member_gc : string -> string -> string list -> bool
+(** [add_member_gc client id new_member] adds a new member [new_member]
+    to the groupchat [id]. Returns [true] if successfully added, [false]
+    otherwise. Requires: [new_member] is a new member. *)
 
-val is_in_gc : string -> string -> bool
-(** [is_in_gc id username] checks whether [username] is in the groupchat
-    [id]. Returns [true] if [username] is in [id], [false] otherwise*)
+val is_in_gc : string -> string -> string -> bool
+(** [is_in_gc client id username] checks whether [username] is in the
+    groupchat [id]. Returns [true] if [username] is in [id], [false]
+    otherwise. *)
 
-val is_gc : string -> bool
-(** [is_gc gc] checks whether [gc] is an existing groupchat. Returns
-    [true] if so, [false] otherwise*)
+val is_gc : string -> string -> bool
+(** [is_gc client gc] checks whether [gc] is an existing groupchat.
+    Returns [true] if so, [false] otherwise. *)
 
-val add_msg_to_gc : Msg.t -> bool
-(** [send_msg_to_gc msg] adds the message [msg] to the groupchat
+val add_msg_to_gc : string -> Msg.t -> bool
+(** [send_msg_to_gc client msg] adds the message [msg] to the groupchat
     [Msg.receiver id], sent by [Msg.sender username]. Returns [true] if
-    message is successfully added, [false] otherwise.*)
+    message is successfully added, [false] otherwise. *)
 
 val get_msg_gc_since : string -> string -> string -> Msg.t list
-(** [get_msg_gc_since username id time] is a list of all messages in
+(** [get_msg_gc_since client id time] is a list of all messages in
     groupchat [id] since [time]. Raises [IncorrectUser] if [username] is
-    not valid or [username] is not in groupchat [id]. Raises
-    [DBNotExist] if database has not been created.*)
+    not valid. Raises [DBNotExist] if database has not been created. *)
 
-val gc_of_user : string -> string list
-(** [gc_of_user username] is the list of groupchats that [username] is
-    in. The list returned is a list of groupchat ids.
+val gc_of_user : string -> string -> string list
+(** [gc_of_user client username] is the list of groupchats that
+    [username] is in. The list returned is a list of groupchat ids.
 
-    Requires: [username] is a valid existing user *)
+    Requires: [username] is a valid existing user. *)
 
-val members_of_gc : string -> string list
-(** [member_of_gc id] is the list of member usernames in groupchat [id].
+val members_of_gc : string -> string -> string list
+(** [member_of_gc client id] is the list of member usernames in
+    groupchat [id].
 
-    Requires: [id] is the id of an existing groupchat*)
+    Requires: [id] is the id of an existing groupchat. *)
