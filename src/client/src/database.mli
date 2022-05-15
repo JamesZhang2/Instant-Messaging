@@ -94,7 +94,8 @@ val add_groupchat : string -> string -> string list -> bool
 (** [add_groupchat client id member_list] adds a groupchat to database,
     with [id] being the groupchat id, [client] being the person joining,
     and [member_list] being the current members in the groupchat.
-    Returns [true] if successfully added, [false] otherwise. *)
+    Returns [true] if successfully added, [false] otherwise. Requires:
+    [client] is in [member_list]. *)
 
 val create_groupchat : string -> string -> bool
 (** [create_groupchat client id] creates a new groupchat with [id],
@@ -116,7 +117,7 @@ val is_gc : string -> string -> bool
     Returns [true] if so, [false] otherwise. *)
 
 val add_msg_to_gc : string -> Msg.t -> bool
-(** [send_msg_to_gc client msg] adds the message [msg] to the groupchat
+(** [add_msg_to_gc client msg] adds the message [msg] to the groupchat
     [Msg.receiver id], sent by [Msg.sender username]. Returns [true] if
     message is successfully added, [false] otherwise. *)
 
@@ -125,9 +126,9 @@ val get_msg_gc_since : string -> string -> string -> Msg.t list
     groupchat [id] since [time]. Raises [IncorrectUser] if [username] is
     not valid. Raises [DBNotExist] if database has not been created. *)
 
-val gc_of_user : string -> string -> string list
-(** [gc_of_user client username] is the list of groupchats that
-    [username] is in. The list returned is a list of groupchat ids.
+val gc_of_user : string -> string list
+(** [gc_of_user client] is the list of groupchats that [username] is in.
+    The list returned is a list of groupchat ids.
 
     Requires: [username] is a valid existing user. *)
 
