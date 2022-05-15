@@ -61,54 +61,59 @@ let db_op meth input =
   ()
 (* if success then () else print_endline ("Error" ^ resp) *)
 
-let send_msg receiver msg =
-  if !username_ref = "" then (false, "Incorrect user login credential")
+(** [send_msg_master receiver msg packer msg_type db_meth rel_checker]*)
+let send_msg_master receiver msg packer msg_type db_meth rel_checker =
+  if !username_ref = "" then (false, "Incorrect user login coredential")
   else
     let sender = !username_ref in
-    if not (is_frd sender receiver) then
-      (false, "You are not friends with " ^ receiver)
+    if not (rel_checker sender receiver) then
+      (false, "You are not authorized to send message to " ^ receiver)
     else
       let encrypted_msg =
         if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
         else msg
       in
-      let packed_msg =
-        Packager.pack_send_msg sender receiver encrypted_msg
-      in
+      let packed_msg = packer sender receiver encrypted_msg in
       let raw_response = Network.request "POST" ~body:packed_msg in
       let success, resp = bool_post_parse raw_response in
-      (* if message sent sucessfully, add message to database. *)
       if success then
         let message =
           Msg.make_msg sender receiver
             (Time.string_of_now true)
-            Message msg
+            msg_type msg
         in
-        db_op (add_msg sender) message
+        db_op db_meth message
       else ();
       (success, resp)
 
+let send_msg receiver msg =
+  let sender = !username_ref in
+  send_msg_master receiver msg Packager.pack_send_msg Message
+    (add_msg sender) is_frd
+(* if !username_ref = "" then (false, "Incorrect user login credential")
+   else let sender = !username_ref in if not (is_frd sender receiver)
+   then (false, "You are not friends with " ^ receiver) else let
+   encrypted_msg = if use_encryption then Util.Crypto.(sym_enc (sym_gen
+   ()) msg) else msg in let packed_msg = Packager.pack_send_msg sender
+   receiver encrypted_msg in let raw_response = Network.request "POST"
+   ~body:packed_msg in let success, resp = bool_post_parse raw_response
+   in (* if message sent sucessfully, add message to database. *) if
+   success then let message = Msg.make_msg sender receiver
+   (Time.string_of_now true) Message msg in db_op (add_msg sender)
+   message else (); (success, resp) *)
+
 let send_gc_msg gc msg =
-  if !username_ref = "" then (false, "Incorrect user login credential")
-  else
-    let sender = !username_ref in
-    if not (is_in_gc gc sender) then
-      (false, "You are not in this groupchat")
-    else
-      let encrypted_msg =
-        if use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg)
-        else msg
-      in
-      let packed_msg = Packager.pack_send_msg sender gc encrypted_msg in
-      let raw_response = Network.request "POST" ~body:packed_msg in
-      let success, resp = bool_post_parse raw_response in
-      if success then
-        let message =
-          Msg.make_msg sender gc (Time.string_of_now true) GCMessage msg
-        in
-        db_op add_msg_to_gc message
-      else ();
-      (success, resp)
+  send_msg_master gc msg Packager.pack_send_gc_msg GCMessage
+    add_msg_to_gc is_in_gc
+(* if !username_ref = "" then (false, "Incorrect user login credential")
+   else let sender = !username_ref in if not (is_in_gc gc sender) then
+   (false, "You are not in this groupchat") else let encrypted_msg = if
+   use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg) else msg
+   in let packed_msg = Packager.pack_send_gc_msg sender gc encrypted_msg
+   in let raw_response = Network.request "POST" ~body:packed_msg in let
+   success, resp = bool_post_parse raw_response in if success then let
+   message = Msg.make_msg sender gc (Time.string_of_now true) GCMessage
+   msg in db_op add_msg_to_gc message else (); (success, resp) *)
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =

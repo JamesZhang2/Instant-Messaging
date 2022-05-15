@@ -23,7 +23,9 @@ let print_headers headers =
 let header body =
   [ ("content-length", body |> String.length |> string_of_int) ]
 
-(** [send_msg_mast req_meth sender time receiver msg msg_type db_meth]*)
+(** [send_msg_mast req_meth sender time receiver msg msg_type db_meth]
+    sends the [message] to [receiver] with type [msg_type], and use
+    [db_meth] for database operations*)
 let send_msg_master req_meth sender time receiver msg msg_type db_meth =
   if req_meth <> Post then
     Packager.error_response "SendMessage should use Post method"
@@ -35,6 +37,8 @@ let send_msg_master req_meth sender time receiver msg msg_type db_meth =
       Packager.error_response
         "Message can't be sent, please try again later"
 
+(**[handle_send_msg req_meth sender time receiver msg] sends the message
+   [msg] to [receiver] from [sender]*)
 let handle_send_msg req_meth sender time receiver msg =
   send_msg_master req_meth sender time receiver msg Util.Msg.Message
     add_msg
@@ -46,6 +50,8 @@ let handle_send_msg req_meth sender time receiver msg =
    successfully sent" else Packager.error_response "Message can't be
    sent, please try again later" *)
 
+(** [handle_send_gc_mst req_meth sender time gc msg] sends the message
+    [msg] to groupchat [gc]*)
 let handle_send_gc_msg req_meth sender time gc msg =
   send_msg_master req_meth sender time gc msg Util.Msg.GCMessage
     add_msg_to_gc
@@ -56,6 +62,8 @@ let handle_send_gc_msg req_meth sender time gc msg =
    Packager.error_response "Message can't be sent, please try again
    later" *)
 
+(**[handle_get_msg req_meth receiver tme amount] is the json-string to
+   return after retrieving a list of messages to [receiver]*)
 let handle_get_msg req_meth receiver time amount =
   if req_meth <> Post then
     Packager.error_response "GetMessage should use POST method"
@@ -66,6 +74,8 @@ let handle_get_msg req_meth receiver time amount =
     in
     Packager.get_method_response (func ())
 
+(**[handle_register req_meth username time password] register a new user
+   with [username] and [password], with public key [public_key]*)
 let handle_register req_meth username time password public_key =
   if req_meth <> Post then
     Packager.error_response "Register should use POST method"
@@ -76,6 +86,9 @@ let handle_register req_meth username time password public_key =
     Packager.error_response
       "Registration unsuccessful, please try another username"
 
+(** [handle_login req_meth sender time password] attempts to login the
+    user [sender] with [password], and returns the json string of the
+    corresponding result*)
 let handle_login req_meth sender time password =
   if req_meth <> Post then
     Packager.error_response "Login should use POST method"
@@ -96,6 +109,9 @@ let add_fr_accept_msg sender receiver time =
   in
   add_msg msg_receiver
 
+(** [handle_friend_req req_meth sender time receiver msg] processes a
+    friend request from [sender] to [receiver] and returns the
+    appropriate json string for the client*)
 let handle_friend_req req_meth sender time receiver msg =
   if req_meth <> Post then
     Packager.error_response "FriendReq should use POST method"
@@ -145,6 +161,9 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
         (* print_endline "already friend branch"; *)
         Packager.post_method_response
           ("You are already friends with " ^ receiver)
+    | false, false ->
+        (* print_endline "no fr branch"; *)
+        Packager.error_response "No such friend request"
     | false, true -> (
         (* print_endline "fr branch"; *)
         let successful =
@@ -154,8 +173,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
         match (successful, accepted) with
         | false, _ ->
             Packager.error_response
-              ("Operation Unsuccessful, friend request from" ^ receiver
-             ^ "still pending")
+              ("Friend request from" ^ receiver ^ "still pending")
         | true, true ->
             (* let _ = fr_accept_msg receiver sender time in *)
             let _ = add_fr_accept_msg sender receiver time in
@@ -172,14 +190,16 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
             Packager.post_method_response
               ("You rejected " ^ receiver
              ^ "'s friend request succesfully "))
-    | false, false ->
-        (* print_endline "no fr branch"; *)
-        Packager.error_response "No such friend request"
 
+(** [handle_fetch_key username] returns a json string containing the
+    public key of [username]*)
 let handle_fetch_key username =
   let key = user_key username in
   Packager.post_method_response key
 
+(**[handle_gc_req req_meth sender time gc password] handles a request to
+   join the groupchat [gc] from [sender], and returns a corresponding
+   json-string for the user*)
 let handle_gc_req req_meth sender time gc password =
   if req_meth <> Post then
     Packager.error_response "Need to use Post method"
