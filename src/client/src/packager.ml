@@ -69,5 +69,10 @@ let pack_send_gc_msg sender gc msg =
     (pack_sender sender) (pack_time ()) (pack_receiver gc)
     (pack "message" msg)
 
-let pack_gc_mem gc =
+let pack_fetch_gcmem gc =
   Printf.sprintf "{%s, %s}" (pack_type "FetchMem") (pack_receiver gc)
+
+let pack_create_gc creator id password =
+  Printf.sprintf "{%s, %s, %s, %s}" (pack_type "CreateGC")
+    (pack_sender creator) (pack_receiver id)
+    (pack "message" password)

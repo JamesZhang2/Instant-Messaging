@@ -236,9 +236,7 @@ let login username password =
             (* hard coded time: TODO change later*)
           in
           (*update gc members*)
-          let _ =
-            List.iter update_member_of_gc (gc_of_user username username)
-          in
+          let _ = List.iter update_member_of_gc (gc_of_user username) in
           let login_notification =
             (* print_endline "get there"; *)
             Msg.make_msg "" "" "" Message "Login Successful"
@@ -375,8 +373,19 @@ let lst_of_friends () =
 let lst_of_gc () =
   if "" = !username_ref then (false, [ "User not logged in" ])
   else
-    let lst = gc_of_user !username_ref !username_ref in
+    let lst = gc_of_user !username_ref in
     (true, lst)
+
+let create_groupchat id password =
+  if "" = !username_ref then (false, "Must Log in first")
+  else
+    let json = Packager.pack_create_gc !username_ref id password in
+    let raw_response = Network.request "POST" ~body:json in
+    let successful, resp = bool_post_parse raw_response in
+    if not successful then (false, resp)
+    else
+      let _ = db_op (create_groupchat !username_ref) id in
+      (successful, resp)
 
 let current_user () =
   if !username_ref = "" then None else Some !username_ref

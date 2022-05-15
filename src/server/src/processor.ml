@@ -210,6 +210,8 @@ let handle_gc_req req_meth sender time gc password =
     if b then Packager.post_method_response "Successfully Added"
     else "Failed to join GC"
 
+(** [handle_fetch_gc_mem req_meth gc] fetches the list of members in the
+    groupchat [gc]*)
 let handle_fetch_gc_mem req_meth gc =
   if req_meth <> Post then Packager.error_response "need to use post"
   else if not (gc_exists gc) then
@@ -218,6 +220,16 @@ let handle_fetch_gc_mem req_meth gc =
     let lst = members_of_gc gc in
     let msg = Packager.pack_lst lst in
     Packager.post_method_response msg
+
+let handle_create_gc req_meth creator id pass =
+  if req_meth <> Post then Packager.error_response "need to use post"
+  else if gc_exists id then
+    Packager.error_response "Groupchat already exists"
+  else
+    let success = create_groupchat id pass creator in
+    if success then
+      Packager.post_method_response "Groupchat successfully created"
+    else Packager.error_response "Cannot create the groupchat"
 
 (** [parse req_meth body] parses the body [body] with request method
     [req_meth] and returns a Lwt.t of the resulting type [t]*)
@@ -242,6 +254,8 @@ let parse req_meth body =
     | SendGCMsg (gc, msg) ->
         handle_send_gc_msg req_meth sender time gc msg
     | GCReq (gc, pass) -> handle_gc_req req_meth sender time gc pass
+    | CreateGC (creator, id, pass) ->
+        handle_create_gc req_meth creator id pass
   in
   let res_body =
     match get_res_body () with

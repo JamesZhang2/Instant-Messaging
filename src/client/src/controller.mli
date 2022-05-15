@@ -87,3 +87,7 @@ val members_of_gc : string -> bool * string list
 (** [members_of_gc gcid] returns a list of members of groupchat [gcid].
     Returns: [(true, lst)] if the query is successful,
     [(false, feedback)] otherwise. *)
+
+val create_groupchat : string -> string -> bool * string
+(** [create_groupchat id password] creates a new groupchat with [id] as
+    identification, and [password] as entrance password*)
