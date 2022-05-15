@@ -77,25 +77,26 @@ let help_logged_out =
     logged in. *)
 let help_logged_in =
   [
-    "---------- Messages ----------";
+    "-------------------- Messages --------------------";
     "[SendMsg <receiver> <message>] : sends a message to a friend";
     "[GetNewMsg] : gets all your new messages";
     "[GetAllMsg] : gets all your recent messages";
     "[Read from <friend>] : reads all recent messages from a friend";
-    "---------- Friends ----------";
+    "-------------------- Friends ---------------------";
     "[FriendReq <receiver> <message>] : sends a friend request to \
      another user";
     "[Accept <user>] : accepts a friend request from user";
     "[Reject <user>] : rejects a friend request from user";
     "[FriendRequests] : reads all recent friend reequests";
     "[Friends] : shows a list of all your friends";
-    "---------- Groupchats ----------";
+    "-------------------- Groupchats ------------------";
+    "[CreateGC <groupchat> <password>] : creates a new groupchat";
     "[JoinGC <groupchat> <password>] : tries to join a groupchat";
     "[ReadGC <groupchat>] : reads all recent messages from a groupchat";
     "[SendGC <groupchat> <message>] : sends a message to a groupchat";
     "[Groupchats] : shows a list of all your groupchats";
     "[Members <groupchat>] : shows a list of all users in a groupchat";
-    "---------- Account ----------";
+    "-------------------- Account ---------------------";
     "[Register <username> <password>] : registers a new user and \
      switches to that user";
     "[Login <username> <password>] : switches to another user";
@@ -172,6 +173,9 @@ let rec main () =
         print_list friends;
         print_string "> ")
       else bool_print (false, "Unable to fetch list of friends")
+  | CreateGC (gcid, password) ->
+      let resp = Controller.create_groupchat gcid password in
+      bool_print resp
   | JoinGC (gcid, password) ->
       let resp = Controller.join_gc gcid password in
       bool_print resp

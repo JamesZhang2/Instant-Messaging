@@ -12,6 +12,7 @@ type t =
   | FriendReqRep of string * bool
   | ReadFR
   | ListFriends
+  | CreateGC of string * string
   | JoinGC of string * string
   | ReadGC of string
   | SendGC of string * string
@@ -56,6 +57,7 @@ let parse logged_in str =
     | [ "Reject"; receiver ] -> FriendReqRep (receiver, false)
     | [ "FriendRequests" ] -> ReadFR
     | [ "Friends" ] -> ListFriends
+    | [ "CreateGC"; gcid; password ] -> CreateGC (gcid, password)
     | [ "JoinGC"; gcid; password ] -> JoinGC (gcid, password)
     | [ "ReadGC"; gcid ] -> ReadGC gcid
     | "SendGC" :: gcid :: t -> SendGC (gcid, String.concat " " t)

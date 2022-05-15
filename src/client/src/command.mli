@@ -19,6 +19,7 @@ type t =
   | FriendReqRep of string * bool  (** receiver, accepted *)
   | ReadFR
   | ListFriends
+  | CreateGC of string * string  (** gcid, password *)
   | JoinGC of string * string  (** gcid, password *)
   | ReadGC of string  (** gcid *)
   | SendGC of string * string  (** gcid, message *)

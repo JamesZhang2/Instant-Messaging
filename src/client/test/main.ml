@@ -80,6 +80,8 @@ let command_tests =
     command_test "FriendRequests when logged in" true "FriendRequests"
       ReadFR;
     command_test "Friends when logged in" true "Friends" ListFriends;
+    command_test "CreateGC when logged in" true "CreateGC CS3110 OCaml"
+      (CreateGC ("CS3110", "OCaml"));
     command_test "JoinGC when logged in" true "JoinGC CS3110 OCaml"
       (JoinGC ("CS3110", "OCaml"));
     command_test "ReadGC when logged in" true "ReadGC CS3110"
