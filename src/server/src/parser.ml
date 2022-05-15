@@ -14,6 +14,7 @@ type pkt_type =
   | FetchGCMem of string
   | SendGCMsg of string * string
   | GCReq of string * string
+  | CreateGC of string * string * string
 (*gc, password*)
 
 type t = {
@@ -88,6 +89,12 @@ let parse_gc_mem j =
   let receiver = get_str_val j "receiver" in
   { (parse_common j) with pkt_type = FetchGCMem receiver }
 
+let parse_create_gc j =
+  let gc = get_str_val j "receiver" in
+  let creator = get_str_val j "sender" in
+  let pass = get_str_val j "message" in
+  { (parse_common j) with pkt_type = CreateGC (creator, gc, pass) }
+
 let parse json =
   let j = from_string json in
   let type' = get_str_val j "type" in
@@ -102,6 +109,7 @@ let parse json =
   | "GCRequest" -> parse_gc_req j
   | "GCMessage" -> parse_send_gc_msg j
   | "FetchMem" -> parse_gc_mem j
+  | "CreateGC" -> parse_create_gc j
   | _ -> raise (SyntaxError "parse")
 
 let pkt_type pkt = pkt.pkt_type

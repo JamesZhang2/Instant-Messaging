@@ -46,3 +46,8 @@ val pack_send_gc_msg : string -> string -> string -> string
 val pack_fetch_gcmem : string -> string
 (** [pack_fetch_gcmem gc] is the json string that fetches members of the
     groupchat [gc]*)
+
+val pack_create_gc : string -> string -> string -> string
+(** [pack_create_gc creator gcid password] is the json string that
+    requests to create a new groupchat with id [id] and [password]
+    created by [creator]*)

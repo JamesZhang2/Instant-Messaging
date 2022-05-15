@@ -20,6 +20,8 @@ type pkt_type =
   | FetchGCMem of string
   | SendGCMsg of string * string (*gc, message*)
   | GCReq of string * string
+  | CreateGC of string * string * string
+(*creator, id, password*)
 
 val parse : string -> t
 (** [parse json] is the packet of information parsed from [json].
