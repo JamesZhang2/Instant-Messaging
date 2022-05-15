@@ -1,5 +1,6 @@
 (** A module for messages sent and received by users (including direct
-    messages and friend requests). *)
+    messages, friend requests, group messages, and groupchat joining
+    requests). *)
 
 (** [msg_type] is the type of a message. It can either be a [FriendReq]
     or a direct [Message], or a [FriendReqRep (true, key)], or a

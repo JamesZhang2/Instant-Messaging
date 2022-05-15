@@ -474,5 +474,5 @@ let suite =
 
 let _ =
   create_tables ();
-  run_test_tt_main suite;
-  run_database_tests ()
+  run_database_tests ();
+  run_test_tt_main suite

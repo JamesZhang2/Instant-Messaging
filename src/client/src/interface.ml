@@ -111,7 +111,7 @@ let print_help () =
       print_string "> "
   | Some user ->
       print_prompt ("You are currently logged in as " ^ user);
-      List.map print_prompt help_logged_out |> ignore;
+      List.map print_prompt help_logged_in |> ignore;
       print_string "> "
 
 let rec main () =
