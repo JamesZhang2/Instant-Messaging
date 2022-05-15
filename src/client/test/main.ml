@@ -256,10 +256,77 @@ let msg_tests () =
   let c = msgs_by_frd_test () in
   a && b && c
 
+let groupchat_member_test () =
+  Database.(
+    let a = create_groupchat "alice" "gc1" in
+    let b = is_in_gc "alice" "gc1" "alice" in
+    let c = add_member_gc "alice" "gc1" [ "bob"; "charlie" ] in
+    let d = is_gc "alice" "gc1" in
+    let e = is_gc "alice" "gc2" |> not in
+    let f = add_groupchat "alice" "gc2" [ "eve"; "alice" ] in
+    let g = is_gc "alice" "gc2" in
+    let h = is_in_gc "alice" "gc2" "eve" in
+    let i =
+      "alice" |> gc_of_user |> List.sort_uniq compare
+      = ([ "gc1"; "gc2" ] |> List.sort_uniq compare)
+    in
+    let j =
+      members_of_gc "alice" "gc1"
+      |> List.sort_uniq compare
+      = ([ "bob"; "charlie"; "alice" ] |> List.sort_uniq compare)
+    in
+    a && b && c && d && e && f && g && h && i && j)
+
+let groupchat_msg_test () =
+  let a =
+    add_msg_to_gc "alice"
+      (Msg.make_msg "alice" "gc1" "2000-01-01 06:00:00" GCMessage
+         "hello6")
+  in
+  let b =
+    add_msg_to_gc "alice"
+      (Msg.make_msg "charlie" "gc1" "2000-01-01 07:00:00" GCMessage
+         "hello7")
+  in
+  let c =
+    add_msg_to_gc "alice"
+      (Msg.make_msg "alice" "gc2" "2000-01-01 08:00:00" GCMessage
+         "hello8")
+  in
+  let d =
+    add_msg_to_gc "alice"
+      (Msg.make_msg "bob" "gc1" "2000-01-01 08:00:00" GCMessage
+         "hello from bob")
+  in
+  let e =
+    add_msg_to_gc "alice"
+      (Msg.make_msg "alice" "gc1" "2000-01-01 09:00:00" GCMessage
+         "hello 9")
+  in
+  let f =
+    let lst = get_msg_gc_since "alice" "gc1" "2000-01-01 05:00:00" in
+    if List.length lst = 4 then true
+    else (
+      print_endline
+        ("NOT EQUAL TO 4: " ^ (lst |> List.length |> string_of_int));
+      false)
+  in
+  let g =
+    let lst = get_msg_gc_since "alice" "gc1" "2000-01-01 07:59:00" in
+    if List.length lst = 2 then true
+    else (
+      print_endline "NOT EQUAL TO 2";
+      false)
+  in
+  a && b && c && d && e && f && g
+
 let db_test () =
   let a = request_tests () in
   let b = msg_tests () in
-  if a && b then print_endline "DATABASE TEST ON CLIENT SIDE FINISHED. "
+  let c = groupchat_member_test () in
+  let d = groupchat_msg_test () in
+  if a && b && c && d then
+    print_endline "DATABASE TEST ON CLIENT SIDE FINISHED. "
   else print_endline "DATABSAE TEST ON CLIENT SIDE FAILED. "
 
 (******************** Packager Tests ********************)
