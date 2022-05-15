@@ -696,7 +696,8 @@ let create_gc client id =
       |> is_success
   else (false, put "Client %s does not exist. " client) |> is_success
 
-let add_member_gc client id mem =
+(** [add_mem_gc client id mem] adds [mem] to groupchat [id]. *)
+let add_mem_gc client id mem =
   if is_client client then
     if create_gcm_table client |> dir_handle then
       let gcid = get_gc_id client id in
@@ -728,14 +729,19 @@ let add_member_gc client id mem =
       |> is_success
   else (false, put "Client %s does not exist. " client) |> is_success
 
+let add_member_gc client id mem_list =
+  List.fold_left
+    (fun f mem -> f && add_mem_gc client id mem)
+    true mem_list
+
 let create_groupchat client id =
   let a = create_gc client id in
-  let b = add_member_gc client id client in
+  let b = add_mem_gc client id client in
   a && b
 
 let add_groupchat client id mem_list =
   let a = create_gc client id in
-  List.map (fun mem -> add_member_gc client id mem) mem_list
+  List.map (fun mem -> add_mem_gc client id mem) mem_list
   |> List.cons a
   |> List.fold_left ( && ) true
 
