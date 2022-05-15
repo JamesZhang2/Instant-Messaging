@@ -3,59 +3,66 @@ exception Malformed
 type parameters = string list
 
 type command =
-  | SendMsg of string * string * string
-  | GetNewMsg of string
+  | SendMsg of string * string
+  | GetNewMsg
   | GetAllMsg
   | ReadMsgFrom of string
   | Register of string * string
   | Login of string * string
   | Logout
-  | FriendReq of string * string * string
-  | FriendReqRep of string * string * bool
+  | FriendReq of string * string
+  | FriendReqRep of string * bool
   | ReadFR
-  | ListFriend
+  | ListFriends
+  | JoinGC of string * string
+  | ReadGC of string
+  | SendGC of string * string
+  | ListGC
+  | GCMembers of string
   | Help
   | Quit
 
 (** [parse str] Parses a string command into command type. Raises:
     [Malformed] if the command does not match with any of the types*)
-let parse ~(maybe_user : string option) str =
+let parse logged_in str =
   let str_list =
     str |> String.split_on_char ' ' |> List.filter (fun s -> s <> "")
   in
-  match maybe_user with
-  | None -> (
-      match str_list with
-      | [ "Quit" ]
-      | [ "quit" ] ->
-          Quit
-      | [ "Help" ]
-      | [ "help" ] ->
-          Help
-      | [ "Register"; username; password ] ->
-          Register (username, password)
-      | [ "Login"; username; password ] -> Login (username, password)
-      | _ -> raise Malformed)
-  | Some user -> (
-      match str_list with
-      | [ "Quit" ]
-      | [ "quit" ] ->
-          Quit
-      | [ "Help" ]
-      | [ "help" ] ->
-          Help
-      | "SendMsg" :: receiver :: t ->
-          SendMsg (user, receiver, String.concat " " t)
-      | [ "GetNewMsg" ] -> GetNewMsg user
-      | [ "GetAllMsg" ] -> GetAllMsg
-      | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
-      | [ "Register"; username; password ] ->
-          Register (username, password)
-      | [ "Login"; username; password ] -> Login (username, password)
-      | [ "FriendReq"; receiver; msg ] -> FriendReq (user, receiver, msg)
-      | [ "Accept"; receiver ] -> FriendReqRep (user, receiver, true)
-      | [ "Reject"; receiver ] -> FriendReqRep (user, receiver, false)
-      | [ "FriendRequests" ] -> ReadFR
-      | [ "Friends" ] -> ListFriend
-      | [ "Logout" ] -> Logout
-      | _ -> raise Malformed)
+  if logged_in then
+    match str_list with
+    | [ "Quit" ]
+    | [ "quit" ] ->
+        Quit
+    | [ "Help" ]
+    | [ "help" ] ->
+        Help
+    | [ "Register"; username; password ] -> Register (username, password)
+    | [ "Login"; username; password ] -> Login (username, password)
+    | _ -> raise Malformed
+  else
+    match str_list with
+    | [ "Quit" ]
+    | [ "quit" ] ->
+        Quit
+    | [ "Help" ]
+    | [ "help" ] ->
+        Help
+    | "SendMsg" :: receiver :: t ->
+        SendMsg (receiver, String.concat " " t)
+    | [ "GetNewMsg" ] -> GetNewMsg
+    | [ "GetAllMsg" ] -> GetAllMsg
+    | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
+    | [ "Register"; username; password ] -> Register (username, password)
+    | [ "Login"; username; password ] -> Login (username, password)
+    | [ "FriendReq"; receiver; message ] -> FriendReq (receiver, message)
+    | [ "Accept"; receiver ] -> FriendReqRep (receiver, true)
+    | [ "Reject"; receiver ] -> FriendReqRep (receiver, false)
+    | [ "FriendRequests" ] -> ReadFR
+    | [ "Friends" ] -> ListFriends
+    | [ "JoinGC"; gcid; password ] -> JoinGC (gcid, password)
+    | [ "ReadGC"; gcid ] -> ReadGC gcid
+    | [ "SendGC"; gcid; message ] -> SendGC (gcid, message)
+    | [ "Groupchats" ] -> ListGC
+    | [ "Members"; gcid ] -> GCMembers gcid
+    | [ "Logout" ] -> Logout
+    | _ -> raise Malformed

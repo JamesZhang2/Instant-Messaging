@@ -17,6 +17,8 @@ type pkt_type =
   | FriendReqReply of string * bool
   (* Receiver, Accept or Reject *)
   | FetchKey of string
+  | SendGCMsg of string * string (*gc, message*)
+  | GCReq of string * string
 
 val parse : string -> t
 (** [parse json] is the packet of information parsed from [json].

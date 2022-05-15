@@ -3,7 +3,7 @@
 open Util
 
 exception SyntaxError
-(**Raised when the json syntax is incorrect. *)
+(** Raised when the json syntax is incorrect. *)
 
 type t
 (** Abstract type representing a reponse from. *)
