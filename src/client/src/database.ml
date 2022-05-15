@@ -194,31 +194,27 @@ let is_client name =
 (** [create_msg_table username] creates the message table for [username]
     if not exists. *)
 let create_msg_table username =
-  let st =
-    prepare
-      (username |> clt_msg |> open_db)
-      "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY \
-       AUTOINCREMENT, user TEXT NOT NULL,message TEXT NOT NULL, \
-       isSender BOOL NOT NULL, time TEXT NOT NULL);"
-  in
-  username |> clt_msg |> bind_text st 1 |> assert_ok;
-  step st
+  exec
+    (open_db (clt_msg username))
+    (put
+       "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
+        AUTOINCREMENT, user TEXT NOT NULL,message TEXT NOT NULL, \
+        isSender BOOL NOT NULL, time TEXT NOT NULL);"
+       (clt_msg username))
   |> handle_rc
        (put "%s's message table created or already existed. " username)
 
 (** [create_req_table username] creates the friend request table for
     [username] if not exists. *)
 let create_req_table username =
-  let st =
-    prepare
-      (username |> clt_req |> open_db)
-      "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY \
-       AUTOINCREMENT, user TEXT NOT NULL, key TEXT NOT NULL, message \
-       TEXT, isSender BOOL NOT NULL, time TEXT NOT NULL, accepted \
-       BOOL);"
-  in
-  username |> clt_msg |> bind_text st 1 |> assert_ok;
-  step st
+  exec
+    (open_db (clt_req username))
+    (put
+       "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
+        AUTOINCREMENT, user TEXT NOT NULL, key TEXT NOT NULL, message \
+        TEXT, isSender BOOL NOT NULL, time TEXT NOT NULL, accepted \
+        BOOL);"
+       (clt_req username))
   |> handle_rc
        (put "%s's friend request table created or already existed. "
           username)
@@ -226,28 +222,24 @@ let create_req_table username =
 (** [create_gc_table username] creates the groupchat table for
     [username] if not exists. *)
 let create_gc_table username =
-  let st =
-    prepare
-      (username |> clt_gc |> open_db)
-      "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY \
-       AUTOINCREMENT, name TEXT NOT NULL);"
-  in
-  username |> clt_gc |> bind_text st 1 |> assert_ok;
-  step st
+  exec
+    (username |> clt_gc |> open_db)
+    (put
+       "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
+        AUTOINCREMENT, name TEXT NOT NULL);"
+       (clt_gc username))
   |> handle_rc
        (put "%s's groupchat table created or already existed. " username)
 
 (** [create_gcm_table username] creates the groupchat member table for
     [username] if not exists. *)
 let create_gcm_table username =
-  let st =
-    prepare
-      (username |> clt_gcm |> open_db)
-      "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY \
-       AUTOINCREMENT, gcId INTEGER NOT NULL, mem TEXT NOT NULL);"
-  in
-  username |> clt_gcm |> bind_text st 1 |> assert_ok;
-  step st
+  exec
+    (username |> clt_gcm |> open_db)
+    (put
+       "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
+        AUTOINCREMENT, gcId INTEGER NOT NULL, mem TEXT NOT NULL);"
+       (clt_gcm username))
   |> handle_rc
        (put "%s's groupchat member table created or already existed. "
           username)
@@ -255,16 +247,14 @@ let create_gcm_table username =
 (** [create_gcmsg_table username] creates the groupchat message table
     for [username] if not exists. *)
 let create_gcmsg_table username =
-  let st =
-    prepare
-      (username |> clt_gcmsg |> open_db)
-      "CREATE TABLE IF NOT EXISTS ? (id INTEGER PRIMARY KEY \
-       AUTOINCREMENT, gcId INTEGER NOT NULL, sender TEXT NOT NULL, \
-       receiver TEXT NOT NULL, message TEXT NOT NULL, time TEXT NOT \
-       NULL);"
-  in
-  username |> clt_gcmsg |> bind_text st 1 |> assert_ok;
-  step st
+  exec
+    (username |> clt_gcmsg |> open_db)
+    (put
+       "CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY \
+        AUTOINCREMENT, gcId INTEGER NOT NULL, sender TEXT NOT NULL, \
+        receiver TEXT NOT NULL, message TEXT NOT NULL, time TEXT NOT \
+        NULL);"
+       (clt_gcmsg username))
   |> handle_rc
        (put "%s's groupchat message table created or already existed. "
           username)
