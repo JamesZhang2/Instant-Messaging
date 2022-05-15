@@ -60,8 +60,8 @@ let pack_fetch_key username =
     (pack "username" username)
 
 let pack_join_gc username gc password =
-  Printf.sprintf "{%s, %s, %s, %s} " (pack_type "GCRequest")
-    (pack_sender username) (pack_receiver gc)
+  Printf.sprintf "{%s, %s, %s, %s, %s} " (pack_type "GCRequest")
+    (pack_sender username) (pack_time ()) (pack_receiver gc)
     (pack "message" password)
 
 let pack_send_gc_msg sender gc msg =
@@ -70,9 +70,10 @@ let pack_send_gc_msg sender gc msg =
     (pack "message" msg)
 
 let pack_fetch_gcmem gc =
-  Printf.sprintf "{%s, %s}" (pack_type "FetchMem") (pack_receiver gc)
+  Printf.sprintf "{%s, %s, %s}" (pack_type "FetchMem") (pack_time ())
+    (pack_receiver gc)
 
 let pack_create_gc creator id password =
-  Printf.sprintf "{%s, %s, %s, %s}" (pack_type "CreateGC")
-    (pack_sender creator) (pack_receiver id)
+  Printf.sprintf "{%s, %s, %s, %s, %s}" (pack_type "CreateGC")
+    (pack_sender creator) (pack_time ()) (pack_receiver id)
     (pack "message" password)
