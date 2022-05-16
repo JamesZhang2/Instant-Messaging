@@ -345,15 +345,21 @@ let read_msg_from sender =
     (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
+(**[invalid_gc_msg gc msg] is a error message using [msg] with
+   associated with groupchat [gc]*)
+let invalid_gc_msg gc msg =
+  [
+    Msg.make_msg gc !username_ref
+      (Time.string_of_now true)
+      GCMessage msg;
+  ]
+
 let read_gc_msg gc =
   if "" = !username_ref then (false, incorrect_usermsg)
+  else if not (is_gc !username_ref gc) then
+    (false, invalid_gc_msg gc "Invalid Groupchat")
   else if not (is_in_gc !username_ref gc !username_ref) then
-    ( false,
-      [
-        Msg.make_msg gc !username_ref
-          (Time.string_of_now true)
-          GCMessage "Not in groupchat";
-      ] )
+    (false, invalid_gc_msg gc "You are not in thsi group chat")
   else
     let username = !username_ref in
     match get_msg_gc_since username gc "2022-03-29 17:00:00" with
