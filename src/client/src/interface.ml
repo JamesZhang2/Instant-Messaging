@@ -1,23 +1,28 @@
 open Controller
 open Util
 
-(** begin new line if 1, if 0 then it's a prompt*)
+(** begin new line if 1, if 0 then it's a prompt. *)
 let str_format prompt str =
   if prompt = 0 then "> " ^ str ^ "\n" else "> " ^ str ^ "\n> "
 
-(**[begin_print] prompts the user for a new command.*)
-let begin_print =
-  "What would you like to do : " |> str_format 0
-  |> ANSITerminal.print_string [ ANSITerminal.cyan ]
+(** [print_color str color] prints [str] with [color]. *)
+let print_color str color =
+  str |> str_format 0 |> ANSITerminal.print_string [ color ]
 
-(** [illegal_command str] prints the string [str] corresponding to an
-    illegal input*)
-let illegal_command str =
-  str |> str_format 1
-  |> ANSITerminal.print_string [ ANSITerminal.magenta ]
+(** [begin_print ()] prompts the user for a new command. *)
+let begin_print () =
+  print_color "What would you like to do : " ANSITerminal.cyan
 
 (** [print_prompt str] prints [str] as a prompt. *)
 let print_prompt str = str_format 0 str |> print_string
+
+(** [bool_print (check, msg)] check if the first element is true then
+    print the message, if false, assume an error and print an error
+    message*)
+let bool_print (check, msg) =
+  if check then print_color msg ANSITerminal.green
+  else print_color msg ANSITerminal.magenta;
+  print_string "> "
 
 (**[print_message msg] prints one message represented by Controller type
    [msg]*)
@@ -43,27 +48,16 @@ let print_message msg =
     print_prompt time);
   message ^ "\n" |> str_format 1 |> print_string
 
-(** Prints all strings in [lst]*)
-let print_list lst =
-  let func x = print_endline x in
-  List.map func lst |> ignore
-
 (** [print_messages msg_list] prints the list of messages [msg_list]*)
 let print_messages msg_list =
   match msg_list with
   | [] -> "Already up to date." |> str_format 1 |> print_string
   | lst -> List.map print_message lst |> ignore
 
-(** [bool_print (check, msg)] check if the first element is true then
-    print the message, if false, assume an error and print an error
-    message*)
-let bool_print (check, msg) =
-  if check then
-    msg |> str_format 1
-    |> ANSITerminal.print_string [ ANSITerminal.green ]
-  else
-    msg |> str_format 1
-    |> ANSITerminal.print_string [ ANSITerminal.magenta ]
+(** Prints all strings in [lst]*)
+let print_list lst =
+  if lst = [] then print_endline "None"
+  else List.map print_endline lst |> ignore
 
 (** [help_logged_out] is the list of help messages when the user is
     logged out. *)
@@ -113,14 +107,14 @@ let print_help () =
       List.map print_prompt help_logged_out |> ignore;
       print_string "> "
   | Some user ->
-      "You are currently logged in as " ^ user
-      |> str_format 0
-      |> ANSITerminal.print_string [ ANSITerminal.green ];
+      print_color
+        ("You are currently logged in as " ^ user)
+        ANSITerminal.green;
       List.map print_prompt help_logged_in |> ignore;
       print_string "> "
 
 let rec main () =
-  begin_print;
+  begin_print ();
   let logged_in =
     match current_user () with
     | Some _ -> true
@@ -128,7 +122,7 @@ let rec main () =
   in
   let cmd = read_line () in
   (match Command.parse logged_in cmd with
-  | exception Command.Malformed -> illegal_command "Command Illegal."
+  | exception Command.Malformed -> bool_print (false, "Command Illegal.")
   | Help -> print_help ()
   | SendMsg (receiver, msg) ->
       let resp = Controller.send_msg receiver msg in
