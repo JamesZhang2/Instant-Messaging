@@ -154,6 +154,10 @@ let msg_processor receiver msg =
 
 let members_of_gc gcid =
   if "" = !username_ref then (false, [ "Must log in first" ])
+  else if not (is_gc !username_ref gcid) then
+    (false, [ "Invalid groupchat" ])
+  else if not (is_in_gc !username_ref gcid !username_ref) then
+    (false, [ "You are not in this groupchat" ])
   else
     let json = Packager.pack_fetch_gcmem !username_ref gcid in
     let fetch_resp = Network.request "POST" ~body:json in
