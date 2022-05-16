@@ -152,12 +152,13 @@ let msg_processor receiver msg =
        if b then db_op (add_member_gc (Msg.sender msg)) receiver else ());
   decrypt
 
-let members_of_gc gcid =
+let members_of_gc gcid is_command =
   if "" = !username_ref then (false, [ "Must log in first" ])
   else if not (is_gc !username_ref gcid) then
     (false, [ "Invalid groupchat" ])
-  else if not (is_in_gc !username_ref gcid !username_ref) then
-    (false, [ "You are not in this groupchat" ])
+  else if
+    (not (is_in_gc !username_ref gcid !username_ref)) && is_command
+  then (false, [ "You are not in this groupchat" ])
   else
     let json = Packager.pack_fetch_gcmem !username_ref gcid in
     let fetch_resp = Network.request "POST" ~body:json in
@@ -180,7 +181,7 @@ let members_of_gc gcid =
 (** [update_member_of_gc gcid] updates the local groupchat [gcid] with
     the list of members on server*)
 let update_member_of_gc gcid =
-  let _ = members_of_gc gcid in
+  let _ = members_of_gc gcid false in
   ()
 
 let update_msg ?(amount = "unread") () =
@@ -313,7 +314,7 @@ let join_gc gc password =
     let raw_response = Network.request "POST" ~body:message in
     let successful, resp = bool_post_parse raw_response in
     if successful then
-      let _, memlst = members_of_gc gc in
+      let _, memlst = members_of_gc gc false in
       let _ = add_groupchat !username_ref gc memlst in
       let _ = update_member_of_gc gc in
       let _ = update_msg () in
