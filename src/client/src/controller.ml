@@ -67,32 +67,31 @@ let encrypt key msg =
   if use_encryption then Util.Crypto.(sym_enc key msg) else msg
 
 (** [send_msg_master receiver msg packer msg_type db_meth rel_checker]*)
-let send_msg_master receiver msg packer msg_type db_meth rel_checker =
+let send_msg_master receiver msg packer msg_type db_meth =
   let sender = !username_ref in
-  if not (rel_checker receiver sender) then
-    (false, "You are not authorized to send message to " ^ receiver)
-  else
-    let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
-    let packed_msg = packer sender receiver encrypted_msg in
-    let raw_response = Network.request "POST" ~body:packed_msg in
-    let success, resp = bool_post_parse raw_response in
-    if success then
-      let message =
-        Msg.make_msg sender receiver
-          (Time.string_of_now true)
-          msg_type msg
-      in
-      db_op db_meth message
-    else ();
-    (success, resp)
+  let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
+  let packed_msg = packer sender receiver encrypted_msg in
+  let raw_response = Network.request "POST" ~body:packed_msg in
+  let success, resp = bool_post_parse raw_response in
+  if success then
+    let message =
+      Msg.make_msg sender receiver
+        (Time.string_of_now true)
+        msg_type msg
+    in
+    db_op db_meth message
+  else ();
+  (success, resp)
 
 let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login coredential")
   else if not (is_client receiver) then (false, "Not A Friend")
+  else if not (is_frd !username_ref receiver) then
+    (false, "You are not friends with " ^ receiver)
   else
     let sender = !username_ref in
     send_msg_master receiver msg Packager.pack_send_msg Message
-      (add_msg sender) is_frd
+      (add_msg sender)
 (* if !username_ref = "" then (false, "Incorrect user login credential")
    else let sender = !username_ref in if not (is_frd sender receiver)
    then (false, "You are not friends with " ^ receiver) else let
@@ -108,10 +107,11 @@ let send_msg receiver msg =
 let send_gc_msg gc msg =
   if !username_ref = "" then (false, "Incorrect user login coredential")
   else if not (is_gc !username_ref gc) then (false, "invalid gc")
+  else if not (is_in_gc !username_ref gc !username_ref) then
+    (false, "You are not in this groupchat")
   else
     send_msg_master gc msg Packager.pack_send_gc_msg GCMessage
       (add_msg_to_gc !username_ref)
-      (is_in_gc !username_ref)
 (* if !username_ref = "" then (false, "Incorrect user login credential")
    else let sender = !username_ref in if not (is_in_gc gc sender) then
    (false, "You are not in this groupchat") else let encrypted_msg = if
@@ -152,12 +152,13 @@ let msg_processor receiver msg =
        if b then db_op (add_member_gc (Msg.sender msg)) receiver else ());
   decrypt
 
-let members_of_gc gcid =
+let members_of_gc gcid is_command =
   if "" = !username_ref then (false, [ "Must log in first" ])
   else if not (is_gc !username_ref gcid) then
     (false, [ "Invalid groupchat" ])
-  else if not (is_in_gc !username_ref gcid !username_ref) then
-    (false, [ "You are not in this groupchat" ])
+  else if
+    (not (is_in_gc !username_ref gcid !username_ref)) && is_command
+  then (false, [ "You are not in this groupchat" ])
   else
     let json = Packager.pack_fetch_gcmem !username_ref gcid in
     let fetch_resp = Network.request "POST" ~body:json in
@@ -180,7 +181,7 @@ let members_of_gc gcid =
 (** [update_member_of_gc gcid] updates the local groupchat [gcid] with
     the list of members on server*)
 let update_member_of_gc gcid =
-  let _ = members_of_gc gcid in
+  let _ = members_of_gc gcid false in
   ()
 
 let update_msg ?(amount = "unread") () =
@@ -313,7 +314,7 @@ let join_gc gc password =
     let raw_response = Network.request "POST" ~body:message in
     let successful, resp = bool_post_parse raw_response in
     if successful then
-      let _, memlst = members_of_gc gc in
+      let _, memlst = members_of_gc gc false in
       let _ = add_groupchat !username_ref gc memlst in
       let _ = update_member_of_gc gc in
       let _ = update_msg () in

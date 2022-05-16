@@ -83,10 +83,11 @@ val lst_of_gc : unit -> bool * string list
     user is in. Returns: [(true, lst)] if the query is successful,
     [(false, feedback)] otherwise. *)
 
-val members_of_gc : string -> bool * string list
-(** [members_of_gc gcid] returns a list of members of groupchat [gcid].
-    Returns: [(true, lst)] if the query is successful,
-    [(false, feedback)] otherwise. *)
+val members_of_gc : string -> bool -> bool * string list
+(** [members_of_gc gcid is_command] returns a list of members of
+    groupchat [gcid]. Returns: [(true, lst)] if the query is successful,
+    [(false, feedback)] otherwise. Requires: [is_command] is true if
+    this function is called from interface *)
 
 val create_groupchat : string -> string -> bool * string
 (** [create_groupchat id password] creates a new groupchat with [id] as

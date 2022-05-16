@@ -199,7 +199,7 @@ let rec main () =
         print_string "> ")
       else bool_print (false, "Unable to fetch list of groupchats")
   | GCMembers gcid ->
-      let check, members = Controller.members_of_gc gcid in
+      let check, members = Controller.members_of_gc gcid true in
       if check then (
         print_list members;
         print_string "> ")
