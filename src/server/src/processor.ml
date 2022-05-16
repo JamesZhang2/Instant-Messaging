@@ -72,7 +72,8 @@ let handle_get_msg req_meth receiver time amount =
       if amount = "unread" then fun _ -> get_new_msg receiver
       else fun _ -> get_msg_since receiver amount
     in
-    Packager.get_method_response (func ())
+    let str = Packager.get_method_response (func ()) in
+    str
 
 (**[handle_register req_meth username time password] register a new user
    with [username] and [password], with public key [public_key]*)
@@ -208,7 +209,7 @@ let handle_gc_req req_meth sender time gc password =
   else
     let b = add_member_gc gc sender in
     if b then Packager.post_method_response "Successfully Added"
-    else "Failed to join GC"
+    else Packager.error_response "You are already in this groupchat"
 
 (** [handle_fetch_gc_mem req_meth gc] fetches the list of members in the
     groupchat [gc]*)

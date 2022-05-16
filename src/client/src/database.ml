@@ -687,6 +687,7 @@ let create_gc client id =
 
 (** [add_mem_gc client id mem] adds [mem] to groupchat [id]. *)
 let add_mem_gc client id mem =
+  (* print_endline mem; *)
   if is_client client then
     if create_gcm_table client |> dir_handle then
       let gcid = get_gc_id client id in
@@ -736,6 +737,7 @@ let add_groupchat client id mem_list =
 
 let is_in_gc client id username =
   let gcid = get_gc_id client id in
+  (* print_int gcid; print_endline (client ^ id ^ username); *)
   if gcid >= 0 then (
     let st =
       prepare

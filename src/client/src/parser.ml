@@ -34,6 +34,8 @@ let rec parse_messages msg_list =
       let complete_msg =
         if msg_type = "Message" then
           Msg.make_msg sender receiver time Msg.Message message
+        else if msg_type = "GCMessage" then
+          Msg.make_msg sender receiver time Msg.GCMessage message
         else if msg_type = "FriendReq" then
           Msg.make_msg sender receiver time Msg.FriendReq message
         else
@@ -75,4 +77,4 @@ let get_plain t =
 
 let to_str_list str =
   str |> Yojson.Basic.from_string |> Yojson.Basic.Util.to_list
-  |> List.map Yojson.Basic.to_string
+  |> List.map Yojson.Basic.Util.to_string

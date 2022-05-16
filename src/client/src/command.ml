@@ -46,8 +46,8 @@ let parse logged_in str =
     | [ "Help" ]
     | [ "help" ] ->
         Help
-    | "SendMsg" :: receiver :: t ->
-        SendMsg (receiver, String.concat " " t)
+    | "SendMsg" :: receiver :: fst_msg :: t ->
+        SendMsg (receiver, String.concat " " (fst_msg :: t))
     | [ "GetNewMsg" ] -> GetNewMsg
     | [ "GetAllMsg" ] -> GetAllMsg
     | [ "Read"; "from"; sender ] -> ReadMsgFrom sender

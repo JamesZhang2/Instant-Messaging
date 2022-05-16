@@ -88,6 +88,7 @@ let send_msg_master receiver msg packer msg_type db_meth rel_checker =
 
 let send_msg receiver msg =
   if !username_ref = "" then (false, "Incorrect user login coredential")
+  else if not (is_client receiver) then (false, "Not A Friend")
   else
     let sender = !username_ref in
     send_msg_master receiver msg Packager.pack_send_msg Message
@@ -131,7 +132,7 @@ let msg_processor receiver msg =
   in
   (* let _ = print_endline "got there" in *)
   let decrypt =
-    Msg.make_msg (Msg.sender msg) receiver (Msg.time msg)
+    Msg.make_msg (Msg.sender msg) (Msg.receiver msg) (Msg.time msg)
       (Msg.msg_type msg) ptext
   in
   (let msg_type = Msg.msg_type msg in
@@ -308,6 +309,8 @@ let join_gc gc password =
     let raw_response = Network.request "POST" ~body:message in
     let successful, resp = bool_post_parse raw_response in
     if successful then
+      let _, memlst = members_of_gc gc in
+      let _ = add_groupchat !username_ref gc memlst in
       let _ = update_member_of_gc gc in
       let _ = update_msg () in
       (successful, "You have successfully joined the groupchat")
