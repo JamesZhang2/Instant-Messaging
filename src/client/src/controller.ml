@@ -284,6 +284,7 @@ let friend_req receiver msg =
           ()
         else ()
       in
+      let _ = update_msg () in
       (success, resp)
 
 let friend_req_reply receiver accepted =
