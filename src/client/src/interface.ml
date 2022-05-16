@@ -102,8 +102,10 @@ let help_logged_in =
   ]
 
 let print_help () =
+  begin_print ();
   match current_user () with
   | None ->
+      print_color "You are currently not logged in" ANSITerminal.yellow;
       List.map print_prompt help_logged_out |> ignore;
       print_string "> "
   | Some user ->
@@ -114,7 +116,6 @@ let print_help () =
       print_string "> "
 
 let rec main () =
-  begin_print ();
   let logged_in =
     match current_user () with
     | Some _ -> true
@@ -179,9 +180,7 @@ let rec main () =
       bool_print resp
   | ReadGC gcid ->
       let check, messages = Controller.read_gc_msg gcid in
-      if check then (
-        print_messages messages;
-        print_string "> ")
+      if check then print_messages messages
       else
         let message =
           match messages with

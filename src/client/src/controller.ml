@@ -359,7 +359,7 @@ let read_gc_msg gc =
   else if not (is_gc !username_ref gc) then
     (false, invalid_gc_msg gc "Invalid Groupchat")
   else if not (is_in_gc !username_ref gc !username_ref) then
-    (false, invalid_gc_msg gc "You are not in thsi group chat")
+    (false, invalid_gc_msg gc "You are not in this group chat")
   else
     let username = !username_ref in
     match get_msg_gc_since username gc "2022-03-29 17:00:00" with
