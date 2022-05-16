@@ -60,8 +60,6 @@ let command_tests =
     command_test "SendMsg phrase when logged in" true
       "SendMsg Bob Hello world!"
       (SendMsg ("Bob", "Hello world!"));
-    command_test "SendMsg empty when logged in" true "SendMsg Bob"
-      (SendMsg ("Bob", ""));
     command_test "GetNewMsg when logged in" true "GetNewMsg" GetNewMsg;
     command_test "GetAllMsg when logged in" true "GetAllMsg" GetAllMsg;
     command_test "Read from friend when logged in" true
@@ -107,6 +105,7 @@ let command_tests =
       "Login Alice Bob apple";
     command_err_test "Extra param for Register when logged in" true
       "Register Alice Bob apple";
+    command_err_test "SendMsg empty when logged in" true "SendMsg Bob";
     command_err_test "Extra param for GetNewMsg when logged in" true
       "GetNewMsg Alice";
     command_err_test "Empty string" true "";

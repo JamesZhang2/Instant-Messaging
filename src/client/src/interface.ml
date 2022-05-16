@@ -58,7 +58,9 @@ let print_messages msg_list =
     print the message, if false, assume an error and print an error
     message*)
 let bool_print (check, msg) =
-  if check then msg |> str_format 1 |> print_string
+  if check then
+    msg |> str_format 1
+    |> ANSITerminal.print_string [ ANSITerminal.green ]
   else
     msg |> str_format 1
     |> ANSITerminal.print_string [ ANSITerminal.magenta ]
@@ -111,7 +113,9 @@ let print_help () =
       List.map print_prompt help_logged_out |> ignore;
       print_string "> "
   | Some user ->
-      print_prompt ("You are currently logged in as " ^ user);
+      "You are currently logged in as " ^ user
+      |> str_format 0
+      |> ANSITerminal.print_string [ ANSITerminal.green ];
       List.map print_prompt help_logged_in |> ignore;
       print_string "> "
 
