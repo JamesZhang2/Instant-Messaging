@@ -42,25 +42,12 @@ let send_msg_master req_meth sender time receiver msg msg_type db_meth =
 let handle_send_msg req_meth sender time receiver msg =
   send_msg_master req_meth sender time receiver msg Util.Msg.Message
     add_msg
-(* let _ = print_endline msg in if req_meth <> Post then (* let _ =
-   print_endline "if branch" in *) Packager.error_response "SendMessage
-   should use POST method" else (* let _ = print_endline "else branch"
-   in *) let msg = Msg.make_msg sender receiver time Util.Msg.Message
-   msg in if add_msg msg then Packager.post_method_response "Message
-   successfully sent" else Packager.error_response "Message can't be
-   sent, please try again later" *)
 
 (** [handle_send_gc_mst req_meth sender time gc msg] sends the message
     [msg] to groupchat [gc]*)
 let handle_send_gc_msg req_meth sender time gc msg =
   send_msg_master req_meth sender time gc msg Util.Msg.GCMessage
     add_msg_to_gc
-(* if req_meth <> Post then Packager.error_response "SendGCMessage
-   should use POST method" else let msg = Msg.make_msg sender gc time
-   Util.Msg.GCMessage msg in if add_msg_to_gc msg then
-   Packager.post_method_response "Message successfully sent" else
-   Packager.error_response "Message can't be sent, please try again
-   later" *)
 
 (**[handle_get_msg req_meth receiver tme amount] is the json-string to
    return after retrieving a list of messages to [receiver]*)
@@ -157,14 +144,10 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
          a request from receiver to sender exist*)
     with
     | true, _ ->
-        (* print_endline "already friend branch"; *)
         Packager.post_method_response
           ("You are already friends with " ^ receiver)
-    | false, false ->
-        (* print_endline "no fr branch"; *)
-        Packager.error_response "No such friend request"
+    | false, false -> Packager.error_response "No such friend request"
     | false, true -> (
-        (* print_endline "fr branch"; *)
         let successful =
           if accepted then fr_accept receiver sender
           else fr_reject receiver sender
@@ -174,9 +157,7 @@ let handle_friend_req_reply req_meth sender time receiver accepted =
             Packager.error_response
               ("Friend request from" ^ receiver ^ "still pending")
         | true, true ->
-            (* let _ = fr_accept_msg receiver sender time in *)
             let _ = add_fr_accept_msg sender receiver time in
-            (* print_endline "got there 2"; *)
             Packager.post_method_response
               ("You are now friends with " ^ receiver)
         | true, false ->

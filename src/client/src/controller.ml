@@ -92,17 +92,6 @@ let send_msg receiver msg =
     let sender = !username_ref in
     send_msg_master receiver msg Packager.pack_send_msg Message
       (add_msg sender)
-(* if !username_ref = "" then (false, "Incorrect user login credential")
-   else let sender = !username_ref in if not (is_frd sender receiver)
-   then (false, "You are not friends with " ^ receiver) else let
-   encrypted_msg = if use_encryption then Util.Crypto.(sym_enc (sym_gen
-   ()) msg) else msg in let packed_msg = Packager.pack_send_msg sender
-   receiver encrypted_msg in let raw_response = Network.request "POST"
-   ~body:packed_msg in let success, resp = bool_post_parse raw_response
-   in (* if message sent sucessfully, add message to database. *) if
-   success then let message = Msg.make_msg sender receiver
-   (Time.string_of_now true) Message msg in db_op (add_msg sender)
-   message else (); (success, resp) *)
 
 let send_gc_msg gc msg =
   if !username_ref = "" then (false, "Incorrect user login coredential")
@@ -112,15 +101,6 @@ let send_gc_msg gc msg =
   else
     send_msg_master gc msg Packager.pack_send_gc_msg GCMessage
       (add_msg_to_gc !username_ref)
-(* if !username_ref = "" then (false, "Incorrect user login credential")
-   else let sender = !username_ref in if not (is_in_gc gc sender) then
-   (false, "You are not in this groupchat") else let encrypted_msg = if
-   use_encryption then Util.Crypto.(sym_enc (sym_gen ()) msg) else msg
-   in let packed_msg = Packager.pack_send_gc_msg sender gc encrypted_msg
-   in let raw_response = Network.request "POST" ~body:packed_msg in let
-   success, resp = bool_post_parse raw_response in if success then let
-   message = Msg.make_msg sender gc (Time.string_of_now true) GCMessage
-   msg in db_op add_msg_to_gc message else (); (success, resp) *)
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
@@ -226,7 +206,6 @@ let login username password =
   match raw_body with
   | None -> (true, [])
   | Some raw_body' -> (
-      (* print_endline raw_body'; *)
       match raw_body' |> Parser.parse |> Parser.get_type with
       | ErrorResponse x -> (false, [ Msg.make_msg "" "" "" Message x ])
       | GetMsgResponse x -> raise IllegalResponse
@@ -239,12 +218,10 @@ let login username password =
           let success, messages =
             if is_client username then update_msg ()
             else update_msg ~amount:"2022-03-29 17:00:00" ()
-            (* hard coded time: TODO change later*)
           in
           (*update gc members*)
           let _ = List.iter update_member_of_gc (gc_of_user username) in
           let login_notification =
-            (* print_endline "get there"; *)
             Msg.make_msg "" "" "" Message "Login Successful"
           in
           (success, login_notification :: messages))
@@ -259,17 +236,12 @@ let friend_req receiver msg =
     (false, "Cannot send friend request to yourself")
     (* else if isFriend !username_ref receiver then (true, "Already
        Friends") *)
-    (*TODO: put back in later*)
   else
     let fetch_success, key = fetch_key receiver in
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
-      let encrypt =
-        encrypt (Crypto.pub_from_str key) msg
-        (* if use_encryption then Crypto.sym_enc (Crypto.pub_from_str
-           key) msg else msg *)
-      in
+      let encrypt = encrypt (Crypto.pub_from_str key) msg in
       let message = Packager.pack_friend_req sender receiver encrypt in
       let raw_response = Network.request "POST" ~body:message in
       let success, resp = bool_post_parse raw_response in
@@ -333,7 +305,6 @@ let read_msg () =
   else
     let username = !username_ref in
     match get_all_msgs_since username "2022-03-29 17:00:00" with
-    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
 let read_msg_from sender =
@@ -343,7 +314,6 @@ let read_msg_from sender =
     match
       get_msgs_by_frd_since username sender "2022-03-29 17:00:00"
     with
-    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
 (**[invalid_gc_msg gc msg] is a error message using [msg] with
@@ -364,7 +334,6 @@ let read_gc_msg gc =
   else
     let username = !username_ref in
     match get_msg_gc_since username gc "2022-03-29 17:00:00" with
-    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages -> (true, List.rev messages)
 
 let read_fr () =
@@ -372,7 +341,6 @@ let read_fr () =
   else
     let username = !username_ref in
     match get_all_reqs username with
-    (* | exception IncorrectUser -> (false, incorrect_usermsg) *)
     | messages ->
         ( true,
           List.filter
