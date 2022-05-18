@@ -23,7 +23,7 @@ opam install -y utop odoc ounit2 qcheck bisect_ppx menhir ocaml-lsp-server ocaml
 Now install packages specific to this project:
 
 ```text
-opam install -y opium cryptokit sqlite3 cohttp cohttp-lwt-unix ANSITerminal yojson 
+opam install -y opium sqlite3 cohttp cohttp-lwt-unix ANSITerminal yojson 
 ```
 
 You may need to install dependencies for these packages using `sudo apt install` or `opam install`.
@@ -39,3 +39,13 @@ Go to the server directory using `cd src/server`. Then run `make run`. The serve
 ### Client
 
 Open a new terminal. Go to the client directory using `cd src/client`. Then run `make run`. The client interface should be up and running.
+
+### Restart the whole IM system
+
+Go to the server directory using `cd src/server`. Then run `make clean`. The data files in the server side should have been all deleted. 
+
+Then, go to the client directory using `cd src/client`. Then run `make clean` again. The data files in the client side should have been all deleted. 
+
+Be sure to run `make clean` on both server and client side. 
+
+*Note: running `make clean` permanently erases all data and cannot be restored. *
