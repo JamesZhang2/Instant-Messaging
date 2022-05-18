@@ -6,7 +6,17 @@
     We are not using OUnit to test the database because OUnit tests are
     parallel, whereas we need the database tests to be sequential. For
     instance, we must first add a user before testing that the user
-    exists in the database. *)
+    exists in the database.
+
+    We believe Database is implemented correctly because we test every
+    functions with their typical inputs, and they work as expected.
+
+    We believe our Packager is implemented correctly because we tested
+    every functions with their typical inputs, and they work as
+    expected.
+
+    We believe Parser is implemented correctly because we tested every
+    functions with their typical inputs, and they work as expected. *)
 
 open OUnit2
 open Server
@@ -461,8 +471,6 @@ let packager_tests =
       ];
     test get_method_response "get test 3" get_expected_3 [];
   ]
-
-(******************** Processor Tests ********************)
 
 let suite =
   "test suite for Server"

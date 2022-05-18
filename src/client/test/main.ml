@@ -1,11 +1,31 @@
-(** We only wrote OUnit tests for Command, Parser, and Packager. The
-    command-line user interface is play-tested. The network and the
-    controller are integration-tested.
+(* We only wrote OUnit tests for Command, Parser, and Packager. The
+   command-line user interface is play-tested. The network and the
+   controller are integration-tested.
 
-    We are not using OUnit to test the database because OUnit tests are
-    parallel, whereas we need the database tests to be sequential. For
-    instance, we must first add a user before testing that the user
-    exists in the database. *)
+   We are not using OUnit to test the database because OUnit tests are
+   parallel, whereas we need the database tests to be sequential. For
+   instance, we must first add a user before testing that the user
+   exists in the database.
+
+   We believe Command is implemented correctly because as belows we
+   tested the [parse] function (the only function in Command) with
+   almost every different types of input commends, from "Help" to
+   "Login" to features like direct messaging and group messaging.
+
+   We believe Parser is implemented correctly because we tested the
+   three of four functions in our mli, we do not test on
+   [Parser.to_str_list] because from our implementation it's easy to see
+   that it is correct.
+
+   We believe our Packager is implemented correctly because we tested
+   every functions with their typical inputs, and they work as expected.
+
+   We believe Database is implemented correctly because we test every
+   functions with their typical inputs, and they work as expected.
+
+   In addition to these, by play-tests and integration tests, we ensured
+   that not only Network, Interface and Controller work well as expected
+   but also all the other compilation units are surely correct. *)
 
 open OUnit2
 open Client

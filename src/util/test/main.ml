@@ -1,6 +1,9 @@
-(** For Util, we wrote tests for our Time and Crypto modules. We didn't
-    write tests for Msg because it mostly just contains a type [Msg.t]
-    that is widely used throughout our project. *)
+(** For Util, we wrote tests for our Time module. We didn't write tests
+    for Msg because it mostly just contains a type [Msg.t] that is
+    widely used throughout our project.
+
+    We believe Time is implemented correctly because as belows we tested
+    different time strings, both typical and corner cases. *)
 
 open OUnit2
 open Util
