@@ -49,3 +49,7 @@ Then, go to the client directory using `cd src/client`. Then run `make clean` ag
 Be sure to run `make clean` on both server and client side. 
 
 *Note: running `make clean` permanently erases all data and cannot be restored.*
+
+## Test & Documentation
+
+To test our system, go to the `src/server`, `src/client`, and `src/util` directories and run `make test`. To generate documentations, go to the `src` directory and run `make docs`.
