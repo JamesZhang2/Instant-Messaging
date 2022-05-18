@@ -8,7 +8,10 @@ open Opium
 open Server.Processor
 open Server.Database
 
+(** [get_headers req] is the headers in [req]. *)
 let get_headers req = req.Request.headers |> Headers.to_list
+
+(** [get_meth req] is the method of [req]. *)
 let get_meth req = req.Request.meth |> Method.to_string
 
 (** [response_maker (status, body)] makes a Response Lwt using [status]
@@ -23,6 +26,7 @@ let response_maker (status, body) =
   in
   Lwt.return made
 
+(** [process req] processes the request [req] got from the clients. *)
 let process (req : Request.t) =
   let res =
     handle (get_meth req) (get_headers req)

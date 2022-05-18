@@ -12,6 +12,8 @@ let parse_item item =
   | name, message ->
       "\t\"" ^ name ^ "\" : \"" ^ String.escaped message ^ "\""
 
+(** [parse_item_list lst] parses a [lst] of items into json. Requires:
+    [lst] is type [ItemList]*)
 let rec parse_item_list lst =
   match lst with
   | [] -> ""
@@ -21,12 +23,8 @@ let rec parse_item_list lst =
 (** [convert_object obs] converts an [object obj] to a json string
     recursively*)
 let rec convert_object objs =
-  (* let inner = *)
   match objs with
-  | ItemList lst ->
-      parse_item_list lst
-      (* let mapped = List.map parse_item lst in List.fold_left ( ^ ) ""
-         mapped *)
+  | ItemList lst -> parse_item_list lst
   | NestList (name, objects) ->
       let header = "\"" ^ name ^ "\" : [\n" in
       let json_obj_lst = List.map (fun x -> [ x ]) objects in
@@ -40,6 +38,7 @@ and json_convert lst =
   let concat = String.concat ", \n\t" str_lst in
   "{\n" ^ concat ^ "\n}"
 
+(**[message_to_obj msg] parses a [msg : Msg.t] into an obj type*)
 let message_to_obj msg =
   let msg_t =
     match Msg.msg_type msg with
@@ -61,6 +60,8 @@ let message_to_obj msg =
   in
   ItemList lst
 
+(** [error_parse message] is the [obj] representation of an error
+    message containing [message]*)
 let error_parse message =
   ItemList
     [

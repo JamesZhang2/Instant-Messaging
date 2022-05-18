@@ -42,29 +42,5 @@ let time_tests =
       true;
   ]
 
-(******************** Crypto Tests ********************)
-
-let rsa_test msg =
-  let open Crypto in
-  let key = pke_gen () in
-  let ctxt = pke_enc (get_pub key) msg in
-  pke_dec (get_priv key) ctxt
-
-let crypto_test (name : string) (msg : string) : test =
-  name >:: fun _ -> assert_equal msg (rsa_test msg)
-
-let crypto_tests =
-  [
-    crypto_test "RSA: hello world" "hello world";
-    crypto_test "RSA: 123456789" "123456789";
-    crypto_test "RSA: hellohellohellohellohello"
-      "hellohellohellohellohello";
-    crypto_test "RSA: 7932roud49yewfhds273p98y1e fwyodsro3q!ewfoi3--;"
-      "7932roud49yewfhds273p98y1e fwyodsro3q!ewfoi3--;";
-    crypto_test "RSA: " "";
-  ]
-
-let suite =
-  "test suite for Util" >::: List.flatten [ time_tests; crypto_tests ]
-
+let suite = "test suite for Util" >::: List.flatten [ time_tests ]
 let _ = run_test_tt_main suite

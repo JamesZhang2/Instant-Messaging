@@ -24,7 +24,9 @@ val register : string -> string -> bool * string
 val login : string -> string -> bool * Msg.t list
 (** [login username password] tries to log in to user [username] with
     [password]. Returns: [(true, new_msg list)] if the user is logged
-    in, [(false, error_msg)] otherwise. *)
+    in, [(false, error_msg)] otherwise.
+
+    Effects: updates all messages and new status *)
 
 val logout : unit -> string
 (** [logout] logs out the current user. *)

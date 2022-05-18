@@ -13,11 +13,6 @@ type req_method =
   | Post
   | Get
 
-(* For debugging *)
-let print_headers headers =
-  List.map (fun (a, b) -> print_endline (a ^ ": " ^ b)) headers
-  |> ignore
-
 (** [header body] is the header containing content-length for the
     [body]. *)
 let header body =
