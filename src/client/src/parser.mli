@@ -1,4 +1,4 @@
-(** This module processes a response body from the server*)
+(** This module processes a response body from the server. *)
 
 open Util
 
@@ -27,4 +27,4 @@ val get_plain : t -> string
     representation of response. *)
 
 val to_str_list : string -> string list
-(** [to_str_list json] converts a json string into a list of strings*)
+(** [to_str_list json] converts a json string into a list of strings. *)

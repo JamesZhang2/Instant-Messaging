@@ -10,7 +10,7 @@ val handle : string -> (string * string) list -> string Lwt.t -> t Lwt.t
     http header, as a [t Lwt.t]. Effect: sends a specified request to
     the server.
 
-    - FriendReqRep, then if user reply is true, then the other user's
+    - FriendReqRep: then if user reply is true, then the other user's
       public key is returned, otherwise a regular rejection is sent
     - FriendReq: If pending request in reverse order exists, then an
       accepted friend req is retrievable on get_msg, otherwise sends a
@@ -30,7 +30,7 @@ val response_body : t -> string Lwt.t
     client. *)
 
 val status_body : t -> (string * string) Lwt.t
-(** [status_body res] is a tuple of status and body in Lwt*)
+(** [status_body res] is a tuple of status and body in Lwt. *)
 
 val response_headers : t -> (string * string) list
 (** [response_header res] is the header of this response [res]. *)

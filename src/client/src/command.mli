@@ -30,5 +30,7 @@ type t =
 
 val parse : bool -> string -> t
 (** [parse logged_in str] parses a string command into command type,
-    based on whether a user is logged in or not. Raises: [Malformed] if
-    the command does not match with any of the types*)
+    based on whether a user is logged in or not.
+
+    Raises: [Malformed] if the command does not match with any of the
+    types. *)
