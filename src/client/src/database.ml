@@ -329,59 +329,35 @@ let add_req client req key req_state user =
        (put "A new friend request inserted to client %s' table. " client)
 
 let add_request client req key req_state =
-  if is_client client then
-    if create_req_table client |> dir_handle then
-      if
-        req |> sender <> receiver req
-        && (sender req = client || receiver req = client)
-      then
-        let user =
-          if sender req = client then receiver req else sender req
-        in
-        if is_in_req client user |> not then
-          add_req client req key req_state user
-        else
-          ( false,
-            put "Client %s's friend request already in record. " client
-          )
-      else (false, put "Client %s's friend request is invalid. " client)
-    else
-      ( false,
-        put
-          "Client %s's friend request table does not exist and cannot \
-           be created. "
-          client )
-  else (false, put "Client %s does not exist. " client)
+  if
+    is_client client
+    && create_req_table client |> dir_handle
+    && req |> sender <> receiver req
+    && (sender req = client || receiver req = client)
+  then
+    let user =
+      if sender req = client then receiver req else sender req
+    in
+    if is_in_req client user |> not then
+      add_req client req key req_state user
+    else (false, "Friend request already in record. ")
+  else (false, "Error occurred when adding friend request. ")
 
 let update_request client username req_state =
-  if is_client client then
-    if create_req_table client |> dir_handle then
-      if is_in_req client username then (
-        let st =
-          prepare
-            (client |> clt_req |> open_db)
-            (client |> clt_req
-            |> put "UPDATE %s SET accepted=? WHERE user=?;")
-        in
-        bind_values st [ bool_to_t req_state; TEXT username ]
-        |> assert_ok;
-        step st
-        |> handle_rc
-             (put "The friend state of %s (client) and %s updated. "
-                client username))
-      else
-        ( false,
-          put
-            "This friend request of %s (client) and %s has not been \
-             added to the table. "
-            client username )
-    else
-      ( false,
-        put
-          "Client %s's friend request table does not exist and cannot \
-           be created. "
-          client )
-  else (false, put "Client %s does not exist. " client)
+  if
+    is_client client
+    && create_req_table client |> dir_handle
+    && is_in_req client username
+  then (
+    let st =
+      prepare
+        (client |> clt_req |> open_db)
+        (client |> clt_req
+        |> put "UPDATE %s SET accepted=? WHERE user=?;")
+    in
+    bind_values st [ bool_to_t req_state; TEXT username ] |> assert_ok;
+    step st |> handle_rc "Friend request has been updated. ")
+  else (false, "Error occurred when updating friend request. ")
 
 (** [form_req_lsts client lst] group [lst] by 4 to form a new list of
     requests. *)
@@ -396,138 +372,77 @@ let rec form_req_lsts client = function
   | _ -> failwith "Friend request list has issues with partitioning. "
 
 let get_all_reqs client =
-  if is_client client then
-    if create_req_table client |> dir_handle then
-      let res =
-        fold
-          (prepare
-             (client |> clt_req |> open_db)
-             (put "SELECT user, isSender, message, time FROM %s"
-                (clt_req client)))
-          ~f:(fun x ar ->
-            (Array.map data_to_string ar |> Array.to_list) @ x)
-          ~init:[]
-      in
-      match res with
-      | _, lst -> form_req_lsts client lst
-    else
-      failwith
-        (put
-           "Client %s's friend request table does not exist and cannot \
-            be created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let res =
+    fold
+      (prepare
+         (client |> clt_req |> open_db)
+         (put "SELECT user, isSender, message, time FROM %s"
+            (clt_req client)))
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> form_req_lsts client lst
 
-(* let rec form_frd_lsts client = function | u :: i :: m :: t :: a ::
-   tail -> if a = "1" then if i = "1" then make_msg client u t FriendReq
-   m :: form_frd_lsts client tail else if i = "0" then make_msg u client
-   t FriendReq m :: form_frd_lsts client tail else failwith "Friend list
-   has issues with partitioning. " else form_frd_lsts client tail | []
-   -> [] | _ -> failwith "Friend list has issues with partitioning. " *)
-
-(* should return t list or string list?*)
 let get_all_frds client =
-  if is_client client then
-    if create_req_table client |> dir_handle then
-      let res =
-        fold
-          (prepare
-             (open_db (clt_req client))
-             (put "SELECT user FROM %s WHERE accepted=true"
-                (clt_req client)))
-          ~f:(fun x ar ->
-            (Array.map data_to_string ar |> Array.to_list) @ x)
-          ~init:[]
-      in
-      match res with
-      | _, lst -> lst
-    else
-      failwith
-        (put
-           "Client %s's friend request table does not exist and cannot \
-            be created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let res =
+    fold
+      (prepare
+         (open_db (clt_req client))
+         (put "SELECT user FROM %s WHERE accepted=true" (clt_req client)))
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> lst
 
 let get_req_by_name client username =
-  if is_client client then
-    if create_req_table client |> dir_handle then (
-      let st =
-        prepare
-          (open_db (clt_req client))
-          (put
-             "SELECT user, isSender, message, time FROM %s WHERE user=?"
-             (clt_req client))
-      in
-      bind_text st 1 username |> assert_ok;
-      let res =
-        fold st
-          ~f:(fun x ar ->
-            (Array.map data_to_string ar |> Array.to_list) @ x)
-          ~init:[]
-      in
-      match res with
-      | _, lst -> (
-          match lst with
-          | [ u; i; m; t ] ->
-              if i = "1" then Some (make_msg client u t FriendReq m)
-              else if i = "0" then
-                Some (make_msg u client t FriendReq m)
-              else None
-          | _ -> None))
-    else
-      failwith
-        (put
-           "Client %s's friend request table does not exist and cannot \
-            be created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let st =
+    prepare
+      (open_db (clt_req client))
+      (put "SELECT user, isSender, message, time FROM %s WHERE user=?"
+         (clt_req client))
+  in
+  bind_text st 1 username |> assert_ok;
+  let res =
+    fold st
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> (
+      match lst with
+      | [ u; i; m; t ] ->
+          if i = "1" then Some (make_msg client u t FriendReq m)
+          else if i = "0" then Some (make_msg u client t FriendReq m)
+          else None
+      | _ -> None)
 
 (******************** Message Table ********************)
 
 let add_msg client msg =
-  if is_client client then
-    if create_msg_table client |> dir_handle then
-      if
-        msg |> sender <> (msg |> receiver)
-        && (msg |> sender = client || msg |> receiver = client)
-      then
-        let user =
-          if sender msg = client then receiver msg else sender msg
-        in
-        if is_frd client user then (
-          let st =
-            prepare
-              (open_db (clt_msg client))
-              (put
-                 "INSERT INTO %s (user, message, time, isSender) \
-                  VALUES (?, ?, ?, ?);"
-                 (clt_msg client))
-          in
-          bind_values st
-            [
-              TEXT user;
-              TEXT (content msg);
-              TEXT (time msg);
-              bool_to_t (user = receiver msg);
-            ]
-          |> assert_ok;
-          step st
-          |> handle_rc
-               (put
-                  "A new message from %s to %s inserted to client %s' \
-                   table. "
-                  (sender msg) (receiver msg) client))
-        else
-          (false, put "Client %s and %s are not friends. " client user)
-      else (false, put "Client %s's message is invalid. " client)
-    else
-      ( false,
-        put
-          "Client %s's message table does not exist and cannot be \
-           created. "
-          client )
-  else (false, put "Client %s does not exist. " client)
+  let user = if sender msg = client then receiver msg else sender msg in
+
+  let st =
+    prepare
+      (open_db (clt_msg client))
+      (put
+         "INSERT INTO %s (user, message, time, isSender) VALUES (?, ?, \
+          ?, ?);"
+         (clt_msg client))
+  in
+  bind_values st
+    [
+      TEXT user;
+      TEXT (content msg);
+      TEXT (time msg);
+      bool_to_t (user = receiver msg);
+    ]
+  |> assert_ok;
+  step st |> handle_rc "Message added. "
 
 (** [form_msg_lsts client lst] group [lst] by 4 to form a new list of
     messages. *)
@@ -542,95 +457,62 @@ let rec form_msg_lsts client = function
   | _ -> failwith "Message list has issues with partitioning. "
 
 let get_all_msgs_since client time =
-  if is_client client then
-    if create_msg_table client |> dir_handle then (
-      let st =
-        prepare
-          (open_db (clt_msg client))
-          (put
-             "SELECT user, message, time, isSender FROM %s WHERE time \
-              > ? ORDER BY time ASC"
-             (clt_msg client))
-      in
-      bind_text st 1 (time_ok time) |> assert_ok;
-      let res =
-        fold st
-          ~f:(fun x ar ->
-            (Array.map data_to_string ar |> Array.to_list) @ x)
-          ~init:[]
-      in
-      match res with
-      | _, lst ->
-          (* print_int (List.length lst); *)
-          form_msg_lsts client lst)
-    else
-      failwith
-        (put
-           "Client %s's message table does not exist and cannot be \
-            created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let st =
+    prepare
+      (open_db (clt_msg client))
+      (put
+         "SELECT user, message, time, isSender FROM %s WHERE time > ? \
+          ORDER BY time ASC"
+         (clt_msg client))
+  in
+  bind_text st 1 (time_ok time) |> assert_ok;
+  let res =
+    fold st
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> form_msg_lsts client lst
 
 let get_msgs_by_frd client frd =
-  if is_client client then
-    if create_msg_table client |> dir_handle then
-      if is_frd client frd then (
-        let st =
-          prepare
-            (open_db (clt_msg client))
-            (put
-               "SELECT user, message, time, isSender FROM %s WHERE \
-                user=? ORDER BY time ASC"
-               (clt_msg client))
-        in
-        bind_text st 1 frd |> assert_ok;
-        let res =
-          fold st
-            ~f:(fun x ar ->
-              (Array.map data_to_string ar |> Array.to_list) @ x)
-            ~init:[]
-        in
-        match res with
-        | _, lst -> form_msg_lsts client lst)
-      else []
-    else
-      failwith
-        (put
-           "Client %s's message table does not exist and cannot be \
-            created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let st =
+    prepare
+      (open_db (clt_msg client))
+      (put
+         "SELECT user, message, time, isSender FROM %s WHERE user=? \
+          ORDER BY time ASC"
+         (clt_msg client))
+  in
+  bind_text st 1 frd |> assert_ok;
+  let res =
+    fold st
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> form_msg_lsts client lst
 
 let get_msgs_by_frd_since client frd time =
-  if is_client client then
-    if create_msg_table client |> dir_handle then
-      if is_frd client frd then (
-        let st =
-          prepare
-            (open_db (clt_msg client))
-            (put
-               "SELECT user, message, time, isSender FROM %s WHERE \
-                user=? AND time>? ORDER BY time ASC"
-               (clt_msg client))
-        in
-        bind_text st 1 frd |> assert_ok;
-        bind_text st 2 (time_ok time) |> assert_ok;
-        let res =
-          fold st
-            ~f:(fun x ar ->
-              (Array.map data_to_string ar |> Array.to_list) @ x)
-            ~init:[]
-        in
-        match res with
-        | _, lst -> form_msg_lsts client lst)
-      else []
-    else
-      failwith
-        (put
-           "Client %s's message table does not exist and cannot be \
-            created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let st =
+    prepare
+      (open_db (clt_msg client))
+      (put
+         "SELECT user, message, time, isSender FROM %s WHERE user=? \
+          AND time>? ORDER BY time ASC"
+         (clt_msg client))
+  in
+  bind_text st 1 frd |> assert_ok;
+  bind_text st 2 (time_ok time) |> assert_ok;
+  let res =
+    fold st
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> form_msg_lsts client lst
 
 (******************** Groupchat Table ********************)
 
@@ -657,67 +539,36 @@ let is_gc client id = get_gc_id client id >= 0
 (** [create_gc client id] creates a groupchat [id] having no member
     inside. *)
 let create_gc client id =
-  if is_client client then
-    if create_gc_table client |> dir_handle then
-      if is_gc client id |> not then (
-        let st =
-          prepare
-            (client |> clt_gc |> open_db)
-            (client |> clt_gc |> put "INSERT INTO %s (name) VALUES (?);")
-        in
-        bind_text st 1 id |> assert_ok;
-        step st
-        |> handle_rc
-             (put "A new groupchat %s is created in client %s' table. "
-                id client)
-        |> is_success)
-      else
-        ( false,
-          put "Client %s's groupchat %s already in record. " client id
-        )
-        |> is_success
-    else
-      ( false,
-        put
-          "Client %s's groupchat table does not exist and cannot be \
-           created. "
-          client )
-      |> is_success
-  else (false, put "Client %s does not exist. " client) |> is_success
+  let st =
+    prepare
+      (client |> clt_gc |> open_db)
+      (client |> clt_gc |> put "INSERT INTO %s (name) VALUES (?);")
+  in
+  bind_text st 1 id |> assert_ok;
+  step st
+  |> handle_rc
+       (put "A new groupchat %s is created in client %s' table. " id
+          client)
+  |> is_success
 
 (** [add_mem_gc client id mem] adds [mem] to groupchat [id]. *)
 let add_mem_gc client id mem =
-  (* print_endline mem; *)
-  if is_client client then
-    if create_gcm_table client |> dir_handle then
-      let gcid = get_gc_id client id in
-      if gcid >= 0 then (
-        let st =
-          prepare
-            (client |> clt_gcm |> open_db)
-            (client |> clt_gcm
-            |> put "INSERT INTO %s (gcId, mem) VALUES (?, ?);")
-        in
-        bind_int st 1 gcid |> assert_ok;
-        bind_text st 2 mem |> assert_ok;
-        step st
-        |> handle_rc
-             (put "Member %s is added to client %s's groupchat %s. " mem
-                client id)
-        |> is_success)
-      else
-        ( false,
-          put "Client %s's groupchat %s has not been created. " client
-            id )
-        |> is_success
-    else
-      ( false,
-        put
-          "Client %s's groupchat member table does not exist and \
-           cannot be created. "
-          client )
-      |> is_success
-  else (false, put "Client %s does not exist. " client) |> is_success
+  let gcid = get_gc_id client id in
+  if gcid >= 0 then (
+    let st =
+      prepare
+        (client |> clt_gcm |> open_db)
+        (client |> clt_gcm
+        |> put "INSERT INTO %s (gcId, mem) VALUES (?, ?);")
+    in
+    bind_int st 1 gcid |> assert_ok;
+    bind_text st 2 mem |> assert_ok;
+    step st
+    |> handle_rc
+         (put "Member %s is added to client %s's groupchat %s. " mem
+            client id)
+    |> is_success)
+  else false
 
 let add_member_gc client id mem_list =
   List.fold_left
@@ -737,7 +588,6 @@ let add_groupchat client id mem_list =
 
 let is_in_gc client id username =
   let gcid = get_gc_id client id in
-  (* print_int gcid; print_endline (client ^ id ^ username); *)
   if gcid >= 0 then (
     let st =
       prepare
@@ -754,47 +604,29 @@ let is_in_gc client id username =
     in
     match res with
     | _, ar -> Array.length ar <> 0)
-  else failwith (put "Groupchat %s is not valid. " id)
+  else false
 
 let add_msg_to_gc client msg =
-  if is_client client then
-    if create_gcmsg_table client |> dir_handle then (
-      let gcid = receiver msg |> get_gc_id client in
-      if gcid = -1 then
-        (false, put "Groupchat %s does not exist. " (receiver msg))
-        |> is_success
-      else
-        let st =
-          prepare
-            (open_db (clt_gcmsg client))
-            (put
-               "INSERT INTO %s (gcId, sender, message, time) VALUES \
-                (?, ?, ?, ?);"
-               (clt_gcmsg client))
-        in
-        bind_values st
-          [
-            INT (Int64.of_int gcid);
-            TEXT (sender msg);
-            TEXT (content msg);
-            TEXT (time msg);
-          ]
-        |> assert_ok;
-        step st
-        |> handle_rc
-             (put
-                "A new message from %s to groupchat %s inserted to \
-                 client %s' table. "
-                (sender msg) (receiver msg) client)
-        |> is_success)
-    else
-      ( false,
-        put
-          "Client %s's groupchat message table does not exist and \
-           cannot be created. "
-          client )
-      |> is_success
-  else (false, put "Client %s does not exist. " client) |> is_success
+  let gcid = receiver msg |> get_gc_id client in
+  if gcid = -1 then false
+  else
+    let st =
+      prepare
+        (open_db (clt_gcmsg client))
+        (put
+           "INSERT INTO %s (gcId, sender, message, time) VALUES (?, ?, \
+            ?, ?);"
+           (clt_gcmsg client))
+    in
+    bind_values st
+      [
+        INT (Int64.of_int gcid);
+        TEXT (sender msg);
+        TEXT (content msg);
+        TEXT (time msg);
+      ]
+    |> assert_ok;
+    step st |> handle_rc "Message added" |> is_success
 
 (** [form_gc_msg_lsts client id lst] group [lst] by 3 to form a new list
     of messages. *)
@@ -805,144 +637,53 @@ let rec form_gc_msg_lsts client id = function
   | _ -> failwith "Message list has issues with partitioning. "
 
 let get_msg_gc_since client id time =
-  if is_client client then
-    if create_gcmsg_table client |> dir_handle then
-      let gcid = get_gc_id client id in
-      if gcid <> -1 then (
-        let st =
-          prepare
-            (open_db (clt_gcmsg client))
-            (put
-               "SELECT sender, message, time FROM %s WHERE gcId=? AND \
-                time>? ORDER BY time ASC"
-               (clt_gcmsg client))
-        in
-        bind_int st 1 gcid |> assert_ok;
-        bind_text st 2 (time_ok time) |> assert_ok;
-        let res =
-          fold st
-            ~f:(fun x ar ->
-              (Array.map data_to_string ar |> Array.to_list) @ x)
-            ~init:[]
-        in
-        match res with
-        | _, lst -> form_gc_msg_lsts client id lst)
-      else failwith (put "Groupchat %s does not exist. " id)
-    else
-      failwith
+  let gcid = get_gc_id client id in
+  if gcid = -1 then []
+  else
+    let st =
+      prepare
+        (open_db (clt_gcmsg client))
         (put
-           "Client %s's groupchat message table does not exist and \
-            cannot be created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+           "SELECT sender, message, time FROM %s WHERE gcId=? AND \
+            time>? ORDER BY time ASC"
+           (clt_gcmsg client))
+    in
+    bind_int st 1 gcid |> assert_ok;
+    bind_text st 2 (time_ok time) |> assert_ok;
+    let res =
+      fold st
+        ~f:(fun x ar ->
+          (Array.map data_to_string ar |> Array.to_list) @ x)
+        ~init:[]
+    in
+    match res with
+    | _, lst -> form_gc_msg_lsts client id lst
 
 let gc_of_user client =
-  if is_client client then
-    if create_gc_table client |> dir_handle then
-      let res =
-        fold
-          (prepare
-             (open_db (clt_gc client))
-             (put "SELECT name FROM %s" (clt_gc client)))
-          ~f:(fun x ar ->
-            (Array.map data_to_string ar |> Array.to_list) @ x)
-          ~init:[]
-      in
-      match res with
-      | _, lst -> lst
-    else
-      failwith
-        (put
-           "Client %s's groupchat table does not exist and cannot be \
-            created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
+  let res =
+    fold
+      (prepare
+         (open_db (clt_gc client))
+         (put "SELECT name FROM %s" (clt_gc client)))
+      ~f:(fun x ar ->
+        (Array.map data_to_string ar |> Array.to_list) @ x)
+      ~init:[]
+  in
+  match res with
+  | _, lst -> lst
 
 let members_of_gc client id =
-  if is_client client then
-    if create_gcm_table client |> dir_handle then
-      let gcid = get_gc_id client id in
-      if gcid <> -1 then
-        let res =
-          fold
-            (prepare
-               (open_db (clt_gcm client))
-               (put "SELECT mem FROM %s WHERE gcId=%d" (clt_gcm client)
-                  gcid))
-            ~f:(fun x ar ->
-              (Array.map data_to_string ar |> Array.to_list) @ x)
-            ~init:[]
-        in
-        match res with
-        | _, lst -> lst
-      else failwith (put "Groupchat %s does not exist. " id)
-    else
-      failwith
-        (put
-           "Client %s's groupchat table does not exist and cannot be \
-            created. "
-           client)
-  else failwith (put "Client %s does not exist. " client)
-
-let request_test () =
-  (match
-     let a = init_dbs () in
-     let b = create_dbs "alice" "666" in
-     let c =
-       add_request "alice"
-         (make_msg "alice" "bob" "2000-01-01 08:00:00" FriendReq "hello")
-         (Some "123") None
-     in
-     let d = update_request "alice" "bob" true in
-     cmb_rc [ a; b; c; d ]
-   with
-  | f, m ->
-      if f then print_endline ("TRUE: " ^ m)
-      else print_endline ("FALSE: " ^ m));
-  if is_in_req "alice" "bob" then print_endline "Bob is in Alice's list"
-  else print_endline "Bob is NOT in Alice's list";
-  let lst = get_all_reqs "alice" in
-  List.iter
-    (fun x -> print_endline (sender x ^ " AND " ^ receiver x))
-    lst;
-  let lst = get_all_frds "alice" in
-  List.iter (fun x -> print_endline x) lst
-
-let msg_test () =
-  (let a = init_dbs () in
-   let b = create_dbs "alice" "666" in
-   let c =
-     add_request "alice"
-       (make_msg "alice" "bob" "2000-01-01 08:00:00" FriendReq "hello")
-       (Some "123") None
-   in
-   let d = update_request "alice" "bob" true in
-   let e =
-     add_msg "alice"
-       (make_msg "alice" "bob" "2000-01-01 09:00:00" Message
-          "hello at 9")
-   in
-   let f =
-     add_msg "alice"
-       (make_msg "alice" "bob" "2000-01-02 11:00:00" Message
-          "hello at 11")
-   in
-   let g =
-     add_msg "alice"
-       (make_msg "bob" "alice" "2000-01-02 08:00:00" Message
-          "hello on second day")
-   in
-   match cmb_rc [ a; b; c; d; e; f; g ] with
-   | f, m ->
-       if f then print_endline ("TRUE: " ^ m)
-       else print_endline ("FALSE: " ^ m));
-  let lst = get_all_msgs_since "alice" "2000-01-01 00:00:00" in
-  List.iter
-    (fun x ->
-      print_endline (sender x ^ " TO " ^ receiver x ^ " AT " ^ time x))
-    lst;
-  let lst = get_msgs_by_frd_since "alice" "bob" "2000-01-01 00:00:00" in
-  List.iter
-    (fun x ->
-      print_endline (sender x ^ " TO " ^ receiver x ^ " AT " ^ time x))
-    lst
+  let gcid = get_gc_id client id in
+  if gcid = -1 then []
+  else
+    let res =
+      fold
+        (prepare
+           (open_db (clt_gcm client))
+           (put "SELECT mem FROM %s WHERE gcId=%d" (clt_gcm client) gcid))
+        ~f:(fun x ar ->
+          (Array.map data_to_string ar |> Array.to_list) @ x)
+        ~init:[]
+    in
+    match res with
+    | _, lst -> lst
