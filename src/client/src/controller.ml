@@ -14,9 +14,6 @@ let key_ref = ref (Crypto.sym_gen ())
 (** memory documentation of the current user*)
 let username_ref = ref ""
 
-(** For debug purposes *)
-let use_encryption = false
-
 exception IllegalResponse
 
 (** [header body] is the header containing content-length for the
@@ -61,16 +58,10 @@ let db_op meth input =
   ()
 (* if success then () else print_endline ("Error" ^ resp) *)
 
-(** [encrypt key msg] encrypts the message using the given symmetric
-    [key]*)
-let encrypt key msg =
-  if use_encryption then Util.Crypto.(sym_enc key msg) else msg
-
 (** [send_msg_master receiver msg packer msg_type db_meth rel_checker]*)
 let send_msg_master receiver msg packer msg_type db_meth =
   let sender = !username_ref in
-  let encrypted_msg = encrypt (Util.Crypto.sym_gen ()) msg in
-  let packed_msg = packer sender receiver encrypted_msg in
+  let packed_msg = packer sender receiver msg in
   let raw_response = Network.request "POST" ~body:packed_msg in
   let success, resp = bool_post_parse raw_response in
   if success then
@@ -104,12 +95,7 @@ let send_gc_msg gc msg =
 
 (** [msg_processor receiver msg] Processes the incoming messages*)
 let msg_processor receiver msg =
-  let ptext =
-    if use_encryption then
-      try Crypto.sym_dec !key_ref (Msg.content msg) with
-      | x -> "message"
-    else Msg.content msg
-  in
+  let ptext = Msg.content msg in
   (* let _ = print_endline "got there" in *)
   let decrypt =
     Msg.make_msg (Msg.sender msg) (Msg.receiver msg) (Msg.time msg)
@@ -241,8 +227,7 @@ let friend_req receiver msg =
     if not fetch_success then (false, "Unable to find user " ^ receiver)
     else
       let sender = !username_ref in
-      let encrypt = encrypt (Crypto.pub_from_str key) msg in
-      let message = Packager.pack_friend_req sender receiver encrypt in
+      let message = Packager.pack_friend_req sender receiver msg in
       let raw_response = Network.request "POST" ~body:message in
       let success, resp = bool_post_parse raw_response in
       let req =
