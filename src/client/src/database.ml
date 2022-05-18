@@ -413,19 +413,16 @@ let get_req_by_name client username =
       ~init:[]
   in
   match res with
-  | _, lst -> (
-      match lst with
-      | [ u; i; m; t ] ->
-          if i = "1" then Some (make_msg client u t FriendReq m)
-          else if i = "0" then Some (make_msg u client t FriendReq m)
-          else None
-      | _ -> None)
+  | _, [ u; i; m; t ] ->
+      if i = "1" then Some (make_msg client u t FriendReq m)
+      else if i = "0" then Some (make_msg u client t FriendReq m)
+      else None
+  | _ -> None
 
 (******************** Message Table ********************)
 
 let add_msg client msg =
   let user = if sender msg = client then receiver msg else sender msg in
-
   let st =
     prepare
       (open_db (clt_msg client))
