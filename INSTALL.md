@@ -40,7 +40,7 @@ Go to the server directory using `cd src/server`. Then run `make run`. The serve
 
 Open a new terminal. Go to the client directory using `cd src/client`. Then run `make run`. The client interface should be up and running.
 
-### Restart the whole IM system
+## Restart the whole IM system
 
 Go to the server directory using `cd src/server`. Then run `make clean`. The data files in the server side should have been all deleted. 
 
