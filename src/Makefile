@@ -8,5 +8,5 @@ clean:
 	rm -f client/data/database/*.db
 	dune clean
 
-doc:
+docs:
 	dune build @doc

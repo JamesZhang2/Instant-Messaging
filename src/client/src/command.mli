@@ -10,7 +10,7 @@ exception Malformed
 type t =
   | SendMsg of string * string  (** receiver, message *)
   | GetNewMsg
-  | GetAllMsg
+  | ReadAllMsg
   | ReadMsgFrom of string  (** sender *)
   | Register of string * string  (** username, password *)
   | Login of string * string  (** username, password *)

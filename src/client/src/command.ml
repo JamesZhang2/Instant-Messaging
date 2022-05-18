@@ -3,7 +3,7 @@ exception Malformed
 type t =
   | SendMsg of string * string
   | GetNewMsg
-  | GetAllMsg
+  | ReadAllMsg
   | ReadMsgFrom of string
   | Register of string * string
   | Login of string * string
@@ -49,7 +49,7 @@ let parse logged_in str =
     | "SendMsg" :: receiver :: fst_msg :: t ->
         SendMsg (receiver, String.concat " " (fst_msg :: t))
     | [ "GetNewMsg" ] -> GetNewMsg
-    | [ "GetAllMsg" ] -> GetAllMsg
+    | [ "ReadAllMsg" ] -> ReadAllMsg
     | [ "Read"; "from"; sender ] -> ReadMsgFrom sender
     | "FriendReq" :: receiver :: t ->
         FriendReq (receiver, String.concat " " t)

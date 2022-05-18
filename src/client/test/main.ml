@@ -1,3 +1,12 @@
+(** We only wrote OUnit tests for Command, Parser, and Packager. The
+    command-line user interface is play-tested. The network and the
+    controller are integration-tested.
+
+    We are not using OUnit to test the database because OUnit tests are
+    parallel, whereas we need the database tests to be sequential. For
+    instance, we must first add a user before testing that the user
+    exists in the database. *)
+
 open OUnit2
 open Client
 open Command
@@ -61,7 +70,8 @@ let command_tests =
       "SendMsg Bob Hello world!"
       (SendMsg ("Bob", "Hello world!"));
     command_test "GetNewMsg when logged in" true "GetNewMsg" GetNewMsg;
-    command_test "GetAllMsg when logged in" true "GetAllMsg" GetAllMsg;
+    command_test "ReadAllMsg when logged in" true "ReadAllMsg"
+      ReadAllMsg;
     command_test "Read from friend when logged in" true
       "Read from Charlie" (ReadMsgFrom "Charlie");
     command_test "FriendReq when logged in" true "FriendReq Bob Hello"

@@ -75,9 +75,10 @@ let help_logged_in =
   [
     "-------------------- Messages --------------------";
     "[SendMsg <receiver> <message>] : sends a message to a friend";
-    "[GetNewMsg] : gets all your new messages";
-    "[GetAllMsg] : gets all your recent messages";
-    "[Read from <friend>] : reads all recent messages from a friend";
+    "[GetNewMsg] : gets all your new messages from the server";
+    "[ReadAllMsg] : reads all your recent local messages";
+    "[Read from <friend>] : reads all recent local messages from a \
+     friend";
     "-------------------- Friends ---------------------";
     "[FriendReq <receiver> <message>] : sends a friend request to \
      another user";
@@ -131,7 +132,7 @@ let rec main () =
   | GetNewMsg ->
       let check, messages = Controller.update_msg () in
       if check then print_messages messages else bool_print (false, "")
-  | GetAllMsg ->
+  | ReadAllMsg ->
       let check, messages = Controller.read_msg () in
       if check then print_messages messages
       else bool_print (false, "Message History Fetch Unsuccessful")
