@@ -38,6 +38,8 @@ let parse_common j =
     time = get_str_val j "time";
   }
 
+(** [parse_send_msg j] parses a package whose type is "SendMessage". The
+    next few functions are similar. *)
 let parse_send_msg j =
   let receiver = get_str_val j "receiver" in
   let msg = get_str_val j "message" in

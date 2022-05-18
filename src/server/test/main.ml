@@ -1,3 +1,13 @@
+(** Processor is not unit-tested because it is used to connect different
+    parts of the server, communicating with the network to handle
+    requests from the clients. Instead, it is tested through integration
+    testing.
+
+    We are not using OUnit to test the database because OUnit tests are
+    parallel, whereas we need the database tests to be sequential. For
+    instance, we must first add a user before testing that the user
+    exists in the database. *)
+
 open OUnit2
 open Server
 open Database
@@ -7,15 +17,6 @@ open Processor
 open Util
 
 (******************** Server Database Tests ********************)
-
-(** Warning: To prevent bad data from going into the server database,
-    remember to change [test] to [true] in database.ml before running
-    the tests. *)
-
-(** Note: We are not using ounit to test the database because ounit
-    tests are parallel, whereas we need the database tests to be
-    sequential. For instance, we must first add a user before testing
-    that the user exists in the database. *)
 
 (** [assert_false x] asserts that [x] is [false]. *)
 let assert_false x = assert (not x)
@@ -54,7 +55,6 @@ let add_more_users () =
     && add_user injection_str strange_chars strange_chars
          "2022-03-29 19:12:28"
   in
-
   assert added
 
 let test_user_exists () =
@@ -443,8 +443,6 @@ let get_expected_3 =
    ]\n\
    }"
 
-let error_tests = []
-
 let packager_tests =
   let open Util in
   [
@@ -466,11 +464,9 @@ let packager_tests =
 
 (******************** Processor Tests ********************)
 
-let processor_tests = []
-
 let suite =
   "test suite for Server"
-  >::: List.flatten [ parser_tests; processor_tests; packager_tests ]
+  >::: List.flatten [ parser_tests; packager_tests ]
 
 let _ =
   create_tables ();

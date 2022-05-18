@@ -1,3 +1,7 @@
+(** For Util, we wrote tests for our Time and Crypto modules. We didn't
+    write tests for Msg because it mostly just contains a type [Msg.t]
+    that is widely used throughout our project. *)
+
 open OUnit2
 open Util
 open Time

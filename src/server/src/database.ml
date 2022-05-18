@@ -60,11 +60,9 @@ exception UnknownUser of string
 exception UnknownGCID of string
 exception NoAccess of string * string
 
-let test = true
-
 let db_file =
   "data" ^ Filename.dir_sep ^ "database" ^ Filename.dir_sep
-  ^ if test then "test.db" else "server.db"
+  ^ "server.db"
 
 let server_db = db_open db_file
 
@@ -94,7 +92,10 @@ let assert_rc rc expected =
     in
     prerr_and_fail rc err_msg
 
+(** [assert_rc rc expected err_msg] asserts that [rc] is [OK]. *)
 let assert_ok rc = assert_rc rc Rc.OK
+
+(** [assert_rc rc expected err_msg] asserts that [rc] is [ROW]. *)
 let assert_row rc = assert_rc rc Rc.ROW
 
 (** [time_ok time] raises [MalformedTime] if [time] is not in the right
@@ -158,10 +159,13 @@ let create_tables () =
    internally. *)
 let select_all_sql table = Printf.sprintf "SELECT * from %s" table
 
+(** [print_option str] prints [s] followed by ["|"] if [str] is
+    [Some s]; it prints ["|"] if [str] is [None]. *)
 let print_option = function
   | Some s -> print_string (s ^ "|")
   | None -> print_string "|"
 
+(** [print_all_cb] is the callback function for printing a table. *)
 let print_all_cb row header =
   Array.iter print_option row;
   print_newline ()
@@ -367,7 +371,7 @@ let cons_one_msg lst (row : Data.t array) =
       failwith
         "Server.Database.cons_one_msg: row is in the wrong format"
 
-(** Debug *)
+(** [print_msg_list lst] prints a list of messages. *)
 let print_msg_list (lst : Msg.t list) =
   lst |> List.map Msg.string_of_msg |> List.map print_endline |> ignore
 
@@ -386,7 +390,6 @@ let get_msg_aux receiver time ~new_only =
       else
         Printf.printf "Retrieved messages sent to %s after %s\n\n"
           receiver time;
-      (* if test then print_msg_list (List.rev lst); *)
       List.rev lst
   | rc, _ ->
       prerr_and_fail rc

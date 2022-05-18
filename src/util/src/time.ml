@@ -25,7 +25,6 @@ let time_regex =
   Printf.sprintf "%s-%s-%s %s:%s:%s" year month day hr min sec
 
 let chk_time time =
-  (* TODO: This does not check invalid dates like 2/31/2022. *)
   Str.string_match ("^" ^ time_regex ^ "$" |> Str.regexp) time 0
 
 let earliest_time = "0000-01-01 00:00:00"
