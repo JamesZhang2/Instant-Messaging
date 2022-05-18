@@ -73,9 +73,11 @@ let help_logged_out =
     logged in. *)
 let help_logged_in =
   [
+    "Note: You need to run [GetNewMsg] to keep everything up to date.";
     "-------------------- Messages --------------------";
     "[SendMsg <receiver> <message>] : sends a message to a friend";
-    "[GetNewMsg] : gets all your new messages from the server";
+    "[GetNewMsg] : gets all your new messages and notifications from \
+     the server";
     "[ReadAllMsg] : reads all your recent local messages";
     "[Read from <friend>] : reads all recent local messages from a \
      friend";
