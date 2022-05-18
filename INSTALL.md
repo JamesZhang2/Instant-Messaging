@@ -48,4 +48,4 @@ Then, go to the client directory using `cd src/client`. Then run `make clean` ag
 
 Be sure to run `make clean` on both server and client side. 
 
-*Note: running `make clean` permanently erases all data and cannot be restored. *
+*Note: running `make clean` permanently erases all data and cannot be restored.*
