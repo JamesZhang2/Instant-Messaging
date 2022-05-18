@@ -12,17 +12,33 @@ type t = {
   response : response_type;
 }
 
-(** [fr_rep_tup turns msg into a tup]*)
+(** [fr_rep_tup msg] turns friend request reply [msg] into a tuple
+    [(accepted, public key)] *)
 let fr_rep_tup msg =
   let accepted = String.get msg 0 in
   let key = String.sub msg 1 (String.length msg - 1) in
   (accepted = 'T', key)
 
+(** [msgtype_of_string str msg] converts a string representation [str]
+    of msg into a [Msg.msg_type], and updates [msg] as necessary.
+
+    Requries: if [str] = "FriendReqRep", [msg] does not equal to [None]*)
+let msgtype_of_string str msg =
+  match str with
+  | "Message" -> (Msg.Message, msg)
+  | "GCMessage" -> (GCMessage, msg)
+  | "FriendReq" -> (FriendReq, msg)
+  | "FriendReqRep" -> (FriendReqRep (fr_rep_tup msg), "")
+  | _ -> raise SyntaxError
+
+(** [parse_messages msg_list] parses a list [msg_list] of json type into
+    a list of messages accepted by controller [Msg.t list]*)
 let rec parse_messages msg_list =
   match msg_list with
   | [] -> []
   | h :: t ->
       let assoc = Yojson.Basic.Util.to_assoc h in
+      (*[util str] finds the associated string of [str] in assoc*)
       let util str =
         List.assoc str assoc |> Yojson.Basic.Util.to_string
       in
@@ -31,17 +47,9 @@ let rec parse_messages msg_list =
       let msg_type = util "msg_type" in
       let time = util "time" in
       let message = util "message" in
+      let type', updated_msg = msgtype_of_string msg_type message in
       let complete_msg =
-        if msg_type = "Message" then
-          Msg.make_msg sender receiver time Msg.Message message
-        else if msg_type = "GCMessage" then
-          Msg.make_msg sender receiver time Msg.GCMessage message
-        else if msg_type = "FriendReq" then
-          Msg.make_msg sender receiver time Msg.FriendReq message
-        else
-          Msg.make_msg sender receiver time
-            (Msg.FriendReqRep (fr_rep_tup message))
-            ""
+        Msg.make_msg sender receiver time type' updated_msg
       in
       complete_msg :: parse_messages t
 
